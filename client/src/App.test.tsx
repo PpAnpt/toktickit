@@ -16,24 +16,37 @@ describe('App Component', () => {
     expect(screen.getByText('TokTickIT IT Service Desk')).toBeInTheDocument();
   });
 
-  it('shows online status when API is reachable', async () => {
-    (global.fetch as any).mockResolvedValue({
-      ok: true,
-      json: async () => ({ status: 'ok', service: 'TokTickIT API' }),
+  it('shows online status and categories when API is reachable', async () => {
+    // สอนให้ระบบทดสอบรู้จักการตอบกลับของ API ทั้ง 2 แบบ
+    (global.fetch as any).mockImplementation(async (url: string) => {
+      if (url.includes('/api/health')) {
+        return { ok: true, json: async () => ({ status: 'ok' }) };
+      }
+      if (url.includes('/api/categories')) {
+        return {
+          ok: true, json: async () => [
+            { id: 1, name: 'Account and Access' },
+            { id: 2, name: 'Hardware' }
+          ]
+        };
+      }
     });
 
     render(<App />);
-    
-    // Click button
+
+    // จำลองการกดปุ่ม
     const checkBtn = screen.getByRole('button', { name: /\[ Check System \]/i });
     fireEvent.click(checkBtn);
 
-    // Should show loading initially
+    // ตอนกำลังโหลด ต้องขึ้นคำว่า Loading...
     expect(screen.getByText(/Loading.../i)).toBeInTheDocument();
 
-    // Wait for resolution
+    // รอจนกว่าจะดึงข้อมูลเสร็จ แล้วเช็คว่ามีข้อความเหล่านี้ขึ้นมาไหม
     await waitFor(() => {
       expect(screen.getByText(/Online/i)).toBeInTheDocument();
+      // เช็คว่ามีหมวดหมู่โผล่มาบนหน้าจอจริงๆ
+      expect(screen.getByText('Account and Access')).toBeInTheDocument();
+      expect(screen.getByText('Hardware')).toBeInTheDocument();
     });
   });
 
@@ -41,12 +54,10 @@ describe('App Component', () => {
     (global.fetch as any).mockRejectedValue(new Error('Network error'));
 
     render(<App />);
-    
-    // Click button
+
     const checkBtn = screen.getByRole('button', { name: /\[ Check System \]/i });
     fireEvent.click(checkBtn);
 
-    // Wait for error resolution
     await waitFor(() => {
       expect(screen.getByText(/Offline/i)).toBeInTheDocument();
       expect(screen.getByText(/Network error/i)).toBeInTheDocument();
