@@ -16,8 +16,14 @@ TokTickIT is a full-stack IT service desk application. This repository contains 
    - Run `npm install`
    - Copy `.env.example` to `.env` and configure your `DATABASE_URL`.
    - Run `npx prisma migrate dev` to setup the database.
+   - Run `npx prisma db seed` (to insert initial request categories).
    - Run `npm run dev` to start the backend.
 4. Set up the frontend:
    - Navigate to `client/`
    - Run `npm install`
    - Run `npm run dev` to start the frontend.
+
+## Running Tests
+To run the automated tests for this project:
+- **Backend (Supertest):** Navigate to `server/` and run `npm run test`
+- **Frontend (Vitest):** Navigate to `client/` and run `npm run test`
