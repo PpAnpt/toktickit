@@ -163,6 +163,69 @@ app.post('/api/tickets', async (req: Request, res: Response) => {
   }
 });
 
+// ---------------------------------------------------------------------------
+// Lab 2 Issue 3 — Upload Attachment API
+// ---------------------------------------------------------------------------
+app.post('/api/tickets/:id/attachments', (req: Request, res: Response): void => {
+  upload.single('file')(req, res, async (err) => {
+    if (err) {
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ error: 'File size exceeds the 5MB limit.' });
+      }
+      if (err.message === 'INVALID_FILE_TYPE') {
+        return res.status(400).json({ error: 'Only JPG, PNG, WEBP, and PDF files are allowed.' });
+      }
+      return res.status(400).json({ error: err.message || 'File upload failed.' });
+    }
+
+    try {
+      const ticketId = Number(req.params.id);
+      const requesterIdHeader = req.headers['x-requester-id'];
+      const requesterId = requesterIdHeader ? Number(requesterIdHeader) : undefined;
+
+      if (!req.file) {
+        return res.status(400).json({ error: 'No file uploaded.' });
+      }
+
+      // ตรวจสอบว่าตั๋วนี้มีอยู่จริงและเป็นของ Requester คนนี้หรือไม่
+      const ticket = await prisma.ticket.findUnique({
+        where: { id: ticketId },
+        include: { attachments: { where: { isRemoved: false } } }
+      });
+
+      if (!ticket) {
+        return res.status(404).json({ error: 'Ticket not found.' });
+      }
+
+      if (requesterId && ticket.requesterId !== requesterId) {
+        return res.status(403).json({ error: 'You do not have permission to add attachments to this ticket.' });
+      }
+
+      // ตรวจสอบจำนวนไฟล์แนบไม่ให้เกิน 5 ไฟล์
+      if (ticket.attachments.length >= 5) {
+        return res.status(400).json({ error: 'Maximum limit of 5 attachments per ticket reached.' });
+      }
+
+      // บันทึกข้อมูลไฟล์ลง Database
+      const attachment = await prisma.attachment.create({
+        data: {
+          ticketId,
+          originalFileName: req.file.originalname,
+          storedFileName: req.file.filename,
+          size: req.file.size,
+          mimeType: req.file.mimetype,
+          isRemoved: false,
+        }
+      });
+
+      return res.status(201).json(attachment);
+    } catch (dbError) {
+      console.error('Failed to save attachment metadata:', dbError);
+      return res.status(500).json({ error: 'Failed to process attachment.' });
+    }
+  });
+});
+
 // We only start the server if this file is run directly, 
 // which makes it easier to import `app` for testing in the future.
 if (require.main === module) {
