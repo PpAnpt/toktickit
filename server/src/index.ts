@@ -61,6 +61,73 @@ app.get('/api/requesters', async (req: Request, res: Response) => {
   }
 });
 
+// ---------------------------------------------------------------------------
+// Lab 2 Issue 3 — Create Ticket API
+// ---------------------------------------------------------------------------
+app.post('/api/tickets', async (req: Request, res: Response) => {
+  try {
+    // 1. ตรวจสอบ Requester ID จาก Header (จำลอง Auth)
+    const requesterIdHeader = req.headers['x-requester-id'];
+    const requesterId = requesterIdHeader ? Number(requesterIdHeader) : req.body.requesterId;
+
+    if (!requesterId || isNaN(requesterId)) {
+      return res.status(401).json({ error: 'Missing or invalid X-Requester-Id header' });
+    }
+
+    const { summary, description, categoryId, relatedSystemId, requestedPriority } = req.body;
+
+    // 2. Validation ตรวจสอบข้อมูลจำเป็น
+    const errors: Record<string, string> = {};
+    if (!summary || !summary.trim()) {
+      errors.summary = 'Summary is required.';
+    }
+    if (!description || !description.trim()) {
+      errors.description = 'Description is required.';
+    }
+    if (!categoryId) {
+      errors.categoryId = 'Category is required.';
+    }
+    if (!relatedSystemId) {
+      errors.relatedSystemId = 'Related System is required.';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      return res.status(400).json({ error: 'Validation failed', details: errors });
+    }
+
+    // 3. สร้างเลขที่ Ticket Number อัตโนมัติ (เช่น TKT-2026-000001)
+    const currentYear = new Date().getFullYear();
+    const ticketCount = await prisma.ticket.count();
+    const ticketNumber = `TKT-${currentYear}-${String(ticketCount + 1).padStart(6, '0')}`;
+
+    // 4. บันทึกลง Database
+    const newTicket = await prisma.ticket.create({
+      data: {
+        ticketNumber,
+        summary: summary.trim(),
+        description: description.trim(),
+        status: 'New',
+        requestedPriority: requestedPriority || 'MEDIUM',
+        requesterId: Number(requesterId),
+        categoryId: Number(categoryId),
+        relatedSystemId: Number(relatedSystemId),
+      },
+      include: {
+        category: true,
+        relatedSystem: true,
+        requester: {
+          select: { id: true, name: true, email: true }
+        }
+      }
+    });
+
+    return res.status(201).json(newTicket);
+  } catch (error) {
+    console.error('Failed to create ticket:', error);
+    return res.status(500).json({ error: 'An unexpected error occurred while creating the ticket.' });
+  }
+});
+
 // We only start the server if this file is run directly, 
 // which makes it easier to import `app` for testing in the future.
 if (require.main === module) {
