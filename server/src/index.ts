@@ -226,6 +226,203 @@ app.post('/api/tickets/:id/attachments', (req: Request, res: Response): void => 
   });
 });
 
+// ---------------------------------------------------------------------------
+// Lab 2 Issue 4 — My Tickets List API (Search, Filter, Sort, Pagination)
+// ---------------------------------------------------------------------------
+app.get('/api/tickets', async (req: Request, res: Response) => {
+  try {
+    const requesterIdHeader = req.headers['x-requester-id'];
+    const requesterId = requesterIdHeader ? Number(requesterIdHeader) : undefined;
+
+    if (!requesterId || isNaN(requesterId)) {
+      return res.status(401).json({ error: 'Missing or invalid X-Requester-Id header' });
+    }
+
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 10));
+    const skip = (page - 1) * limit;
+
+    const search = req.query.search ? String(req.query.search).trim() : '';
+    const categoryId = req.query.categoryId ? Number(req.query.categoryId) : undefined;
+    const status = req.query.status ? String(req.query.status) : undefined;
+    const sortBy = (req.query.sortBy as string) || 'createdAt';
+    const sortOrder = req.query.sortOrder === 'asc' ? 'asc' : 'desc';
+
+    // เงื่อนไขกรองข้อมูล: ต้องเป็นตั๋วของ requester คนนี้เท่านั้น (Ownership)
+    const whereCondition: any = {
+      requesterId: requesterId,
+    };
+
+    if (categoryId) {
+      whereCondition.categoryId = categoryId;
+    }
+
+    if (status) {
+      whereCondition.status = status;
+    }
+
+    if (search) {
+      whereCondition.OR = [
+        { summary: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+        { ticketNumber: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    const [totalItems, tickets] = await Promise.all([
+      prisma.ticket.count({ where: whereCondition }),
+      prisma.ticket.findMany({
+        where: whereCondition,
+        skip,
+        take: limit,
+        orderBy: { [sortBy]: sortOrder },
+        include: {
+          category: true,
+          relatedSystem: true,
+          attachments: {
+            where: { isRemoved: false },
+            select: { id: true }
+          }
+        }
+      })
+    ]);
+
+    const totalPages = Math.ceil(totalItems / limit);
+
+    return res.status(200).json({
+      data: tickets,
+      meta: {
+        totalItems,
+        totalPages,
+        currentPage: page,
+        limit,
+      }
+    });
+  } catch (error) {
+    console.error('Failed to fetch tickets:', error);
+    return res.status(500).json({ error: 'Failed to fetch tickets.' });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Lab 2 Issue 4 — Ticket Detail API (with Ownership Protection)
+// ---------------------------------------------------------------------------
+app.get('/api/tickets/:id', async (req: Request, res: Response) => {
+  try {
+    const ticketId = Number(req.params.id);
+    const requesterIdHeader = req.headers['x-requester-id'];
+    const requesterId = requesterIdHeader ? Number(requesterIdHeader) : undefined;
+
+    if (!requesterId || isNaN(requesterId)) {
+      return res.status(401).json({ error: 'Missing or invalid X-Requester-Id header' });
+    }
+
+    const ticket = await prisma.ticket.findUnique({
+      where: { id: ticketId },
+      include: {
+        category: true,
+        relatedSystem: true,
+        requester: { select: { id: true, name: true, email: true } },
+        attachments: {
+          orderBy: { createdAt: 'asc' }
+        }
+      }
+    });
+
+    if (!ticket) {
+      return res.status(404).json({ error: 'Ticket not found.' });
+    }
+
+    // ห้าม Requester คนอื่นแอบดูตั๋ว (Cross-requester protection)
+    if (ticket.requesterId !== requesterId) {
+      return res.status(403).json({ error: 'Access denied. You do not own this ticket.' });
+    }
+
+    return res.status(200).json(ticket);
+  } catch (error) {
+    console.error('Failed to fetch ticket detail:', error);
+    return res.status(500).json({ error: 'Failed to fetch ticket detail.' });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Lab 2 Issue 4 — Download Attachment API (Blocks Removed Files)
+// ---------------------------------------------------------------------------
+app.get('/api/tickets/:id/attachments/:attachmentId/download', async (req: Request, res: Response) => {
+  try {
+    const ticketId = Number(req.params.id);
+    const attachmentId = Number(req.params.attachmentId);
+    const requesterIdHeader = req.headers['x-requester-id'];
+    const requesterId = requesterIdHeader ? Number(requesterIdHeader) : undefined;
+
+    const attachment = await prisma.attachment.findUnique({
+      where: { id: attachmentId },
+      include: { ticket: true }
+    });
+
+    if (!attachment || attachment.ticketId !== ticketId) {
+      return res.status(404).json({ error: 'Attachment not found.' });
+    }
+
+    // ตรวจสอบ Ownership
+    if (requesterId && attachment.ticket.requesterId !== requesterId) {
+      return res.status(403).json({ error: 'Access denied.' });
+    }
+
+    // ถ้าไฟล์ถูกลบไปแล้ว (Soft-removed) จะไม่อนุญาตให้ดาวน์โหลด
+    if (attachment.isRemoved) {
+      return res.status(404).json({ error: 'This attachment has been removed.' });
+    }
+
+    const filePath = path.join(uploadDir, attachment.storedFileName);
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ error: 'File on disk not found.' });
+    }
+
+    return res.download(filePath, attachment.originalFileName);
+  } catch (error) {
+    console.error('Failed to download attachment:', error);
+    return res.status(500).json({ error: 'Failed to download attachment.' });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Lab 2 Issue 4 — Soft-remove Attachment API
+// ---------------------------------------------------------------------------
+app.delete('/api/tickets/:id/attachments/:attachmentId', async (req: Request, res: Response) => {
+  try {
+    const ticketId = Number(req.params.id);
+    const attachmentId = Number(req.params.attachmentId);
+    const requesterIdHeader = req.headers['x-requester-id'];
+    const requesterId = requesterIdHeader ? Number(requesterIdHeader) : undefined;
+
+    const attachment = await prisma.attachment.findUnique({
+      where: { id: attachmentId },
+      include: { ticket: true }
+    });
+
+    if (!attachment || attachment.ticketId !== ticketId) {
+      return res.status(404).json({ error: 'Attachment not found.' });
+    }
+
+    // ตรวจสอบ Ownership
+    if (requesterId && attachment.ticket.requesterId !== requesterId) {
+      return res.status(403).json({ error: 'Access denied.' });
+    }
+
+    // ทำ Soft-remove ใน Database
+    await prisma.attachment.update({
+      where: { id: attachmentId },
+      data: { isRemoved: true }
+    });
+
+    return res.status(204).send();
+  } catch (error) {
+    console.error('Failed to remove attachment:', error);
+    return res.status(500).json({ error: 'Failed to remove attachment.' });
+  }
+});
+
 // We only start the server if this file is run directly, 
 // which makes it easier to import `app` for testing in the future.
 if (require.main === module) {
