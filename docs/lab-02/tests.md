@@ -11,15 +11,15 @@ Testing for Lab 2 will follow a Test-Driven Development (TDD) approach where pos
 
 | Test ID | Type | Requirement / AC | What It Tests | Expected Result | Automated Test File | Final |
 |---|---|---|---|---|---|---|
-| UNIT-01 | Unit | BR-01 | Ticket Number generator | Returns string in `TKT-YYYY-XXXXXX` format | `server/tests/lab-02/utils.test.ts` | Pending |
-| API-01 | API | AC-01, FR-02 | Create valid ticket | 201 Created; one saved Ticket; number returned | `server/tests/lab-02/create-ticket.api.test.ts` | Pending |
-| API-02 | API | AC-05, BR-05 | Upload oversized attachment | 400 Bad Request; validation message | `server/tests/lab-02/attachments.api.test.ts` | Pending |
-| API-03 | API | AC-07, FR-04 | Ticket list pagination | 200 OK; returns correct subset of tickets | `server/tests/lab-02/my-tickets.api.test.ts` | Pending |
-| API-04 | API | AC-03, BR-08 | Cross-requester ticket access | 403 or 404; data not returned | `server/tests/lab-02/ticket-detail.api.test.ts` | Pending |
-| UI-01 | UI | AC-04, BR-09 | Submit without Summary | Field message shown; API not called | `client/src/.../CreateTicket.test.tsx` | Pending |
-| UI-02 | UI | AC-09, BR-11 | View My Tickets with 0 tickets | Empty state graphic & CTA displayed | `client/src/.../MyTickets.test.tsx` | Pending |
-| UI-03 | UI | FR-06 | Upload attachment success state | File appears in attachment list | `client/src/.../AttachmentSection.test.tsx` | Pending |
-| E2E-01 | E2E | AC-01, AC-02, FR-01| Complete submission flow | Confirmation shows official number, ticket in list | `e2e/lab-02/requester-ticket-flow.spec.ts` | Pending |
+| UNIT-01 | Unit | BR-01 | Ticket Number generator | Returns string in `TKT-YYYY-XXXXXX` format | `server/tests/lab-02/utils.test.ts` | Pass (via API-01) |
+| API-01 | API | AC-01, FR-02 | Create valid ticket | 201 Created; one saved Ticket; number returned | `server/tests/lab-02/create-ticket.api.test.ts` | Pass |
+| API-02 | API | AC-05, BR-05 | Upload oversized attachment | 400 Bad Request; validation message | `server/tests/lab-02/attachments.api.test.ts` | Pass |
+| API-03 | API | AC-07, FR-04 | Ticket list pagination | 200 OK; returns correct subset of tickets | `server/tests/lab-02/my-tickets.api.test.ts` | Pass |
+| API-04 | API | AC-03, BR-08 | Cross-requester ticket access | 403 or 404; data not returned | `server/tests/lab-02/ticket-detail.api.test.ts` | Pass |
+| UI-01 | UI | AC-04, BR-09 | Submit without Summary | Field message shown; API not called | `client/src/tests/CreateTicket.test.tsx` | Pass |
+| UI-02 | UI | AC-09, BR-11 | View My Tickets with 0 tickets | Empty state graphic & CTA displayed | `client/src/tests/MyTickets.test.tsx` | Pass |
+| UI-03 | UI | FR-06 | Upload attachment success state | File appears in attachment list | `client/src/tests/AttachmentSection.test.tsx` | Pass |
+| E2E-01 | E2E | AC-01, AC-02, FR-01| Complete submission flow | Confirmation shows official number, ticket in list | `e2e/lab-02/requester-ticket-flow.spec.ts` | Manual Pass |
 
 ## 3. Acceptance-Criterion Traceability
 
@@ -38,11 +38,11 @@ Testing for Lab 2 will follow a Test-Driven Development (TDD) approach where pos
 | AC-11 | Responsive Layout | Manual Visual Audit & Playwright Screenshots |
 
 ## 4. Responsive and Visual Checklist
-- [ ] Desktop layout matches multi-column design.
-- [ ] Mobile layout stacks fields vertically without horizontal scrolling.
-- [ ] Zen Green Theme colors are correctly applied.
-- [ ] Required asterisks, loading states, and error states match specs.
-- [ ] No clipped labels or overlapping messages.
+- [x] Desktop layout matches multi-column design.
+- [x] Mobile layout stacks fields vertically without horizontal scrolling.
+- [x] Zen Green Theme colors are correctly applied.
+- [x] Required asterisks, loading states, and error states match specs.
+- [x] No clipped labels or overlapping messages.
 
 ## 5. Test Commands
 ```bash
