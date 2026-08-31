@@ -1,94 +1,95 @@
-import { useState } from 'react'
-import './App.css'
-interface Category {
+import { useState, useEffect } from 'react';
+import './App.css'; // แน่ใจว่าไฟล์นี้มีอยู่เพื่อใส่สี Zen Green ภายหลัง
+
+interface Requester {
   id: number;
   name: string;
+  email: string;
 }
 
 function App() {
-  const [status, setStatus] = useState<'idle' | 'loading' | 'online' | 'offline'>('idle');
-  const [errorMsg, setErrorMsg] = useState<string>('');
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [requesters, setRequesters] = useState<Requester[]>([]);
+  const [selectedId, setSelectedId] = useState<number | ''>('');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  const checkSystem = async () => {
-    setStatus('loading');
-    setErrorMsg('');
-
-    try {
-      const response = await fetch('http://localhost:3000/api/health');
-      if (!response.ok) {
-        throw new Error('Unable to connect to TokTickIT API');
-      }
-      const data = await response.json();
-      if (data.status === 'ok') {
-        setStatus('online');
-        // เพิ่มส่วนนี้เพื่อดึงข้อมูล Categories
-        const catResponse = await fetch('http://localhost:3000/api/categories');
-        if (catResponse.ok) {
-          const catData = await catResponse.json();
-          setCategories(catData);
+  // ดึงรายชื่อจาก API ทันทีที่เปิดหน้าเว็บ
+  useEffect(() => {
+    const fetchRequesters = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/api/requesters');
+        if (response.ok) {
+          const data = await response.json();
+          setRequesters(data);
         }
-      } else {
-        setStatus('offline');
-        setErrorMsg('API returned an unexpected response');
+      } catch (error) {
+        console.error('Failed to fetch requesters:', error);
       }
-    } catch (error: any) {
-      setStatus('offline');
-      setErrorMsg(error.message || 'Unable to connect to TokTickIT API');
+    };
+    fetchRequesters();
+  }, []);
+
+  const handleLogin = () => {
+    if (selectedId !== '') {
+      // ในอนาคตเราอาจจะเซฟลง localStorage แต่วันนี้เอาแค่ State ก่อน
+      setIsLoggedIn(true);
     }
   };
 
+  // ถ้าเลือกล็อกอินแล้ว (จะทำ UI ของจริงใน Issue หน้า)
+  if (isLoggedIn) {
+    const activeUser = requesters.find(r => r.id === Number(selectedId));
+    return (
+      <div className="container mt-5 text-center">
+        <h2>Welcome, {activeUser?.name}!</h2>
+        <p className="text-muted">{activeUser?.email}</p>
+        <button className="btn btn-secondary mt-3" onClick={() => setIsLoggedIn(false)}>
+          Logout (Change User)
+        </button>
+      </div>
+    );
+  }
+
+  // หน้าจอเลือก Requester (ก่อนล็อกอิน)
   return (
     <div className="container mt-5">
-      <div className="card shadow-sm" style={{ maxWidth: '600px', margin: '0 auto' }}>
-        <div className="card-header bg-primary text-white">
-          <h2 className="h4 mb-0">TokTickIT IT Service Desk</h2>
+      <div className="card shadow-sm" style={{ maxWidth: '500px', margin: '0 auto', borderTop: '5px solid #006B3C' }}>
+        <div className="card-header bg-white text-center py-4">
+          <h2 className="h4 mb-0" style={{ color: '#006B3C' }}>TokTickIT Service Desk</h2>
+          <p className="text-muted mt-2 mb-0">Development Requester Selection</p>
         </div>
-        <div className="card-body text-center py-5">
+
+        <div className="card-body p-4">
+          <div className="mb-4">
+            <label htmlFor="requesterSelect" className="form-label fw-bold">
+              Simulate Login As:
+            </label>
+            <select
+              id="requesterSelect"
+              className="form-select form-select-lg"
+              value={selectedId}
+              onChange={(e) => setSelectedId(Number(e.target.value))}
+            >
+              <option value="" disabled>-- Select a Requester --</option>
+              {requesters.map((req) => (
+                <option key={req.id} value={req.id}>
+                  {req.name} ({req.email})
+                </option>
+              ))}
+            </select>
+          </div>
+
           <button
-            className="btn btn-lg btn-outline-primary mb-4"
-            onClick={checkSystem}
-            disabled={status === 'loading'}
+            className="btn btn-lg w-100 text-white"
+            style={{ backgroundColor: '#006B3C' }}
+            onClick={handleLogin}
+            disabled={selectedId === ''}
           >
-            {status === 'loading' ? (
-              <>
-                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                Loading...
-              </>
-            ) : (
-              '[ Check System ]'
-            )}
+            Continue to Portal
           </button>
-
-          {status !== 'idle' && status !== 'loading' && (
-            <div className={`alert ${status === 'online' ? 'alert-success' : 'alert-danger'} text-start`} role="alert">
-              <h5 className="alert-heading">
-                System Status: <strong>{status === 'online' ? 'Online' : 'Offline'}</strong>
-              </h5>
-              {status === 'online' && categories.length > 0 && (
-                <div className="mt-4 text-start">
-                  <h6>IT Request Categories:</h6>
-                  <ul className="list-group">
-                    {categories.map((cat) => (
-                      <li key={cat.id} className="list-group-item d-flex align-items-center">
-                        <span className="badge bg-secondary me-3">{cat.id}</span>
-                        {cat.name}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-
-              {status === 'offline' && (
-                <p className="mb-0 mt-2">{errorMsg}</p>
-              )}
-            </div>
-          )}
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
