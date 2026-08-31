@@ -506,10 +506,11 @@ function App() {
                     </div>
 
                     <div className="mb-4">
-                      <label className="form-label fw-semibold">
+                      <label htmlFor="file-upload" className="form-label fw-semibold">
                         Attachments <small className="text-muted fw-normal">(Max 5 files, 5MB each. JPG, PNG, WEBP, PDF)</small>
                       </label>
                       <input
+                        id="file-upload"
                         type="file"
                         className="form-control"
                         multiple
@@ -518,6 +519,7 @@ function App() {
                         disabled={selectedFiles.length >= 5}
                       />
                       {fileError && <div className="text-danger small mt-1">{fileError}</div>}
+
 
                       {selectedFiles.length > 0 && (
                         <ul className="list-group mt-2">
