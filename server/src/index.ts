@@ -37,6 +37,29 @@ app.get('/api/categories', async (req: Request, res: Response) => {
   }
 });
 
+app.get('/api/related-systems', async (req: Request, res: Response) => {
+  try {
+    const systems = await prisma.relatedSystem.findMany({
+      orderBy: { name: 'asc' },
+    });
+    res.status(200).json(systems);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch related systems' });
+  }
+});
+
+app.get('/api/requesters', async (req: Request, res: Response) => {
+  try {
+    const requesters = await prisma.requesterUser.findMany({
+      where: { isActive: true },
+      orderBy: { name: 'asc' },
+      select: { id: true, name: true, email: true },
+    });
+    res.status(200).json(requesters);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch requesters' });
+  }
+});
 
 // We only start the server if this file is run directly, 
 // which makes it easier to import `app` for testing in the future.
