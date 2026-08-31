@@ -370,16 +370,16 @@ function App() {
   return (
     <div style={{ backgroundColor: '#F5F7F6', minHeight: '100vh', paddingBottom: '40px' }}>
       {/* Zen Green Navigation Bar */}
-      <nav className="navbar navbar-expand-lg navbar-dark shadow-sm" style={{ backgroundColor: '#006B3C' }}>
+      <nav className="navbar navbar-expand-lg navbar-light shadow-sm">
         <div className="container">
           <span className="navbar-brand fw-bold fs-4">TokTickIT</span>
           <div className="d-flex align-items-center">
-            <div className="text-white me-3 text-end d-none d-sm-block">
+            <div className="text-dark me-3 text-end d-none d-sm-block">
               <div className="fw-semibold">{activeUser?.name}</div>
-              <small className="opacity-75">{activeUser?.email}</small>
+              <small className="text-muted">{activeUser?.email}</small>
             </div>
             <button
-              className="btn btn-outline-light btn-sm"
+              className="btn btn-outline-success btn-sm fw-bold"
               onClick={() => { setIsLoggedIn(false); setCurrentRequesterId(''); setSelectedTicketId(null); }}
             >
               Switch User
