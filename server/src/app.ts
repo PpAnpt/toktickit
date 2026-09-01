@@ -39,34 +39,4 @@ app.get("/api/categories", async (_req: Request, res: Response) => {
   }
 });
 
-// ---------------------------------------------------------------------------
-// Lab 2 Issue 2 — Related Systems list
-// ---------------------------------------------------------------------------
-app.get("/api/related-systems", async (_req: Request, res: Response) => {
-  try {
-    const systems = await getPrisma().relatedSystem.findMany({
-      orderBy: { name: 'asc' }
-    });
-    res.status(200).json(systems);
-  } catch (err) {
-    res.status(500).json({ error: "Failed to fetch related systems" });
-  }
-});
-
-// ---------------------------------------------------------------------------
-// Lab 2 Issue 2 — Requesters list (Active only)
-// ---------------------------------------------------------------------------
-app.get("/api/requesters", async (_req: Request, res: Response) => {
-  try {
-    const requesters = await getPrisma().requesterUser.findMany({
-      where: { isActive: true },
-      orderBy: { name: 'asc' },
-      select: { id: true, name: true, email: true } // ดึงไปเฉพาะฟิลด์ที่จำเป็นเพื่อความปลอดภัย
-    });
-    res.status(200).json(requesters);
-  } catch (err) {
-    res.status(500).json({ error: "Failed to fetch requesters" });
-  }
-});
-
 export default app;
