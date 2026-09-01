@@ -17,4 +17,74 @@ model Category {
   id        Int      @id @default(autoincrement())
   name      String   @unique
   createdAt DateTime @default(now())
+
+  tickets Ticket[]
+}
+
+enum TicketStatus {
+  New
+  Open
+  Pending
+  Resolved
+  Closed
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model RelatedSystem {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+
+  tickets Ticket[] // ความสัมพันธ์ 1-to-many: 1 ระบบ มีได้หลาย Ticket
+}
+
+model RequesterUser {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  isActive  Boolean  @default(true) // สำหรับแยกว่าใครเป็น Active/Inactive
+  createdAt DateTime @default(now())
+
+  tickets Ticket[] // ความสัมพันธ์ 1-to-many: 1 ผู้ใช้ มีได้หลาย Ticket
+}
+
+model Ticket {
+  id                Int            @id @default(autoincrement())
+  ticketNumber      String         @unique
+  summary           String
+  description       String
+  status            TicketStatus   @default(New)
+  requestedPriority TicketPriority @default(MEDIUM)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  // Foreign Keys (ตัวเชื่อมโยง)
+  requesterId Int
+  requester   RequesterUser @relation(fields: [requesterId], references: [id])
+
+  categoryId Int
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  relatedSystemId Int
+  relatedSystem   RelatedSystem @relation(fields: [relatedSystemId], references: [id])
+
+  attachments Attachment[] // 1 ตั๋ว มีไฟล์แนบได้หลายไฟล์
+}
+
+model Attachment {
+  id               Int      @id @default(autoincrement())
+  originalFileName String
+  storedFileName   String
+  size             Int
+  mimeType         String
+  isRemoved        Boolean  @default(false) // สำหรับทำ Soft-remove
+  createdAt        DateTime @default(now())
+
+  ticketId Int
+  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
 }
