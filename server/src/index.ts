@@ -410,10 +410,16 @@ app.delete('/api/tickets/:id/attachments/:attachmentId', async (req: Request, re
       return res.status(403).json({ error: 'Access denied.' });
     }
 
-    // ทำ Soft-remove ใน Database
+    // รับเหตุผลในการลบไฟล์ (Removal Reason)
+    const reason = req.body?.reason || req.query?.reason || 'Uploaded wrong file version';
+
+    // ทำ Soft-remove ใน Database พร้อมบันทึกเหตุผล
     await prisma.attachment.update({
       where: { id: attachmentId },
-      data: { isRemoved: true }
+      data: {
+        isRemoved: true,
+        removalReason: String(reason).trim() || 'Removed by user'
+      }
     });
 
     return res.status(204).send();

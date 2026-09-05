@@ -83,6 +83,7 @@ model Attachment {
   size             Int
   mimeType         String
   isRemoved        Boolean  @default(false) // สำหรับทำ Soft-remove
+  removalReason    String?  // เหตุผลในการลบไฟล์ (Removal Reason)
   createdAt        DateTime @default(now())
 
   ticketId Int

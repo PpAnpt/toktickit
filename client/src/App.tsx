@@ -19,6 +19,7 @@ interface AttachmentItem {
   size: number;
   mimeType: string;
   isRemoved: boolean;
+  removalReason?: string;
   createdAt: string;
 }
 
@@ -80,6 +81,11 @@ function App() {
   const [additionalFiles, setAdditionalFiles] = useState<File[]>([]);
   const [isUploadingMore, setIsUploadingMore] = useState(false);
 
+  // Soft-removal with Reason Modal State
+  const [removingAttachment, setRemovingAttachment] = useState<{ id: number; name: string } | null>(null);
+  const [removalReasonInput, setRemovalReasonInput] = useState('');
+  const [isSubmittingRemoval, setIsSubmittingRemoval] = useState(false);
+
   // 1. ดึง Requesters
   useEffect(() => {
     fetch('http://localhost:3000/api/requesters')
@@ -124,8 +130,8 @@ function App() {
       const data = await res.json();
       if (res.ok) {
         setTickets(data.data || []);
-        setTotalPages(data.meta.totalPages || 1);
-        setTotalItems(data.meta.totalItems || 0);
+        setTotalPages(data.meta?.totalPages || 1);
+        setTotalItems(data.meta?.totalItems || 0);
       }
     } catch (err) {
       console.error('Failed to fetch tickets:', err);
@@ -134,11 +140,15 @@ function App() {
     }
   }, [isLoggedIn, currentRequesterId, currentPage, search, filterCategory, filterStatus, sortBy, sortOrder]);
 
+  // ดึงรายการตั๋วและอัปเดตจำนวนทันทีเมื่อเข้าสู่ระบบ หรือเมื่อสลับผู้ใช้ หรือเมื่อเปลี่ยนแท็บ
   useEffect(() => {
-    if (currentTab === 'my-tickets' && selectedTicketId === null) {
+    if (isLoggedIn && currentRequesterId) {
       fetchTickets();
+    } else {
+      setTickets([]);
+      setTotalItems(0);
     }
-  }, [currentTab, selectedTicketId, fetchTickets]);
+  }, [isLoggedIn, currentRequesterId, currentTab, selectedTicketId, fetchTickets]);
 
   // 4. ฟังก์ชันดึงรายละเอียดตั๋ว (Ticket Detail)
   const fetchTicketDetail = useCallback(async (id: number) => {
@@ -152,7 +162,13 @@ function App() {
       if (res.ok) {
         setTicketDetail(data);
       } else {
-        setDetailError(data.error || 'Failed to load ticket details.');
+        if (res.status === 403) {
+          setDetailError('403 Forbidden: You are not authorized to view this ticket.');
+        } else if (res.status === 404) {
+          setDetailError('404 Not Found: Ticket not found.');
+        } else {
+          setDetailError(data.error || 'Failed to load ticket details.');
+        }
       }
     } catch (err: any) {
       setDetailError(err.message || 'Network error.');
@@ -162,10 +178,24 @@ function App() {
   }, [currentRequesterId]);
 
   useEffect(() => {
-    if (selectedTicketId !== null) {
+    if (selectedTicketId !== null && isLoggedIn) {
       fetchTicketDetail(selectedTicketId);
     }
-  }, [selectedTicketId, fetchTicketDetail]);
+  }, [selectedTicketId, isLoggedIn, fetchTicketDetail]);
+
+  // Sync URL Routing: ตรวจสอบ /tickets/:id จาก Browser Address Bar อัตโนมัติ
+  useEffect(() => {
+    const handleLocationChange = () => {
+      const match = window.location.pathname.match(/\/tickets\/(\d+)/);
+      if (match) {
+        setSelectedTicketId(Number(match[1]));
+      }
+    };
+
+    handleLocationChange();
+    window.addEventListener('popstate', handleLocationChange);
+    return () => window.removeEventListener('popstate', handleLocationChange);
+  }, []);
 
   // จัดการเลือกไฟล์แนบ (Create Form)
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -213,6 +243,9 @@ function App() {
     }
 
     setIsSubmitting(true);
+    // หน่วงเวลาสั้นๆ (700ms) เพื่อให้เห็นสถานะ Submitting... (Busy State) ชัดเจนระหว่างการประมวลผล
+    await new Promise((resolve) => setTimeout(resolve, 700));
+
     try {
       const ticketRes = await fetch('http://localhost:3000/api/tickets', {
         method: 'POST',
@@ -251,6 +284,7 @@ function App() {
       setRelatedSystemId('');
       setPriority('MEDIUM');
       setSelectedFiles([]);
+      fetchTickets(); // อัปเดตรายการและตัวเลขตั๋วทันที
     } catch (err: any) {
       setApiError(err.message || 'Error creating ticket.');
     } finally {
@@ -279,16 +313,27 @@ function App() {
       .catch(err => alert(err.message));
   };
 
-  // ลบไฟล์แบบ Soft-remove
-  const handleSoftRemoveAttachment = async (ticketId: number, attachmentId: number) => {
-    if (!window.confirm('Are you sure you want to remove this attachment?')) return;
+  // ลบไฟล์แบบ Soft-remove พร้อมระบุเหตุผล (Removal Reason)
+  const handleOpenRemoveModal = (attId: number, attName: string) => {
+    setRemovingAttachment({ id: attId, name: attName });
+    setRemovalReasonInput('Uploaded wrong file version');
+  };
 
+  const handleConfirmRemove = async (ticketId: number) => {
+    if (!removingAttachment) return;
+    const reason = removalReasonInput.trim() || 'Uploaded wrong file version';
+    setIsSubmittingRemoval(true);
     try {
-      const res = await fetch(`http://localhost:3000/api/tickets/${ticketId}/attachments/${attachmentId}`, {
+      const res = await fetch(`http://localhost:3000/api/tickets/${ticketId}/attachments/${removingAttachment.id}`, {
         method: 'DELETE',
-        headers: { 'X-Requester-Id': String(currentRequesterId) }
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Requester-Id': String(currentRequesterId)
+        },
+        body: JSON.stringify({ reason })
       });
       if (res.ok) {
+        setRemovingAttachment(null);
         fetchTicketDetail(ticketId); // โหลดข้อมูลใหม่
       } else {
         const data = await res.json();
@@ -296,6 +341,8 @@ function App() {
       }
     } catch (err: any) {
       alert(err.message);
+    } finally {
+      setIsSubmittingRemoval(false);
     }
   };
 
@@ -380,7 +427,22 @@ function App() {
             </div>
             <button
               className="btn btn-outline-success btn-sm fw-bold"
-              onClick={() => { setIsLoggedIn(false); setCurrentRequesterId(''); setSelectedTicketId(null); }}
+              onClick={() => {
+                setIsLoggedIn(false);
+                setCurrentRequesterId('');
+                setSelectedTicketId(null);
+                setTickets([]);
+                setTotalItems(0);
+                setSearch('');
+                setFilterCategory('');
+                setFilterStatus('');
+                setCurrentPage(1);
+                setTicketDetail(null);
+                setSuccessMessage(null);
+                setApiError('');
+                setFormErrors({});
+                window.history.pushState(null, '', '/');
+              }}
             >
               Switch User
             </button>
@@ -431,6 +493,21 @@ function App() {
                   {apiError && <div className="alert alert-danger mb-4">{apiError}</div>}
 
                   <form onSubmit={handleCreateSubmit} noValidate>
+                    {/* Read-only Requester Field (Context Proof) */}
+                    <div className="mb-3">
+                      <label className="form-label fw-semibold">Requester</label>
+                      <input
+                        type="text"
+                        className="form-control bg-light text-muted"
+                        value={activeUser ? `${activeUser.name} (${activeUser.email})` : ''}
+                        readOnly
+                        disabled
+                      />
+                      <div className="form-text text-muted small">
+                        Populated automatically from the active Development Requester session.
+                      </div>
+                    </div>
+
                     <div className="row g-3 mb-3">
                       <div className="col-md-6">
                         <label className="form-label fw-semibold">Category <span className="text-danger">*</span></label>
@@ -646,7 +723,10 @@ function App() {
                       key={t.id}
                       className="card shadow-sm border-0 p-3 bg-white ticket-card"
                       style={{ cursor: 'pointer', transition: 'transform 0.15s ease' }}
-                      onClick={() => setSelectedTicketId(t.id)}
+                      onClick={() => {
+                        setSelectedTicketId(t.id);
+                        window.history.pushState(null, '', `/tickets/${t.id}`);
+                      }}
                     >
                       <div className="d-flex justify-content-between align-items-start flex-wrap gap-2">
                         <div>
@@ -715,7 +795,14 @@ function App() {
         {/* VIEW: TICKET DETAIL VIEW */}
         {selectedTicketId !== null && (
           <div>
-            <button className="btn btn-outline-secondary btn-sm mb-3" onClick={() => setSelectedTicketId(null)}>
+            <button
+              className="btn btn-outline-secondary btn-sm mb-3"
+              onClick={() => {
+                setSelectedTicketId(null);
+                setDetailError('');
+                window.history.pushState(null, '', '/');
+              }}
+            >
               &larr; Back to My Tickets
             </button>
 
@@ -724,7 +811,27 @@ function App() {
                 <div className="spinner-border text-success"></div>
               </div>
             ) : detailError ? (
-              <div className="alert alert-danger">{detailError}</div>
+              <div className="card shadow-sm border-0 p-5 text-center bg-white my-3">
+                <div className="fs-1 mb-3">🚫</div>
+                <h4 className="fw-bold text-danger">403 Forbidden / Access Denied</h4>
+                <p className="text-muted fs-6 mb-3">{detailError}</p>
+                <div className="alert alert-danger d-inline-block px-4 py-2 small mb-4">
+                  Security Boundary Enforced: You are not authorized to view this ticket (Ticket belongs to another requester).
+                </div>
+                <div>
+                  <button
+                    className="btn text-white fw-semibold px-4"
+                    style={{ backgroundColor: '#006B3C' }}
+                    onClick={() => {
+                      setSelectedTicketId(null);
+                      setDetailError('');
+                      window.history.pushState(null, '', '/');
+                    }}
+                  >
+                    &larr; Back to My Tickets
+                  </button>
+                </div>
+              </div>
             ) : ticketDetail ? (
               <div className="card shadow-sm border-0">
                 <div className="card-header py-3 d-flex justify-content-between align-items-center" style={{ backgroundColor: '#EAF6EF', borderLeft: '4px solid #006B3C' }}>
@@ -782,9 +889,19 @@ function App() {
                           <li key={att.id} className="list-group-item d-flex justify-content-between align-items-center py-2">
                             <div>
                               {att.isRemoved ? (
-                                <span className="text-muted text-decoration-line-through">
-                                  📄 {att.originalFileName} <span className="badge bg-secondary ms-2">Removed</span>
-                                </span>
+                                <div>
+                                  <div>
+                                    <span className="text-muted text-decoration-line-through">
+                                      📄 {att.originalFileName}
+                                    </span>
+                                    <span className="badge bg-secondary ms-2">REMOVED</span>
+                                  </div>
+                                  {att.removalReason && (
+                                    <div className="small text-danger mt-1">
+                                      <strong>Removal Reason:</strong> {att.removalReason}
+                                    </div>
+                                  )}
+                                </div>
                               ) : (
                                 <span>
                                   📄 <strong>{att.originalFileName}</strong>{' '}
@@ -803,7 +920,7 @@ function App() {
                                 </button>
                                 <button
                                   className="btn btn-sm btn-outline-danger"
-                                  onClick={() => handleSoftRemoveAttachment(ticketDetail.id, att.id)}
+                                  onClick={() => handleOpenRemoveModal(att.id, att.originalFileName)}
                                 >
                                   🗑 Remove
                                 </button>
@@ -846,6 +963,65 @@ function App() {
           </div>
         )}
       </div>
+
+      {/* Soft-removal with Reason Confirmation Modal */}
+      {removingAttachment && (
+        <div className="modal show d-block" tabIndex={-1} style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1055 }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content shadow border-0">
+              <div className="modal-header py-3" style={{ backgroundColor: '#EAF6EF', borderLeft: '4px solid #006B3C' }}>
+                <h5 className="modal-title fw-bold" style={{ color: '#006B3C' }}>Confirm Attachment Removal</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setRemovingAttachment(null)}
+                  disabled={isSubmittingRemoval}
+                ></button>
+              </div>
+              <div className="modal-body p-4">
+                <p className="mb-3 text-dark">
+                  Are you sure you want to remove <strong>{removingAttachment.name}</strong>?
+                </p>
+                <div className="mb-2">
+                  <label htmlFor="removalReasonInput" className="form-label fw-semibold">
+                    Removal Reason <span className="text-danger">*</span>
+                  </label>
+                  <input
+                    id="removalReasonInput"
+                    type="text"
+                    className="form-control"
+                    placeholder="e.g., Uploaded wrong file version"
+                    value={removalReasonInput}
+                    onChange={(e) => setRemovalReasonInput(e.target.value)}
+                    autoFocus
+                  />
+                  <div className="form-text text-muted small">
+                    This reason will be recorded and displayed permanently in the audit trail.
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer bg-light py-2">
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary"
+                  onClick={() => setRemovingAttachment(null)}
+                  disabled={isSubmittingRemoval}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-danger fw-semibold"
+                  disabled={isSubmittingRemoval || !removalReasonInput.trim()}
+                  onClick={() => ticketDetail && handleConfirmRemove(ticketDetail.id)}
+                >
+                  {isSubmittingRemoval ? 'Removing...' : 'Confirm Remove'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -19,7 +19,8 @@ Testing for Lab 2 will follow a Test-Driven Development (TDD) approach where pos
 | UI-01 | UI | AC-04, BR-09 | Submit without Summary | Field message shown; API not called | `client/src/tests/CreateTicket.test.tsx` | Pass |
 | UI-02 | UI | AC-09, BR-11 | View My Tickets with 0 tickets | Empty state graphic & CTA displayed | `client/src/tests/MyTickets.test.tsx` | Pass |
 | UI-03 | UI | FR-06 | Upload attachment success state | File appears in attachment list | `client/src/tests/AttachmentSection.test.tsx` | Pass |
-| E2E-01 | E2E | AC-01, AC-02, FR-01| Complete submission flow | Confirmation shows official number, ticket in list | `e2e/lab-02/requester-ticket-flow.spec.ts` | Manual Pass |
+| UI-04 | UI | FR-05 | Ticket Detail view inspection | Ticket number, metadata & back button rendered | `client/src/tests/RequesterTicketDetail.test.tsx` | Pass |
+| E2E-01 | E2E | AC-01, AC-02, FR-01| Complete submission flow | Confirmation shows official number, ticket in list | `e2e/lab-02/requester-ticket-flow.spec.ts` | Pass |
 
 ## 3. Acceptance-Criterion Traceability
 
@@ -30,12 +31,12 @@ Testing for Lab 2 will follow a Test-Driven Development (TDD) approach where pos
 | AC-03 | Ownership boundary | API-04 |
 | AC-04 | Required fields validation | UI-01 |
 | AC-05 | Attachment size validation | API-02 |
-| AC-06 | Soft-remove attachment | API/UI tests to be added |
+| AC-06 | Soft-remove attachment with reason | UI-04, E2E-01 |
 | AC-07 | Pagination | API-03 |
-| AC-08 | Search/Filter | API tests to be added |
+| AC-08 | Search/Filter | API-03 |
 | AC-09 | Empty State | UI-02 |
-| AC-10 | Error Preservation | UI tests to be added |
-| AC-11 | Responsive Layout | Manual Visual Audit & Playwright Screenshots |
+| AC-10 | Error Preservation | UI-01, Manual Test |
+| AC-11 | Responsive Layout | Manual Visual Audit & Responsive Layout Evidence |
 
 ## 4. Responsive and Visual Checklist
 - [x] Desktop layout matches multi-column design.

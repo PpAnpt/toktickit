@@ -9,6 +9,15 @@ node_modules/
 dist/
 build/
 
+# Uploaded ticket attachments (Lab 2)
+uploads/*
+server/uploads/*
+!**/uploads/.gitkeep
+
+# Logs & Test Coverage
+*.log
+coverage/
+
 # IDE & OS files
 .vscode/
 .idea/
