@@ -1,0 +1,27 @@
+{
+  "name": "toktickit",
+  "version": "1.0.0",
+  "description": "TokTickIT is a full-stack IT Service Desk application designed to streamline internal technical support and incident management. This repository contains the **Lab 2: Requester Ticketing MVP**, featuring a responsive **Zen Green** interface, an Express REST API backend, and a PostgreSQL database managed with Prisma ORM.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test:e2e": "playwright test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PpAnpt/toktickit.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/PpAnpt/toktickit/issues"
+  },
+  "homepage": "https://github.com/PpAnpt/toktickit#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.63.0"
+  }
+}
