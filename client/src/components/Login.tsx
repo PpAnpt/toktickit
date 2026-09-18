@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { login, UserProfile } from '../api';
+import { login, type UserProfile } from '../api';
 
 interface LoginProps {
   onLoginSuccess: (user: UserProfile) => void;

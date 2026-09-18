@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
 import { Login } from './components/Login';
 import { ChangePassword } from './components/ChangePassword';
-import { getMe, logout as apiLogout, UserProfile, getAuthToken } from './api';
+import { getMe, logout as apiLogout, type UserProfile, getAuthToken } from './api';
 
 interface Requester {
   id: number;
@@ -103,14 +103,6 @@ function App() {
     setApiError('');
     setFormErrors({});
     window.history.pushState(null, '', '/');
-  };
-
-  const getAuthHeaders = (): Record<string, string> => {
-    const token = getAuthToken();
-    const h: Record<string, string> = {};
-    if (token) h['Authorization'] = `Bearer ${token}`;
-    if (currentRequesterId) h['X-Requester-Id'] = String(currentRequesterId);
-    return h;
   };
 
   // Reference Data
