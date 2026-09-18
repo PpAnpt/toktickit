@@ -53,15 +53,19 @@ app.get("/api/related-systems", async (_req: Request, res: Response) => {
   }
 });
 
+import authRoutes from "./routes/auth";
+
+app.use("/api/auth", authRoutes);
+
 // ---------------------------------------------------------------------------
 // Lab 2 Issue 2 — Requesters list (Active only)
 // ---------------------------------------------------------------------------
 app.get("/api/requesters", async (_req: Request, res: Response) => {
   try {
-    const requesters = await getPrisma().requesterUser.findMany({
-      where: { isActive: true },
+    const requesters = await getPrisma().user.findMany({
+      where: { role: 'REQUESTER', isActive: true },
       orderBy: { name: 'asc' },
-      select: { id: true, name: true, email: true } // ดึงไปเฉพาะฟิลด์ที่จำเป็นเพื่อความปลอดภัย
+      select: { id: true, name: true, email: true }
     });
     res.status(200).json(requesters);
   } catch (err) {

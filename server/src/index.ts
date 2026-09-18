@@ -6,6 +6,8 @@ import cors from 'cors';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import authRoutes from './routes/auth';
+import { verifyToken } from './utils/auth';
 
 // สร้างโฟลเดอร์ uploads อัตโนมัติถ้ายังไม่มี
 const uploadDir = path.join(__dirname, '../uploads');
@@ -50,6 +52,31 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
+// Helper function to resolve requester identity from JWT token or legacy header
+export function getRequesterId(req: Request): number | null {
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    try {
+      const decoded = verifyToken(authHeader.substring(7));
+      return decoded.id;
+    } catch {
+      return null;
+    }
+  }
+  const requesterIdHeader = req.headers['x-requester-id'];
+  if (requesterIdHeader) {
+    const id = Number(requesterIdHeader);
+    return isNaN(id) ? null : id;
+  }
+  if (req.body && req.body.requesterId) {
+    const id = Number(req.body.requesterId);
+    return isNaN(id) ? null : id;
+  }
+  return null;
+}
+
+app.use('/api/auth', authRoutes);
+
 app.get('/', (req: Request, res: Response) => {
   res.send('TokTickIT API is running');
 });
@@ -85,8 +112,8 @@ app.get('/api/related-systems', async (req: Request, res: Response) => {
 
 app.get('/api/requesters', async (req: Request, res: Response) => {
   try {
-    const requesters = await prisma.requesterUser.findMany({
-      where: { isActive: true },
+    const requesters = await prisma.user.findMany({
+      where: { role: 'REQUESTER', isActive: true },
       orderBy: { name: 'asc' },
       select: { id: true, name: true, email: true },
     });
@@ -101,12 +128,11 @@ app.get('/api/requesters', async (req: Request, res: Response) => {
 // ---------------------------------------------------------------------------
 app.post('/api/tickets', async (req: Request, res: Response) => {
   try {
-    // 1. ตรวจสอบ Requester ID จาก Header (จำลอง Auth)
-    const requesterIdHeader = req.headers['x-requester-id'];
-    const requesterId = requesterIdHeader ? Number(requesterIdHeader) : req.body.requesterId;
+    // 1. ตรวจสอบ Requester ID จาก JWT หรือ Header
+    const requesterId = getRequesterId(req);
 
-    if (!requesterId || isNaN(requesterId)) {
-      return res.status(401).json({ error: 'Missing or invalid X-Requester-Id header' });
+    if (!requesterId) {
+      return res.status(401).json({ error: 'Missing or invalid authentication context' });
     }
 
     const { summary, description, categoryId, relatedSystemId, requestedPriority } = req.body;
@@ -180,8 +206,7 @@ app.post('/api/tickets/:id/attachments', (req: Request, res: Response): void => 
 
     try {
       const ticketId = Number(req.params.id);
-      const requesterIdHeader = req.headers['x-requester-id'];
-      const requesterId = requesterIdHeader ? Number(requesterIdHeader) : undefined;
+      const requesterId = getRequesterId(req);
 
       if (!req.file) {
         return res.status(400).json({ error: 'No file uploaded.' });
@@ -231,11 +256,10 @@ app.post('/api/tickets/:id/attachments', (req: Request, res: Response): void => 
 // ---------------------------------------------------------------------------
 app.get('/api/tickets', async (req: Request, res: Response) => {
   try {
-    const requesterIdHeader = req.headers['x-requester-id'];
-    const requesterId = requesterIdHeader ? Number(requesterIdHeader) : undefined;
+    const requesterId = getRequesterId(req);
 
-    if (!requesterId || isNaN(requesterId)) {
-      return res.status(401).json({ error: 'Missing or invalid X-Requester-Id header' });
+    if (!requesterId) {
+      return res.status(401).json({ error: 'Missing or invalid authentication context' });
     }
 
     const page = Math.max(1, Number(req.query.page) || 1);
@@ -310,11 +334,10 @@ app.get('/api/tickets', async (req: Request, res: Response) => {
 app.get('/api/tickets/:id', async (req: Request, res: Response) => {
   try {
     const ticketId = Number(req.params.id);
-    const requesterIdHeader = req.headers['x-requester-id'];
-    const requesterId = requesterIdHeader ? Number(requesterIdHeader) : undefined;
+    const requesterId = getRequesterId(req);
 
-    if (!requesterId || isNaN(requesterId)) {
-      return res.status(401).json({ error: 'Missing or invalid X-Requester-Id header' });
+    if (!requesterId) {
+      return res.status(401).json({ error: 'Missing or invalid authentication context' });
     }
 
     const ticket = await prisma.ticket.findUnique({
@@ -352,8 +375,7 @@ app.get('/api/tickets/:id/attachments/:attachmentId/download', async (req: Reque
   try {
     const ticketId = Number(req.params.id);
     const attachmentId = Number(req.params.attachmentId);
-    const requesterIdHeader = req.headers['x-requester-id'];
-    const requesterId = requesterIdHeader ? Number(requesterIdHeader) : undefined;
+    const requesterId = getRequesterId(req);
 
     const attachment = await prisma.attachment.findUnique({
       where: { id: attachmentId },
@@ -393,8 +415,7 @@ app.delete('/api/tickets/:id/attachments/:attachmentId', async (req: Request, re
   try {
     const ticketId = Number(req.params.id);
     const attachmentId = Number(req.params.attachmentId);
-    const requesterIdHeader = req.headers['x-requester-id'];
-    const requesterId = requesterIdHeader ? Number(requesterIdHeader) : undefined;
+    const requesterId = getRequesterId(req);
 
     const attachment = await prisma.attachment.findUnique({
       where: { id: attachmentId },
