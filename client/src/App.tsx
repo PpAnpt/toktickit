@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
+import { Login } from './components/Login';
+import { ChangePassword } from './components/ChangePassword';
+import { getMe, logout as apiLogout, UserProfile, getAuthToken } from './api';
 
 interface Requester {
   id: number;
@@ -39,11 +42,76 @@ interface TicketItem {
 
 function App() {
   // Authentication & Navigation
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [requesters, setRequesters] = useState<Requester[]>([]);
   const [currentRequesterId, setCurrentRequesterId] = useState<number | ''>('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentTab, setCurrentTab] = useState<'create' | 'my-tickets'>('create');
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
+
+  // Check existing session on component mount
+  useEffect(() => {
+    const token = getAuthToken();
+    if (token) {
+      getMe()
+        .then(user => {
+          setCurrentUser(user);
+          setCurrentRequesterId(user.id);
+          setIsLoggedIn(true);
+        })
+        .catch(() => {
+          setIsLoggedIn(false);
+          setCurrentUser(null);
+        });
+    }
+  }, []);
+
+  const handleLoginSuccess = (user: UserProfile) => {
+    setCurrentUser(user);
+    setCurrentRequesterId(user.id);
+    setIsLoggedIn(true);
+  };
+
+  const handleSimulatedLogin = (requesterId: number) => {
+    const matched = requesters.find(r => r.id === requesterId);
+    const mockUser: UserProfile = {
+      id: requesterId,
+      email: matched?.email || `user${requesterId}@example.com`,
+      name: matched?.name || `Requester ${requesterId}`,
+      role: 'REQUESTER',
+      mustChangePassword: false,
+    };
+    setCurrentUser(mockUser);
+    setCurrentRequesterId(requesterId);
+    setIsLoggedIn(true);
+  };
+
+  const handleLogout = async () => {
+    await apiLogout();
+    setCurrentUser(null);
+    setIsLoggedIn(false);
+    setCurrentRequesterId('');
+    setSelectedTicketId(null);
+    setTickets([]);
+    setTotalItems(0);
+    setSearch('');
+    setFilterCategory('');
+    setFilterStatus('');
+    setCurrentPage(1);
+    setTicketDetail(null);
+    setSuccessMessage(null);
+    setApiError('');
+    setFormErrors({});
+    window.history.pushState(null, '', '/');
+  };
+
+  const getAuthHeaders = (): Record<string, string> => {
+    const token = getAuthToken();
+    const h: Record<string, string> = {};
+    if (token) h['Authorization'] = `Bearer ${token}`;
+    if (currentRequesterId) h['X-Requester-Id'] = String(currentRequesterId);
+    return h;
+  };
 
   // Reference Data
   const [categories, setCategories] = useState<OptionItem[]>([]);
@@ -375,76 +443,53 @@ function App() {
 
   const activeUser = requesters.find(r => r.id === Number(currentRequesterId));
 
-  // --- 1. หน้า Login เลือก Requester ---
+  // --- 1. หน้า Login ---
   if (!isLoggedIn) {
     return (
-      <div className="container mt-5">
-        <div className="card shadow-sm" style={{ maxWidth: '500px', margin: '0 auto', borderTop: '5px solid #006B3C' }}>
-          <div className="card-header bg-white text-center py-4">
-            <h2 className="h4 mb-0" style={{ color: '#006B3C' }}>TokTickIT Service Desk</h2>
-            <p className="text-muted mt-2 mb-0">Development Requester Selection</p>
-          </div>
-          <div className="card-body p-4">
-            <div className="mb-4">
-              <label htmlFor="requesterSelect" className="form-label fw-bold">Simulate Login As:</label>
-              <select
-                id="requesterSelect"
-                className="form-select form-select-lg"
-                value={currentRequesterId}
-                onChange={(e) => setCurrentRequesterId(Number(e.target.value))}
-              >
-                <option value="" disabled>-- Select a Requester --</option>
-                {requesters.map((req) => (
-                  <option key={req.id} value={req.id}>{req.name} ({req.email})</option>
-                ))}
-              </select>
-            </div>
-            <button
-              className="btn btn-lg w-100 text-white fw-semibold"
-              style={{ backgroundColor: '#006B3C' }}
-              onClick={() => setIsLoggedIn(true)}
-              disabled={currentRequesterId === ''}
-            >
-              Continue to Portal
-            </button>
-          </div>
-        </div>
-      </div>
+      <Login
+        onLoginSuccess={handleLoginSuccess}
+        onSimulatedLogin={handleSimulatedLogin}
+        requesters={requesters}
+      />
     );
   }
 
   // --- 2. หน้า Main Portal หลังล็อกอิน ---
   return (
     <div style={{ backgroundColor: '#F5F7F6', minHeight: '100vh', paddingBottom: '40px' }}>
+      {currentUser?.mustChangePassword && (
+        <ChangePassword
+          onPasswordChanged={() => {
+            setCurrentUser(prev => prev ? { ...prev, mustChangePassword: false } : null);
+          }}
+          userEmail={currentUser.email}
+        />
+      )}
+
       {/* Zen Green Navigation Bar */}
       <nav className="navbar navbar-expand-lg navbar-light shadow-sm">
         <div className="container">
           <span className="navbar-brand fw-bold fs-4">TokTickIT</span>
           <div className="d-flex align-items-center">
             <div className="text-dark me-3 text-end d-none d-sm-block">
-              <div className="fw-semibold">{activeUser?.name}</div>
-              <small className="text-muted">{activeUser?.email}</small>
+              <div className="fw-semibold">
+                {currentUser?.name || activeUser?.name}
+                <span className="badge rounded-pill ms-2" style={{
+                  backgroundColor: (currentUser?.role || 'REQUESTER') === 'ADMINISTRATOR' ? '#F3E8FF' : (currentUser?.role || 'REQUESTER') === 'IT_STAFF' ? '#EAF6EF' : '#E6FFFA',
+                  color: (currentUser?.role || 'REQUESTER') === 'ADMINISTRATOR' ? '#6B21A8' : (currentUser?.role || 'REQUESTER') === 'IT_STAFF' ? '#006B3C' : '#047481',
+                  border: '1px solid currentColor',
+                  fontSize: '0.75rem'
+                }}>
+                  {currentUser?.role || 'REQUESTER'}
+                </span>
+              </div>
+              <small className="text-muted">{currentUser?.email || activeUser?.email}</small>
             </div>
             <button
-              className="btn btn-outline-success btn-sm fw-bold"
-              onClick={() => {
-                setIsLoggedIn(false);
-                setCurrentRequesterId('');
-                setSelectedTicketId(null);
-                setTickets([]);
-                setTotalItems(0);
-                setSearch('');
-                setFilterCategory('');
-                setFilterStatus('');
-                setCurrentPage(1);
-                setTicketDetail(null);
-                setSuccessMessage(null);
-                setApiError('');
-                setFormErrors({});
-                window.history.pushState(null, '', '/');
-              }}
+              className="btn btn-outline-danger btn-sm fw-bold"
+              onClick={handleLogout}
             >
-              Switch User
+              Logout
             </button>
           </div>
         </div>
