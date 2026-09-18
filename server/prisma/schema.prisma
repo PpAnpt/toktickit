@@ -21,19 +21,48 @@ model Category {
   tickets Ticket[]
 }
 
+enum UserRole {
+  REQUESTER
+  IT_STAFF
+  ADMINISTRATOR
+}
+
 enum TicketStatus {
   New
   Open
-  Pending
+  InProgress          @map("In Progress")
+  WaitingForRequester @map("Waiting for Requester")
   Resolved
   Closed
+  Reopened
+  Cancelled
 }
 
 enum TicketPriority {
   LOW
   MEDIUM
   HIGH
+  URGENT
 }
+
+model User {
+  id                 Int       @id @default(autoincrement())
+  name               String
+  email              String    @unique
+  passwordHash       String
+  role               UserRole  @default(REQUESTER)
+  isActive           Boolean   @default(true)
+  mustChangePassword Boolean   @default(false)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  // ความสัมพันธ์
+  tickets            Ticket[]         @relation("RequesterTickets")
+  assignedTickets    Ticket[]         @relation("StaffAssignedTickets")
+  comments           PublicComment[]
+  internalNotes      InternalNote[]
+}
+
 
 model RelatedSystem {
   id        Int      @id @default(autoincrement())
@@ -43,38 +72,36 @@ model RelatedSystem {
   tickets Ticket[] // ความสัมพันธ์ 1-to-many: 1 ระบบ มีได้หลาย Ticket
 }
 
-model RequesterUser {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String   @unique
-  isActive  Boolean  @default(true) // สำหรับแยกว่าใครเป็น Active/Inactive
-  createdAt DateTime @default(now())
-
-  tickets Ticket[] // ความสัมพันธ์ 1-to-many: 1 ผู้ใช้ มีได้หลาย Ticket
-}
-
 model Ticket {
-  id                Int            @id @default(autoincrement())
-  ticketNumber      String         @unique
-  summary           String
-  description       String
-  status            TicketStatus   @default(New)
-  requestedPriority TicketPriority @default(MEDIUM)
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
+  id                  Int            @id @default(autoincrement())
+  ticketNumber        String         @unique
+  summary             String
+  description         String
+  status              TicketStatus   @default(New)
+  requestedPriority   TicketPriority @default(MEDIUM)
+  itPriority          TicketPriority?
+  indicatedResolvedAt DateTime?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
 
-  // Foreign Keys (ตัวเชื่อมโยง)
-  requesterId Int
-  requester   RequesterUser @relation(fields: [requesterId], references: [id])
+  // Foreign Keys
+  requesterId         Int
+  requester           User           @relation("RequesterTickets", fields: [requesterId], references: [id])
 
-  categoryId Int
-  category   Category @relation(fields: [categoryId], references: [id])
+  ownerId             Int?
+  owner               User?          @relation("StaffAssignedTickets", fields: [ownerId], references: [id])
 
-  relatedSystemId Int
-  relatedSystem   RelatedSystem @relation(fields: [relatedSystemId], references: [id])
+  categoryId          Int
+  category            Category       @relation(fields: [categoryId], references: [id])
 
-  attachments Attachment[] // 1 ตั๋ว มีไฟล์แนบได้หลายไฟล์
+  relatedSystemId     Int
+  relatedSystem       RelatedSystem  @relation(fields: [relatedSystemId], references: [id])
+
+  attachments         Attachment[]
+  comments            PublicComment[]
+  internalNotes       InternalNote[]
 }
+
 
 model Attachment {
   id               Int      @id @default(autoincrement())
@@ -89,3 +116,28 @@ model Attachment {
   ticketId Int
   ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
 }
+
+model PublicComment {
+  id        Int      @id @default(autoincrement())
+  content   String
+  createdAt DateTime @default(now())
+
+  ticketId  Int
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  authorId  Int
+  author    User     @relation(fields: [authorId], references: [id])
+}
+
+model InternalNote {
+  id        Int      @id @default(autoincrement())
+  content   String
+  createdAt DateTime @default(now())
+
+  ticketId  Int
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  authorId  Int
+  author    User     @relation(fields: [authorId], references: [id])
+}
+
