@@ -499,6 +499,15 @@ function App() {
       <div className="container mt-4">
         {/* Navigation Tabs */}
         <div className="d-flex border-bottom mb-4" style={{ borderColor: '#0B7A46' }}>
+          {(currentUser?.role === 'IT_STAFF' || currentUser?.role === 'ADMINISTRATOR') && (
+            <button
+              className={`btn btn-link text-decoration-none pb-2 px-3 fw-bold ${currentTab === 'staff-queue' && selectedTicketId === null ? 'border-bottom border-3' : 'text-secondary'}`}
+              style={{ color: currentTab === 'staff-queue' && selectedTicketId === null ? '#006B3C' : '#6c757d', borderColor: '#006B3C', borderRadius: 0 }}
+              onClick={() => { setCurrentTab('staff-queue'); setSelectedTicketId(null); }}
+            >
+              Ticket Queue
+            </button>
+          )}
           <button
             className={`btn btn-link text-decoration-none pb-2 px-3 fw-bold ${currentTab === 'create' && selectedTicketId === null ? 'border-bottom border-3' : 'text-secondary'}`}
             style={{ color: currentTab === 'create' && selectedTicketId === null ? '#006B3C' : '#6c757d', borderColor: '#006B3C', borderRadius: 0 }}
@@ -507,8 +516,8 @@ function App() {
             Create Ticket
           </button>
           <button
-            className={`btn btn-link text-decoration-none pb-2 px-3 fw-bold ${currentTab === 'my-tickets' || selectedTicketId !== null ? 'border-bottom border-3' : 'text-secondary'}`}
-            style={{ color: currentTab === 'my-tickets' || selectedTicketId !== null ? '#006B3C' : '#6c757d', borderColor: '#006B3C', borderRadius: 0 }}
+            className={`btn btn-link text-decoration-none pb-2 px-3 fw-bold ${currentTab === 'my-tickets' || (selectedTicketId !== null && currentTab !== 'staff-queue') ? 'border-bottom border-3' : 'text-secondary'}`}
+            style={{ color: currentTab === 'my-tickets' || (selectedTicketId !== null && currentTab !== 'staff-queue') ? '#006B3C' : '#6c757d', borderColor: '#006B3C', borderRadius: 0 }}
             onClick={() => { setCurrentTab('my-tickets'); setSelectedTicketId(null); }}
           >
             My Tickets {totalItems > 0 && <span className="badge rounded-pill ms-1" style={{ backgroundColor: '#0B7A46' }}>{totalItems}</span>}
@@ -836,6 +845,16 @@ function App() {
               </div>
             )}
           </div>
+        )}
+
+        {/* TAB 3: STAFF TICKET QUEUE */}
+        {currentTab === 'staff-queue' && selectedTicketId === null && currentUser && (
+          <StaffTicketQueue
+            currentUser={currentUser}
+            onSelectTicket={(ticketId) => {
+              setSelectedTicketId(ticketId);
+            }}
+          />
         )}
 
         {/* VIEW: TICKET DETAIL VIEW */}

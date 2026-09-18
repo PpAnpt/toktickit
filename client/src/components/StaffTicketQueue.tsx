@@ -438,3 +438,5 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
     </div>
   );
 };
+
+export default StaffTicketQueue;
