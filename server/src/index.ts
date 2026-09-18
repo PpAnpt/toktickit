@@ -206,8 +206,7 @@ app.post('/api/tickets/:id/attachments', (req: Request, res: Response): void => 
 
     try {
       const ticketId = Number(req.params.id);
-      const requesterIdHeader = req.headers['x-requester-id'];
-      const requesterId = requesterIdHeader ? Number(requesterIdHeader) : undefined;
+      const requesterId = getRequesterId(req);
 
       if (!req.file) {
         return res.status(400).json({ error: 'No file uploaded.' });
@@ -257,11 +256,10 @@ app.post('/api/tickets/:id/attachments', (req: Request, res: Response): void => 
 // ---------------------------------------------------------------------------
 app.get('/api/tickets', async (req: Request, res: Response) => {
   try {
-    const requesterIdHeader = req.headers['x-requester-id'];
-    const requesterId = requesterIdHeader ? Number(requesterIdHeader) : undefined;
+    const requesterId = getRequesterId(req);
 
-    if (!requesterId || isNaN(requesterId)) {
-      return res.status(401).json({ error: 'Missing or invalid X-Requester-Id header' });
+    if (!requesterId) {
+      return res.status(401).json({ error: 'Missing or invalid authentication context' });
     }
 
     const page = Math.max(1, Number(req.query.page) || 1);
@@ -336,11 +334,10 @@ app.get('/api/tickets', async (req: Request, res: Response) => {
 app.get('/api/tickets/:id', async (req: Request, res: Response) => {
   try {
     const ticketId = Number(req.params.id);
-    const requesterIdHeader = req.headers['x-requester-id'];
-    const requesterId = requesterIdHeader ? Number(requesterIdHeader) : undefined;
+    const requesterId = getRequesterId(req);
 
-    if (!requesterId || isNaN(requesterId)) {
-      return res.status(401).json({ error: 'Missing or invalid X-Requester-Id header' });
+    if (!requesterId) {
+      return res.status(401).json({ error: 'Missing or invalid authentication context' });
     }
 
     const ticket = await prisma.ticket.findUnique({
@@ -378,8 +375,7 @@ app.get('/api/tickets/:id/attachments/:attachmentId/download', async (req: Reque
   try {
     const ticketId = Number(req.params.id);
     const attachmentId = Number(req.params.attachmentId);
-    const requesterIdHeader = req.headers['x-requester-id'];
-    const requesterId = requesterIdHeader ? Number(requesterIdHeader) : undefined;
+    const requesterId = getRequesterId(req);
 
     const attachment = await prisma.attachment.findUnique({
       where: { id: attachmentId },
@@ -419,8 +415,7 @@ app.delete('/api/tickets/:id/attachments/:attachmentId', async (req: Request, re
   try {
     const ticketId = Number(req.params.id);
     const attachmentId = Number(req.params.attachmentId);
-    const requesterIdHeader = req.headers['x-requester-id'];
-    const requesterId = requesterIdHeader ? Number(requesterIdHeader) : undefined;
+    const requesterId = getRequesterId(req);
 
     const attachment = await prisma.attachment.findUnique({
       where: { id: attachmentId },
