@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import request from 'supertest';
 import app from '../../src/index';
 
@@ -95,6 +95,19 @@ describe('Lab 3: Authentication APIs', () => {
     });
 
     describe('POST /api/auth/change-password', () => {
+        beforeEach(async () => {
+            const { getPrisma } = await import('../../src/prisma');
+            const { hashPassword } = await import('../../src/utils/auth');
+            const initialPasswordHash = await hashPassword('Initial123!');
+            await getPrisma().user.updateMany({
+                where: { email: 'emily.watson@example.com' },
+                data: {
+                    passwordHash: initialPasswordHash,
+                    mustChangePassword: true
+                }
+            });
+        });
+
         it('API-04 (AC-04): should change password and clear mustChangePassword flag', async () => {
             // Emily Watson is seeded with mustChangePassword: true and initial password 'Initial123!'
             const loginRes = await request(app)
