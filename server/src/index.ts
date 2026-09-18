@@ -7,6 +7,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import authRoutes from './routes/auth';
+import staffRoutes from './routes/staff';
 import { verifyToken } from './utils/auth';
 
 // สร้างโฟลเดอร์ uploads อัตโนมัติถ้ายังไม่มี
