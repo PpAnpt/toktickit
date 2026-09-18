@@ -77,6 +77,7 @@ export function getRequesterId(req: Request): number | null {
 }
 
 app.use('/api/auth', authRoutes);
+app.use('/api/staff', staffRoutes);
 
 app.get('/', (req: Request, res: Response) => {
   res.send('TokTickIT API is running');

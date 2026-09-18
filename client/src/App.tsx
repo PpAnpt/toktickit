@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
 import { Login } from './components/Login';
 import { ChangePassword } from './components/ChangePassword';
+import { StaffTicketQueue } from './components/StaffTicketQueue';
 import { getMe, logout as apiLogout, type UserProfile, getAuthToken } from './api';
 
 interface Requester {
@@ -46,7 +47,7 @@ function App() {
   const [requesters, setRequesters] = useState<Requester[]>([]);
   const [currentRequesterId, setCurrentRequesterId] = useState<number | ''>('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [currentTab, setCurrentTab] = useState<'create' | 'my-tickets'>('create');
+  const [currentTab, setCurrentTab] = useState<'create' | 'my-tickets' | 'staff-queue'>('create');
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
 
   // Check existing session on component mount
@@ -58,6 +59,9 @@ function App() {
           setCurrentUser(user);
           setCurrentRequesterId(user.id);
           setIsLoggedIn(true);
+          if (user.role === 'IT_STAFF' || user.role === 'ADMINISTRATOR') {
+            setCurrentTab('staff-queue');
+          }
         })
         .catch(() => {
           setIsLoggedIn(false);
@@ -70,6 +74,11 @@ function App() {
     setCurrentUser(user);
     setCurrentRequesterId(user.id);
     setIsLoggedIn(true);
+    if (user.role === 'IT_STAFF' || user.role === 'ADMINISTRATOR') {
+      setCurrentTab('staff-queue');
+    } else {
+      setCurrentTab('create');
+    }
   };
 
   const handleSimulatedLogin = (requesterId: number) => {
