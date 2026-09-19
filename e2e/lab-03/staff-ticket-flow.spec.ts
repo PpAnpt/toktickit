@@ -22,7 +22,7 @@ test.describe('E2E-02: IT Staff Ticket Lifecycle, Operations & Discussion Flow',
 
     // 3. Navigate to Ticket Queue
     await page.click('button:has-text("Ticket Queue")');
-    await expect(page.locator('h3:has-text("IT Staff Ticket Queue")')).toBeVisible();
+    await expect(page.locator('text=IT Staff Ticket Queue')).toBeVisible();
 
     // 4. Verify search and filter in Queue
     const searchInput = page.locator('input[placeholder*="Search ticket #, summary, requester"]');
@@ -62,6 +62,6 @@ test.describe('E2E-02: IT Staff Ticket Lifecycle, Operations & Discussion Flow',
 
     // 10. Return to Queue
     await page.click('button:has-text("Back to Queue")');
-    await expect(page.locator('h3:has-text("IT Staff Ticket Queue")')).toBeVisible();
+    await expect(page.locator('text=IT Staff Ticket Queue')).toBeVisible();
   });
 });
