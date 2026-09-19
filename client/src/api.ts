@@ -104,3 +104,94 @@ export async function changePassword(currentPassword: string, newPassword: strin
   }
   return data;
 }
+
+export interface StaffTicket {
+  id: number;
+  ticketNumber: string;
+  summary: string;
+  status: string;
+  requestedPriority: string;
+  itPriority: string;
+  requester: {
+    id: number;
+    name: string;
+    email: string;
+  };
+  owner: {
+    id: number;
+    name: string;
+    email: string;
+  } | null;
+  category?: {
+    id: number;
+    name: string;
+  };
+  relatedSystem?: {
+    id: number;
+    name: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface StaffQueueResponse {
+  tickets: StaffTicket[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
+export interface StaffMember {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+}
+
+export interface StaffQueueParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: string;
+  priority?: string;
+  owner?: string;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
+/**
+ * Fetch staff ticket queue with search, filter, and pagination
+ */
+export async function fetchStaffTickets(params: StaffQueueParams = {}): Promise<StaffQueueResponse> {
+  const query = new URLSearchParams();
+  if (params.page) query.append('page', String(params.page));
+  if (params.limit) query.append('limit', String(params.limit));
+  if (params.search) query.append('search', params.search);
+  if (params.status && params.status !== 'All') query.append('status', params.status);
+  if (params.priority && params.priority !== 'All') query.append('priority', params.priority);
+  if (params.owner && params.owner !== 'All') query.append('owner', params.owner);
+  if (params.sortBy) query.append('sortBy', params.sortBy);
+  if (params.sortOrder) query.append('sortOrder', params.sortOrder);
+
+  const res = await authFetch(`/api/staff/tickets?${query.toString()}`);
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || 'Failed to fetch staff tickets');
+  }
+  return res.json();
+}
+
+/**
+ * Fetch active IT staff and administrators
+ */
+export async function fetchStaffMembers(): Promise<StaffMember[]> {
+  const res = await authFetch('/api/staff/members');
+  if (!res.ok) {
+    throw new Error('Failed to fetch staff members');
+  }
+  return res.json();
+}
+

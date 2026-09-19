@@ -7,6 +7,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import authRoutes from './routes/auth';
+import staffRoutes from './routes/staff';
 import { verifyToken } from './utils/auth';
 
 // สร้างโฟลเดอร์ uploads อัตโนมัติถ้ายังไม่มี
@@ -76,6 +77,7 @@ export function getRequesterId(req: Request): number | null {
 }
 
 app.use('/api/auth', authRoutes);
+app.use('/api/staff', staffRoutes);
 
 app.get('/', (req: Request, res: Response) => {
   res.send('TokTickIT API is running');
