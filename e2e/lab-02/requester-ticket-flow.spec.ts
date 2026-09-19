@@ -19,7 +19,8 @@ test.describe('E2E-01: Full Requester Ticket Submission & Management Flow', () =
     await expect(page.locator('h4')).toContainText('Create New Support Ticket');
     await page.selectOption('select >> nth=0', { index: 1 }); // Category
     await page.selectOption('select >> nth=1', { index: 1 }); // Related System
-    await page.fill('input[placeholder*="summary"]', 'E2E Automated Test Ticket');
+    const ticketSummary = `E2E Automated Test Ticket ${Date.now()}`;
+    await page.fill('input[placeholder*="summary"]', ticketSummary);
     await page.fill('textarea[placeholder*="Detailed description"]', 'E2E ticket description to verify full lifecycle.');
 
     // 4. Submit Ticket
@@ -32,11 +33,11 @@ test.describe('E2E-01: Full Requester Ticket Submission & Management Flow', () =
 
     // 6. Navigate to My Tickets
     await page.click('button:has-text("View in My Tickets")');
-    await expect(page.locator('h5:has-text("E2E Automated Test Ticket")')).toBeVisible();
+    await expect(page.locator(`h5:has-text("${ticketSummary}")`)).toBeVisible();
 
     // 7. Open Ticket Detail
-    await page.click('.ticket-card:has-text("E2E Automated Test Ticket")');
+    await page.click(`.ticket-card:has-text("${ticketSummary}")`);
     await expect(page.locator('h5:has-text("Ticket Details")')).toBeVisible();
-    await expect(page.locator('text=E2E Automated Test Ticket')).toBeVisible();
+    await expect(page.locator(`text=${ticketSummary}`)).toBeVisible();
   });
 });

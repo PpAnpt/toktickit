@@ -78,7 +78,8 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onSimulatedLogin, 
           }}>
             T
           </div>
-          <h2 style={{ color: '#1A2F25', fontWeight: 700, margin: '0 0 0.5rem 0' }}>TokTickIT</h2>
+          <h2 style={{ color: '#1A2F25', fontWeight: 700, margin: '0 0 0.25rem 0' }}>TokTickIT</h2>
+          <h3 style={{ color: '#5C7164', fontSize: '0.95rem', margin: '0 0 0.5rem 0', fontWeight: 600 }}>TokTickIT Service Desk</h3>
           <p style={{ color: '#5C7164', fontSize: '0.9rem', margin: 0 }}>
             Sign in to your account
           </p>
