@@ -76,8 +76,8 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
       ]);
       setTicket(ticketData);
       setStaffMembers(membersData);
-      setComments(commentsData);
-      setInternalNotes(notesData);
+      setComments(commentsData.length > 0 ? commentsData : (ticketData.comments || []));
+      setInternalNotes(notesData.length > 0 ? notesData : (ticketData.internalNotes || []));
       setSelectedOwnerId(ticketData.owner ? String(ticketData.owner.id) : '');
       setSelectedPriority(ticketData.itPriority || ticketData.requestedPriority || 'MEDIUM');
     } catch (err: any) {
