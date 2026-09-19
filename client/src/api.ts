@@ -195,3 +195,175 @@ export async function fetchStaffMembers(): Promise<StaffMember[]> {
   return res.json();
 }
 
+export interface CommentItem {
+  id: number;
+  ticketId: number;
+  content: string;
+  createdAt: string;
+  author: {
+    id: number;
+    name: string;
+    role: string;
+  };
+}
+
+export interface NoteItem {
+  id: number;
+  ticketId: number;
+  content: string;
+  createdAt: string;
+  author: {
+    id: number;
+    name: string;
+    role: string;
+  };
+}
+
+export interface StaffTicketDetail extends StaffTicket {
+  description: string;
+  indicatedResolvedAt?: string | null;
+  attachments?: Array<{
+    id: number;
+    originalFileName: string;
+    storedFileName: string;
+    size: number;
+    mimeType: string;
+    isRemoved: boolean;
+    removalReason?: string;
+    createdAt: string;
+  }>;
+  comments?: CommentItem[];
+  internalNotes?: NoteItem[];
+}
+
+/**
+ * Fetch full staff ticket detail
+ */
+export async function fetchStaffTicketDetail(id: number): Promise<StaffTicketDetail> {
+  const res = await authFetch(`/api/staff/tickets/${id}`);
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || 'Failed to fetch ticket detail');
+  }
+  return res.json();
+}
+
+/**
+ * Claim or reassign ticket owner
+ */
+export async function updateTicketOwner(id: number, ownerId: number | null): Promise<StaffTicketDetail> {
+  const res = await authFetch(`/api/staff/tickets/${id}/owner`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ownerId }),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || 'Failed to update owner');
+  }
+  return res.json();
+}
+
+/**
+ * Update IT Priority
+ */
+export async function updateTicketPriority(id: number, itPriority: string): Promise<StaffTicketDetail> {
+  const res = await authFetch(`/api/staff/tickets/${id}/priority`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ itPriority }),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || 'Failed to update IT priority');
+  }
+  return res.json();
+}
+
+/**
+ * Update Ticket Status following workflow transition
+ */
+export async function updateTicketStatus(id: number, status: string): Promise<StaffTicketDetail> {
+  const res = await authFetch(`/api/staff/tickets/${id}/status`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status }),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || 'Failed to update status');
+  }
+  return res.json();
+}
+
+/**
+ * Fetch Public Comments
+ */
+export async function fetchPublicComments(ticketId: number): Promise<CommentItem[]> {
+  const res = await authFetch(`/api/tickets/${ticketId}/comments`);
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || 'Failed to fetch comments');
+  }
+  return res.json();
+}
+
+/**
+ * Post Public Comment
+ */
+export async function postPublicComment(ticketId: number, content: string): Promise<CommentItem> {
+  const res = await authFetch(`/api/tickets/${ticketId}/comments`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ content }),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || 'Failed to post comment');
+  }
+  return res.json();
+}
+
+/**
+ * Fetch Internal Notes (Staff & Admin only)
+ */
+export async function fetchInternalNotes(ticketId: number): Promise<NoteItem[]> {
+  const res = await authFetch(`/api/tickets/${ticketId}/internal-notes`);
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || 'Failed to fetch internal notes');
+  }
+  return res.json();
+}
+
+/**
+ * Post Internal Note (Staff & Admin only)
+ */
+export async function postInternalNote(ticketId: number, content: string): Promise<NoteItem> {
+  const res = await authFetch(`/api/tickets/${ticketId}/internal-notes`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ content }),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || 'Failed to post internal note');
+  }
+  return res.json();
+}
+
+/**
+ * Requester indicates problem resolved
+ */
+export async function indicateTicketResolved(ticketId: number): Promise<{ message: string; indicatedResolvedAt: string }> {
+  const res = await authFetch(`/api/tickets/${ticketId}/indicate-resolved`, {
+    method: 'POST',
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || 'Failed to indicate resolved');
+  }
+  return res.json();
+}
+
+
