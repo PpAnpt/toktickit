@@ -17,9 +17,12 @@ server/uploads/*
 # Logs & Test Coverage
 *.log
 coverage/
+test-results/
+playwright-report/
 
 # IDE & OS files
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
+
