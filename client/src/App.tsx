@@ -3,7 +3,8 @@ import './App.css';
 import { Login } from './components/Login';
 import { ChangePassword } from './components/ChangePassword';
 import { StaffTicketQueue } from './components/StaffTicketQueue';
-import { getMe, logout as apiLogout, type UserProfile, getAuthToken } from './api';
+import { StaffTicketDetail } from './components/StaffTicketDetail';
+import { getMe, logout as apiLogout, type UserProfile, getAuthToken, indicateTicketResolved } from './api';
 
 interface Requester {
   id: number;
@@ -39,6 +40,7 @@ interface TicketItem {
   category: OptionItem;
   relatedSystem: OptionItem;
   attachments: AttachmentItem[];
+  indicatedResolvedAt?: string | null;
 }
 
 function App() {
@@ -859,173 +861,209 @@ function App() {
 
         {/* VIEW: TICKET DETAIL VIEW */}
         {selectedTicketId !== null && (
-          <div>
-            <button
-              className="btn btn-outline-secondary btn-sm mb-3"
-              onClick={() => {
+          currentUser && (currentUser.role === 'IT_STAFF' || currentUser.role === 'ADMINISTRATOR') ? (
+            <StaffTicketDetail
+              ticketId={selectedTicketId}
+              currentUser={currentUser}
+              onBack={() => {
                 setSelectedTicketId(null);
                 setDetailError('');
                 window.history.pushState(null, '', '/');
               }}
-            >
-              &larr; Back to My Tickets
-            </button>
+              onTicketUpdated={() => {
+                fetchTickets();
+              }}
+            />
+          ) : (
+            <div>
+              <button
+                className="btn btn-outline-secondary btn-sm mb-3"
+                onClick={() => {
+                  setSelectedTicketId(null);
+                  setDetailError('');
+                  window.history.pushState(null, '', '/');
+                }}
+              >
+                &larr; Back to My Tickets
+              </button>
 
-            {isLoadingDetail ? (
-              <div className="text-center py-5">
-                <div className="spinner-border text-success"></div>
-              </div>
-            ) : detailError ? (
-              <div className="card shadow-sm border-0 p-5 text-center bg-white my-3">
-                <div className="fs-1 mb-3">🚫</div>
-                <h4 className="fw-bold text-danger">403 Forbidden / Access Denied</h4>
-                <p className="text-muted fs-6 mb-3">{detailError}</p>
-                <div className="alert alert-danger d-inline-block px-4 py-2 small mb-4">
-                  Security Boundary Enforced: You are not authorized to view this ticket (Ticket belongs to another requester).
+              {isLoadingDetail ? (
+                <div className="text-center py-5">
+                  <div className="spinner-border text-success"></div>
                 </div>
-                <div>
-                  <button
-                    className="btn text-white fw-semibold px-4"
-                    style={{ backgroundColor: '#006B3C' }}
-                    onClick={() => {
-                      setSelectedTicketId(null);
-                      setDetailError('');
-                      window.history.pushState(null, '', '/');
-                    }}
-                  >
-                    &larr; Back to My Tickets
-                  </button>
-                </div>
-              </div>
-            ) : ticketDetail ? (
-              <div className="card shadow-sm border-0">
-                <div className="card-header py-3 d-flex justify-content-between align-items-center" style={{ backgroundColor: '#EAF6EF', borderLeft: '4px solid #006B3C' }}>
-                  <div className="d-flex align-items-center gap-2">
-                    <span className="badge text-white fs-6" style={{ backgroundColor: '#006B3C' }}>
-                      {ticketDetail.ticketNumber}
-                    </span>
-                    <h5 className="mb-0 fw-bold" style={{ color: '#006B3C' }}>Ticket Details</h5>
+              ) : detailError ? (
+                <div className="card shadow-sm border-0 p-5 text-center bg-white my-3">
+                  <div className="fs-1 mb-3">🚫</div>
+                  <h4 className="fw-bold text-danger">403 Forbidden / Access Denied</h4>
+                  <p className="text-muted fs-6 mb-3">{detailError}</p>
+                  <div className="alert alert-danger d-inline-block px-4 py-2 small mb-4">
+                    Security Boundary Enforced: You are not authorized to view this ticket (Ticket belongs to another requester).
                   </div>
-                  <span className="badge bg-success fs-6">{ticketDetail.status}</span>
+                  <div>
+                    <button
+                      className="btn text-white fw-semibold px-4"
+                      style={{ backgroundColor: '#006B3C' }}
+                      onClick={() => {
+                        setSelectedTicketId(null);
+                        setDetailError('');
+                        window.history.pushState(null, '', '/');
+                      }}
+                    >
+                      &larr; Back to My Tickets
+                    </button>
+                  </div>
                 </div>
-
-                <div className="card-body p-4">
-                  {/* Meta Details Row */}
-                  <div className="row bg-light p-3 rounded mb-4 g-3">
-                    <div className="col-sm-3">
-                      <small className="text-muted d-block">Category</small>
-                      <strong>{ticketDetail.category?.name}</strong>
-                    </div>
-                    <div className="col-sm-3">
-                      <small className="text-muted d-block">Related System</small>
-                      <strong>{ticketDetail.relatedSystem?.name}</strong>
-                    </div>
-                    <div className="col-sm-3">
-                      <small className="text-muted d-block">Priority</small>
-                      <span className={`badge ${ticketDetail.requestedPriority === 'HIGH' ? 'bg-danger' : ticketDetail.requestedPriority === 'MEDIUM' ? 'bg-warning text-dark' : 'bg-secondary'}`}>
-                        {ticketDetail.requestedPriority}
+              ) : ticketDetail ? (
+                <div className="card shadow-sm border-0">
+                  <div className="card-header py-3 d-flex justify-content-between align-items-center" style={{ backgroundColor: '#EAF6EF', borderLeft: '4px solid #006B3C' }}>
+                    <div className="d-flex align-items-center gap-2">
+                      <span className="badge text-white fs-6" style={{ backgroundColor: '#006B3C' }}>
+                        {ticketDetail.ticketNumber}
                       </span>
+                      <h5 className="mb-0 fw-bold" style={{ color: '#006B3C' }}>Ticket Details</h5>
                     </div>
-                    <div className="col-sm-3">
-                      <small className="text-muted d-block">Created Date</small>
-                      <span>{new Date(ticketDetail.createdAt).toLocaleString()}</span>
-                    </div>
-                  </div>
-
-                  {/* Summary & Description */}
-                  <div className="mb-4">
-                    <h5 className="fw-bold">{ticketDetail.summary}</h5>
-                    <div className="p-3 bg-white border rounded" style={{ whiteSpace: 'pre-wrap' }}>
-                      {ticketDetail.description}
-                    </div>
-                  </div>
-
-                  {/* Attachments Section */}
-                  <div className="border-top pt-4">
-                    <h6 className="fw-bold mb-3" style={{ color: '#006B3C' }}>
-                      Attachments ({ticketDetail.attachments.filter(a => !a.isRemoved).length} / 5)
-                    </h6>
-
-                    {ticketDetail.attachments.length === 0 ? (
-                      <p className="text-muted small">No attachments uploaded for this ticket.</p>
-                    ) : (
-                      <ul className="list-group mb-3">
-                        {ticketDetail.attachments.map((att) => (
-                          <li key={att.id} className="list-group-item d-flex justify-content-between align-items-center py-2">
-                            <div>
-                              {att.isRemoved ? (
-                                <div>
-                                  <div>
-                                    <span className="text-muted text-decoration-line-through">
-                                      📄 {att.originalFileName}
-                                    </span>
-                                    <span className="badge bg-secondary ms-2">REMOVED</span>
-                                  </div>
-                                  {att.removalReason && (
-                                    <div className="small text-danger mt-1">
-                                      <strong>Removal Reason:</strong> {att.removalReason}
-                                    </div>
-                                  )}
-                                </div>
-                              ) : (
-                                <span>
-                                  📄 <strong>{att.originalFileName}</strong>{' '}
-                                  <small className="text-muted">({(att.size / 1024).toFixed(1)} KB)</small>
-                                </span>
-                              )}
-                            </div>
-
-                            {!att.isRemoved && (
-                              <div className="d-flex gap-2">
-                                <button
-                                  className="btn btn-sm btn-outline-success"
-                                  onClick={() => handleDownloadAttachment(ticketDetail.id, att.id, att.originalFileName)}
-                                >
-                                  ⬇ Download
-                                </button>
-                                <button
-                                  className="btn btn-sm btn-outline-danger"
-                                  onClick={() => handleOpenRemoveModal(att.id, att.originalFileName)}
-                                >
-                                  🗑 Remove
-                                </button>
-                              </div>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-
-                    {/* Upload More Attachments (if < 5 active) */}
-                    {ticketDetail.attachments.filter(a => !a.isRemoved).length < 5 && (
-                      <div className="card bg-light border-0 p-3 mt-3">
-                        <label className="form-label fw-semibold small mb-1">Add More Attachments</label>
-                        <div className="d-flex gap-2 flex-wrap">
-                          <input
-                            type="file"
-                            className="form-control form-control-sm"
-                            style={{ maxWidth: '300px' }}
-                            accept=".jpg,.jpeg,.png,.webp,.pdf"
-                            onChange={(e) => {
-                              if (e.target.files) setAdditionalFiles(Array.from(e.target.files));
-                            }}
-                          />
+                    <div className="d-flex align-items-center gap-2">
+                      {ticketDetail.indicatedResolvedAt ? (
+                        <span className="badge bg-info text-dark">✓ Indicated Resolved</span>
+                      ) : (
+                        ticketDetail.status !== 'Resolved' && ticketDetail.status !== 'Closed' && (
                           <button
-                            className="btn btn-sm text-white"
-                            style={{ backgroundColor: '#006B3C' }}
-                            disabled={additionalFiles.length === 0 || isUploadingMore}
-                            onClick={() => handleAddMoreAttachments(ticketDetail.id)}
+                            className="btn btn-sm btn-outline-success"
+                            onClick={async () => {
+                              try {
+                                await indicateTicketResolved(ticketDetail.id);
+                                fetchTicketDetail(ticketDetail.id);
+                              } catch (err: any) {
+                                alert(err.message || 'Failed to indicate resolved');
+                              }
+                            }}
                           >
-                            {isUploadingMore ? 'Uploading...' : 'Upload File'}
+                            Mark as Resolved
                           </button>
-                        </div>
+                        )
+                      )}
+                      <span className="badge bg-success fs-6">{ticketDetail.status}</span>
+                    </div>
+                  </div>
+
+                  <div className="card-body p-4">
+                    {/* Meta Details Row */}
+                    <div className="row bg-light p-3 rounded mb-4 g-3">
+                      <div className="col-sm-3">
+                        <small className="text-muted d-block">Category</small>
+                        <strong>{ticketDetail.category?.name}</strong>
                       </div>
-                    )}
+                      <div className="col-sm-3">
+                        <small className="text-muted d-block">Related System</small>
+                        <strong>{ticketDetail.relatedSystem?.name}</strong>
+                      </div>
+                      <div className="col-sm-3">
+                        <small className="text-muted d-block">Priority</small>
+                        <span className={`badge ${ticketDetail.requestedPriority === 'HIGH' ? 'bg-danger' : ticketDetail.requestedPriority === 'MEDIUM' ? 'bg-warning text-dark' : 'bg-secondary'}`}>
+                          {ticketDetail.requestedPriority}
+                        </span>
+                      </div>
+                      <div className="col-sm-3">
+                        <small className="text-muted d-block">Created Date</small>
+                        <span>{new Date(ticketDetail.createdAt).toLocaleString()}</span>
+                      </div>
+                    </div>
+
+                    {/* Summary & Description */}
+                    <div className="mb-4">
+                      <h5 className="fw-bold">{ticketDetail.summary}</h5>
+                      <div className="p-3 bg-white border rounded" style={{ whiteSpace: 'pre-wrap' }}>
+                        {ticketDetail.description}
+                      </div>
+                    </div>
+
+                    {/* Attachments Section */}
+                    <div className="border-top pt-4">
+                      <h6 className="fw-bold mb-3" style={{ color: '#006B3C' }}>
+                        Attachments ({ticketDetail.attachments.filter(a => !a.isRemoved).length} / 5)
+                      </h6>
+
+                      {ticketDetail.attachments.length === 0 ? (
+                        <p className="text-muted small">No attachments uploaded for this ticket.</p>
+                      ) : (
+                        <ul className="list-group mb-3">
+                          {ticketDetail.attachments.map((att) => (
+                            <li key={att.id} className="list-group-item d-flex justify-content-between align-items-center py-2">
+                              <div>
+                                {att.isRemoved ? (
+                                  <div>
+                                    <div>
+                                      <span className="text-muted text-decoration-line-through">
+                                        📄 {att.originalFileName}
+                                      </span>
+                                      <span className="badge bg-secondary ms-2">REMOVED</span>
+                                    </div>
+                                    {att.removalReason && (
+                                      <div className="small text-danger mt-1">
+                                        <strong>Removal Reason:</strong> {att.removalReason}
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <span>
+                                    📄 <strong>{att.originalFileName}</strong>{' '}
+                                    <small className="text-muted">({(att.size / 1024).toFixed(1)} KB)</small>
+                                  </span>
+                                )}
+                              </div>
+
+                              {!att.isRemoved && (
+                                <div className="d-flex gap-2">
+                                  <button
+                                    className="btn btn-sm btn-outline-success"
+                                    onClick={() => handleDownloadAttachment(ticketDetail.id, att.id, att.originalFileName)}
+                                  >
+                                    ⬇ Download
+                                  </button>
+                                  <button
+                                    className="btn btn-sm btn-outline-danger"
+                                    onClick={() => handleOpenRemoveModal(att.id, att.originalFileName)}
+                                  >
+                                    🗑 Remove
+                                  </button>
+                                </div>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+
+                      {/* Upload More Attachments (if < 5 active) */}
+                      {ticketDetail.attachments.filter(a => !a.isRemoved).length < 5 && (
+                        <div className="card bg-light border-0 p-3 mt-3">
+                          <label className="form-label fw-semibold small mb-1">Add More Attachments</label>
+                          <div className="d-flex gap-2 flex-wrap">
+                            <input
+                              type="file"
+                              className="form-control form-control-sm"
+                              style={{ maxWidth: '300px' }}
+                              accept=".jpg,.jpeg,.png,.webp,.pdf"
+                              onChange={(e) => {
+                                if (e.target.files) setAdditionalFiles(Array.from(e.target.files));
+                              }}
+                            />
+                            <button
+                              className="btn btn-sm text-white"
+                              style={{ backgroundColor: '#006B3C' }}
+                              disabled={additionalFiles.length === 0 || isUploadingMore}
+                              onClick={() => handleAddMoreAttachments(ticketDetail.id)}
+                            >
+                              {isUploadingMore ? 'Uploading...' : 'Upload File'}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ) : null}
-          </div>
+              ) : null}
+            </div>
+          )
         )}
       </div>
 

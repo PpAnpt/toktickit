@@ -55,9 +55,11 @@ app.get("/api/related-systems", async (_req: Request, res: Response) => {
 
 import authRoutes from "./routes/auth";
 import staffRoutes from "./routes/staff";
+import ticketInteractionsRoutes from "./routes/ticket-interactions";
 
 app.use("/api/auth", authRoutes);
 app.use("/api/staff", staffRoutes);
+app.use("/api/tickets", ticketInteractionsRoutes);
 
 // ---------------------------------------------------------------------------
 // Lab 2 Issue 2 — Requesters list (Active only)
