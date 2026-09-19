@@ -4,6 +4,7 @@ import { Login } from './components/Login';
 import { ChangePassword } from './components/ChangePassword';
 import { StaffTicketQueue } from './components/StaffTicketQueue';
 import { StaffTicketDetail } from './components/StaffTicketDetail';
+import { UserManagement } from './components/UserManagement';
 import { getMe, logout as apiLogout, type UserProfile, getAuthToken, indicateTicketResolved } from './api';
 
 interface Requester {
@@ -49,7 +50,7 @@ function App() {
   const [requesters, setRequesters] = useState<Requester[]>([]);
   const [currentRequesterId, setCurrentRequesterId] = useState<number | ''>('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [currentTab, setCurrentTab] = useState<'create' | 'my-tickets' | 'staff-queue'>('create');
+  const [currentTab, setCurrentTab] = useState<'create' | 'my-tickets' | 'staff-queue' | 'user-management'>('create');
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
 
   // Check existing session on component mount
@@ -501,6 +502,15 @@ function App() {
       <div className="container mt-4">
         {/* Navigation Tabs */}
         <div className="d-flex border-bottom mb-4" style={{ borderColor: '#0B7A46' }}>
+          {currentUser?.role === 'ADMINISTRATOR' && (
+            <button
+              className={`btn btn-link text-decoration-none pb-2 px-3 fw-bold ${currentTab === 'user-management' && selectedTicketId === null ? 'border-bottom border-3' : 'text-secondary'}`}
+              style={{ color: currentTab === 'user-management' && selectedTicketId === null ? '#006B3C' : '#6c757d', borderColor: '#006B3C', borderRadius: 0 }}
+              onClick={() => { setCurrentTab('user-management'); setSelectedTicketId(null); }}
+            >
+              User Management
+            </button>
+          )}
           {(currentUser?.role === 'IT_STAFF' || currentUser?.role === 'ADMINISTRATOR') && (
             <button
               className={`btn btn-link text-decoration-none pb-2 px-3 fw-bold ${currentTab === 'staff-queue' && selectedTicketId === null ? 'border-bottom border-3' : 'text-secondary'}`}
@@ -518,8 +528,8 @@ function App() {
             Create Ticket
           </button>
           <button
-            className={`btn btn-link text-decoration-none pb-2 px-3 fw-bold ${currentTab === 'my-tickets' || (selectedTicketId !== null && currentTab !== 'staff-queue') ? 'border-bottom border-3' : 'text-secondary'}`}
-            style={{ color: currentTab === 'my-tickets' || (selectedTicketId !== null && currentTab !== 'staff-queue') ? '#006B3C' : '#6c757d', borderColor: '#006B3C', borderRadius: 0 }}
+            className={`btn btn-link text-decoration-none pb-2 px-3 fw-bold ${currentTab === 'my-tickets' || (selectedTicketId !== null && currentTab !== 'staff-queue' && currentTab !== 'user-management') ? 'border-bottom border-3' : 'text-secondary'}`}
+            style={{ color: currentTab === 'my-tickets' || (selectedTicketId !== null && currentTab !== 'staff-queue' && currentTab !== 'user-management') ? '#006B3C' : '#6c757d', borderColor: '#006B3C', borderRadius: 0 }}
             onClick={() => { setCurrentTab('my-tickets'); setSelectedTicketId(null); }}
           >
             My Tickets {totalItems > 0 && <span className="badge rounded-pill ms-1" style={{ backgroundColor: '#0B7A46' }}>{totalItems}</span>}
@@ -857,6 +867,11 @@ function App() {
               setSelectedTicketId(ticketId);
             }}
           />
+        )}
+
+        {/* TAB 4: ADMINISTRATOR USER MANAGEMENT */}
+        {currentTab === 'user-management' && selectedTicketId === null && currentUser?.role === 'ADMINISTRATOR' && (
+          <UserManagement currentUser={currentUser} />
         )}
 
         {/* VIEW: TICKET DETAIL VIEW */}
