@@ -9,6 +9,7 @@ import fs from 'fs';
 import authRoutes from './routes/auth';
 import staffRoutes from './routes/staff';
 import ticketInteractionsRoutes from './routes/ticket-interactions';
+import adminRoutes from './routes/admin';
 import { verifyToken } from './utils/auth';
 
 // สร้างโฟลเดอร์ uploads อัตโนมัติถ้ายังไม่มี
@@ -80,6 +81,7 @@ export function getRequesterId(req: Request): number | null {
 app.use('/api/auth', authRoutes);
 app.use('/api/staff', staffRoutes);
 app.use('/api/tickets', ticketInteractionsRoutes);
+app.use('/api/admin', adminRoutes);
 
 app.get('/', (req: Request, res: Response) => {
   res.send('TokTickIT API is running');
