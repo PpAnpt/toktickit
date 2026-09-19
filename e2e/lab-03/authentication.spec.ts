@@ -54,9 +54,25 @@ test.describe('E2E-01: Authentication & First-Login Password Change Flow', () =>
     await expect(alert).toContainText(/deactivated|inactive/i);
   });
 
-  test('AC-04: Mandatory password change on first login enforcement', async ({ page }) => {
-    // Elena Rostova (or seeded user with mustChangePassword=true)
-    // Note: Emily Watson may have already changed password if run previously, so let's use Elena Rostova if Emily was changed, or check seed
+  test('AC-04: Mandatory password change on first login enforcement', async ({ page, request }) => {
+    // 1. Ensure user has mustChangePassword=true idempotently via admin reset-password API
+    const adminLogin = await request.post('http://localhost:3000/api/auth/login', {
+      data: { email: 'admin@example.com', password: 'Admin123!' },
+    });
+    const { token } = await adminLogin.json();
+
+    const usersRes = await request.get('http://localhost:3000/api/admin/users?search=elena.rostova@example.com', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const users = await usersRes.json();
+    const elena = users[0];
+
+    await request.post(`http://localhost:3000/api/admin/users/${elena.id}/reset-password`, {
+      headers: { Authorization: `Bearer ${token}` },
+      data: { initialPassword: 'Initial123!' },
+    });
+
+    // 2. Log in with initial password
     await page.fill('#email', 'elena.rostova@example.com');
     await page.fill('#password', 'Initial123!');
     await page.click('button[type="submit"]:has-text("Sign In")');

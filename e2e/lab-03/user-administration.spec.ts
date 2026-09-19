@@ -32,7 +32,7 @@ test.describe('E2E-03: Administrator User Administration & Password Reset Lifecy
     await expect(page.locator('h5:has-text("Create New User")')).toBeVisible();
     await page.fill('input[placeholder*="Alex Mercer"]', newStaffName);
     await page.fill('input[placeholder*="alex.mercer@example.com"]', newStaffEmail);
-    await page.selectOption('select >> nth=1', 'IT_STAFF');
+    await page.locator('.modal select').selectOption('IT_STAFF');
     await page.fill('input[placeholder*="At least 6 characters"]', 'InitialPass123!');
     await page.click('button[type="submit"]:has-text("Create Account")');
 
