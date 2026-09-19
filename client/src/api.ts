@@ -116,11 +116,15 @@ export interface StaffTicket {
     id: number;
     name: string;
     email: string;
+    department?: string;
+    jobTitle?: string;
+    contactPhone?: string;
   };
   owner: {
     id: number;
     name: string;
     email: string;
+    role?: string;
   } | null;
   category?: {
     id: number;
