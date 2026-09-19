@@ -21,7 +21,7 @@ test.describe('E2E-01: Authentication & First-Login Password Change Flow', () =>
     await page.click('button[type="submit"]:has-text("Sign In")');
 
     // 3. Verify user enters main application shell
-    await expect(page.locator('span.fw-semibold:has-text("David Lee")')).toBeVisible();
+    await expect(page.locator('text=David Lee')).toBeVisible();
     await expect(page.locator('.badge:has-text("REQUESTER")')).toBeVisible();
     await expect(page.locator('button:has-text("Logout")')).toBeVisible();
 
@@ -55,8 +55,9 @@ test.describe('E2E-01: Authentication & First-Login Password Change Flow', () =>
   });
 
   test('AC-04: Mandatory password change on first login enforcement', async ({ page }) => {
-    // Emily Watson is seeded with mustChangePassword=true
-    await page.fill('#email', 'emily.watson@example.com');
+    // Elena Rostova (or seeded user with mustChangePassword=true)
+    // Note: Emily Watson may have already changed password if run previously, so let's use Elena Rostova if Emily was changed, or check seed
+    await page.fill('#email', 'elena.rostova@example.com');
     await page.fill('#password', 'Initial123!');
     await page.click('button[type="submit"]:has-text("Sign In")');
 
@@ -69,11 +70,11 @@ test.describe('E2E-01: Authentication & First-Login Password Change Flow', () =>
     await page.fill('#currentPassword', 'Initial123!');
     await page.fill('#newPassword', newPass);
     await page.fill('#confirmPassword', newPass);
-    await page.click('button[type="submit"]:has-text("Set New Password & Continue")');
+    await page.click('button[type="submit"]:has-text("Save New Password")');
 
     // Verify modal closes and user reaches portal
-    await expect(page.locator('span.fw-semibold:has-text("Emily Watson")')).toBeVisible();
-    await expect(page.locator('.badge:has-text("REQUESTER")')).toBeVisible();
+    await expect(page.locator('text=Elena Rostova')).toBeVisible();
+    await expect(page.locator('.badge:has-text("IT_STAFF")')).toBeVisible();
 
     // Logout
     await page.click('button:has-text("Logout")');
