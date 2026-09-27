@@ -7,11 +7,6 @@ import { StaffTicketDetail } from './components/StaffTicketDetail';
 import { UserManagement } from './components/UserManagement';
 import { getMe, logout as apiLogout, type UserProfile, getAuthToken, indicateTicketResolved } from './api';
 
-interface Requester {
-  id: number;
-  name: string;
-  email: string;
-}
 
 interface OptionItem {
   id: number;
@@ -47,7 +42,6 @@ interface TicketItem {
 function App() {
   // Authentication & Navigation
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
-  const [requesters, setRequesters] = useState<Requester[]>([]);
   const [currentRequesterId, setCurrentRequesterId] = useState<number | ''>('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentTab, setCurrentTab] = useState<'create' | 'my-tickets' | 'staff-queue' | 'user-management'>('create');
@@ -84,19 +78,6 @@ function App() {
     }
   };
 
-  const handleSimulatedLogin = (requesterId: number) => {
-    const matched = requesters.find(r => r.id === requesterId);
-    const mockUser: UserProfile = {
-      id: requesterId,
-      email: matched?.email || `user${requesterId}@example.com`,
-      name: matched?.name || `Requester ${requesterId}`,
-      role: 'REQUESTER',
-      mustChangePassword: false,
-    };
-    setCurrentUser(mockUser);
-    setCurrentRequesterId(requesterId);
-    setIsLoggedIn(true);
-  };
 
   const handleLogout = async () => {
     await apiLogout();
@@ -158,13 +139,6 @@ function App() {
   const [removalReasonInput, setRemovalReasonInput] = useState('');
   const [isSubmittingRemoval, setIsSubmittingRemoval] = useState(false);
 
-  // 1. ดึง Requesters
-  useEffect(() => {
-    fetch('http://localhost:3000/api/requesters')
-      .then(res => res.json())
-      .then(data => setRequesters(data))
-      .catch(err => console.error('Failed to load requesters:', err));
-  }, []);
 
   // 2. ดึง Categories & Systems เมื่อล็อกอิน
   useEffect(() => {
@@ -445,15 +419,12 @@ function App() {
     }
   };
 
-  const activeUser = requesters.find(r => r.id === Number(currentRequesterId));
 
   // --- 1. หน้า Login ---
   if (!isLoggedIn) {
     return (
       <Login
         onLoginSuccess={handleLoginSuccess}
-        onSimulatedLogin={handleSimulatedLogin}
-        requesters={requesters}
       />
     );
   }
@@ -477,7 +448,7 @@ function App() {
           <div className="d-flex align-items-center">
             <div className="text-dark me-3 text-end d-none d-sm-block">
               <div className="fw-semibold">
-                {currentUser?.name || activeUser?.name}
+                {currentUser?.name}
                 <span className="badge rounded-pill ms-2" style={{
                   backgroundColor: (currentUser?.role || 'REQUESTER') === 'ADMINISTRATOR' ? '#F3E8FF' : (currentUser?.role || 'REQUESTER') === 'IT_STAFF' ? '#EAF6EF' : '#E6FFFA',
                   color: (currentUser?.role || 'REQUESTER') === 'ADMINISTRATOR' ? '#6B21A8' : (currentUser?.role || 'REQUESTER') === 'IT_STAFF' ? '#006B3C' : '#047481',
@@ -487,7 +458,7 @@ function App() {
                   {currentUser?.role || 'REQUESTER'}
                 </span>
               </div>
-              <small className="text-muted">{currentUser?.email || activeUser?.email}</small>
+              <small className="text-muted">{currentUser?.email}</small>
             </div>
             <button
               className="btn btn-outline-danger btn-sm fw-bold"
@@ -566,12 +537,12 @@ function App() {
                       <input
                         type="text"
                         className="form-control bg-light text-muted"
-                        value={activeUser ? `${activeUser.name} (${activeUser.email})` : ''}
+                        value={currentUser ? `${currentUser.name} (${currentUser.email})` : ''}
                         readOnly
                         disabled
                       />
                       <div className="form-text text-muted small">
-                        Populated automatically from the active Development Requester session.
+                        Populated automatically from your authenticated session.
                       </div>
                     </div>
 

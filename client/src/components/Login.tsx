@@ -3,19 +3,13 @@ import { login, type UserProfile } from '../api';
 
 interface LoginProps {
   onLoginSuccess: (user: UserProfile) => void;
-  // Legacy support for Lab 2 test compatibility
-  onSimulatedLogin?: (requesterId: number) => void;
-  requesters?: Array<{ id: number; name: string; email: string }>;
 }
 
-export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onSimulatedLogin, requesters = [] }) => {
+export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
-  // Simulated login state for test compatibility
-  const [simulatedId, setSimulatedId] = useState<number | ''>('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,12 +31,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onSimulatedLogin, 
     }
   };
 
-  const handleSimulatedSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (simulatedId && onSimulatedLogin) {
-      onSimulatedLogin(Number(simulatedId));
-    }
-  };
+
 
   return (
     <div className="login-container" style={{
@@ -183,53 +172,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onSimulatedLogin, 
           </button>
         </form>
 
-        {/* Lab 2 Regression Compatibility: Simulated Requester Section */}
-        {requesters && requesters.length > 0 && onSimulatedLogin && (
-          <div style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px dashed #E2E8F0', opacity: 0.85 }}>
-            <p style={{ fontSize: '0.75rem', color: '#5C7164', marginBottom: '0.5rem', textAlign: 'center' }}>
-              Development Requester Selector (Testing Context)
-            </p>
-            <form onSubmit={handleSimulatedSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <label htmlFor="requesterSelect" style={{ fontSize: '0.8rem', color: '#1A2F25' }}>
-                Simulate Login As:
-              </label>
-              <select
-                id="requesterSelect"
-                value={simulatedId}
-                onChange={(e) => setSimulatedId(Number(e.target.value) || '')}
-                style={{
-                  padding: '0.5rem',
-                  borderRadius: '6px',
-                  border: '1px solid #CBD5E1',
-                  fontSize: '0.85rem'
-                }}
-              >
-                <option value="">-- Choose Test Requester --</option>
-                {requesters.map((req) => (
-                  <option key={req.id} value={req.id}>
-                    {req.name} ({req.email})
-                  </option>
-                ))}
-              </select>
-              <button
-                type="submit"
-                disabled={!simulatedId}
-                style={{
-                  padding: '0.5rem',
-                  backgroundColor: '#EAF6EF',
-                  color: '#006B3C',
-                  border: '1px solid #006B3C',
-                  borderRadius: '6px',
-                  fontWeight: 600,
-                  fontSize: '0.85rem',
-                  cursor: simulatedId ? 'pointer' : 'not-allowed'
-                }}
-              >
-                Continue to Portal
-              </button>
-            </form>
-          </div>
-        )}
+
       </div>
     </div>
   );
