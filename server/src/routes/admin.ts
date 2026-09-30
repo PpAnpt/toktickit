@@ -1,7 +1,7 @@
 import { Router, Response } from 'express';
 import { getPrisma } from '../prisma';
 import { authenticate, requireRole, requirePasswordChanged, AuthenticatedRequest } from '../middlewares/auth';
-import { hashPassword } from '../utils/auth';
+import { hashPassword, validatePasswordPolicy, EMAIL_PATTERN } from '../utils/auth';
 import { UserRole } from '../../generated/prisma/client';
 
 const router = Router();
@@ -75,13 +75,24 @@ router.post('/users', async (req: AuthenticatedRequest, res: Response): Promise<
             return;
         }
 
+        if (!EMAIL_PATTERN.test(email.trim()) || email.trim().length > 254) {
+            res.status(400).json({ error: 'Email address is not valid' });
+            return;
+        }
+
+        if (name.trim().length > 100) {
+            res.status(400).json({ error: 'Name must be at most 100 characters' });
+            return;
+        }
+
         if (!role || !Object.values(UserRole).includes(role as UserRole)) {
             res.status(400).json({ error: 'Valid role is required (REQUESTER, IT_STAFF, ADMINISTRATOR)' });
             return;
         }
 
-        if (!initialPassword || typeof initialPassword !== 'string' || initialPassword.trim().length < 6) {
-            res.status(400).json({ error: 'Initial password must be at least 6 characters' });
+        const passwordError = validatePasswordPolicy(initialPassword, 'Initial password');
+        if (passwordError) {
+            res.status(400).json({ error: passwordError });
             return;
         }
 
@@ -183,12 +194,20 @@ router.patch('/users/:id', async (req: AuthenticatedRequest, res: Response): Pro
                 res.status(400).json({ error: 'Name cannot be empty' });
                 return;
             }
+            if (name.trim().length > 100) {
+                res.status(400).json({ error: 'Name must be at most 100 characters' });
+                return;
+            }
             updateData.name = name.trim();
         }
 
         if (email !== undefined) {
             if (typeof email !== 'string' || !email.trim()) {
                 res.status(400).json({ error: 'Email cannot be empty' });
+                return;
+            }
+            if (!EMAIL_PATTERN.test(email.trim()) || email.trim().length > 254) {
+                res.status(400).json({ error: 'Email address is not valid' });
                 return;
             }
             const normalizedEmail = email.trim().toLowerCase();
@@ -258,8 +277,9 @@ router.post('/users/:id/reset-password', async (req: AuthenticatedRequest, res: 
         }
 
         const { initialPassword } = req.body;
-        if (!initialPassword || typeof initialPassword !== 'string' || initialPassword.trim().length < 6) {
-            res.status(400).json({ error: 'Initial password must be at least 6 characters' });
+        const passwordError = validatePasswordPolicy(initialPassword, 'Initial password');
+        if (passwordError) {
+            res.status(400).json({ error: passwordError });
             return;
         }
 
@@ -279,6 +299,8 @@ router.post('/users/:id/reset-password', async (req: AuthenticatedRequest, res: 
             data: {
                 passwordHash,
                 mustChangePassword: true,
+                // Sign the user out everywhere; they must log in with the new initial password
+                tokenVersion: { increment: 1 },
             },
         });
 

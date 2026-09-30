@@ -1,9 +1,11 @@
 import { Router, Response } from 'express';
 import { getPrisma } from '../prisma';
-import { comparePassword, hashPassword, generateToken } from '../utils/auth';
+import { comparePassword, hashPassword, generateToken, toSafeUser, validatePasswordPolicy } from '../utils/auth';
 import { authenticate, AuthenticatedRequest } from '../middlewares/auth';
 
 const router = Router();
+
+const INVALID_CREDENTIALS = 'Invalid email or password';
 
 /**
  * POST /api/auth/login
@@ -11,9 +13,9 @@ const router = Router();
  */
 router.post('/login', async (req, res): Promise<void> => {
     try {
-        const { email, password } = req.body;
+        const { email, password } = req.body ?? {};
 
-        if (!email || !password) {
+        if (typeof email !== 'string' || typeof password !== 'string' || !email.trim() || !password) {
             res.status(400).json({ error: 'Email and password are required' });
             return;
         }
@@ -24,34 +26,25 @@ router.post('/login', async (req, res): Promise<void> => {
         });
 
         if (!user) {
-            res.status(401).json({ error: 'Invalid email or password' });
+            res.status(401).json({ error: INVALID_CREDENTIALS });
             return;
         }
 
         const isMatch = await comparePassword(password, user.passwordHash);
         if (!isMatch) {
-            res.status(401).json({ error: 'Invalid email or password' });
+            res.status(401).json({ error: INVALID_CREDENTIALS });
             return;
         }
 
+        // Only revealed after a correct password, so account status is not disclosed to guessers
         if (!user.isActive) {
             res.status(401).json({ error: 'Account is deactivated. Please contact an administrator.' });
             return;
         }
 
-        const payload = {
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            role: user.role,
-            mustChangePassword: user.mustChangePassword,
-        };
-
-        const token = generateToken(payload);
-
         res.status(200).json({
-            token,
-            user: payload
+            token: generateToken(user),
+            user: toSafeUser(user),
         });
     } catch (err) {
         console.error('Login error:', err);
@@ -61,67 +54,46 @@ router.post('/login', async (req, res): Promise<void> => {
 
 /**
  * POST /api/auth/logout
- * Terminates session
+ * Revokes every token issued to the user by incrementing their token version
  */
-router.post('/logout', (_req, res): void => {
-    res.status(200).json({ message: 'Logged out successfully' });
+router.post('/logout', authenticate, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    try {
+        await getPrisma().user.update({
+            where: { id: req.user!.id },
+            data: { tokenVersion: { increment: 1 } },
+        });
+        res.status(200).json({ message: 'Logged out successfully' });
+    } catch (err) {
+        console.error('Logout error:', err);
+        res.status(500).json({ error: 'Failed to log out' });
+    }
 });
 
 /**
  * GET /api/auth/me
  * Retrieves current authenticated user profile
  */
-router.get('/me', authenticate, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-    try {
-        if (!req.user) {
-            res.status(401).json({ error: 'Authentication required' });
-            return;
-        }
-
-        const prisma = getPrisma();
-        const user = await prisma.user.findUnique({
-            where: { id: req.user.id },
-            select: {
-                id: true,
-                email: true,
-                name: true,
-                role: true,
-                isActive: true,
-                mustChangePassword: true,
-            }
-        });
-
-        if (!user) {
-            res.status(404).json({ error: 'User not found' });
-            return;
-        }
-
-        res.status(200).json(user);
-    } catch (err) {
-        res.status(500).json({ error: 'Failed to retrieve user profile' });
-    }
+router.get('/me', authenticate, (req: AuthenticatedRequest, res: Response): void => {
+    res.status(200).json(req.user);
 });
 
 /**
  * POST /api/auth/change-password
- * Allows user to change their password (enforces first login change)
+ * Allows user to change their password (enforces first login change).
+ * Older tokens are revoked and a fresh token is returned.
  */
 router.post('/change-password', authenticate, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
-        if (!req.user) {
-            res.status(401).json({ error: 'Authentication required' });
-            return;
-        }
+        const { currentPassword, newPassword } = req.body ?? {};
 
-        const { currentPassword, newPassword } = req.body;
-
-        if (!currentPassword || !newPassword) {
+        if (typeof currentPassword !== 'string' || typeof newPassword !== 'string' || !currentPassword || !newPassword) {
             res.status(400).json({ error: 'Both current password and new password are required' });
             return;
         }
 
-        if (newPassword.length < 8) {
-            res.status(400).json({ error: 'New password must be at least 8 characters long' });
+        const policyError = validatePasswordPolicy(newPassword, 'New password');
+        if (policyError) {
+            res.status(400).json({ error: policyError });
             return;
         }
 
@@ -132,11 +104,11 @@ router.post('/change-password', authenticate, async (req: AuthenticatedRequest, 
 
         const prisma = getPrisma();
         const user = await prisma.user.findUnique({
-            where: { id: req.user.id }
+            where: { id: req.user!.id }
         });
 
         if (!user) {
-            res.status(404).json({ error: 'User not found' });
+            res.status(401).json({ error: 'Authentication required' });
             return;
         }
 
@@ -146,18 +118,20 @@ router.post('/change-password', authenticate, async (req: AuthenticatedRequest, 
             return;
         }
 
-        const newHash = await hashPassword(newPassword);
-        await prisma.user.update({
+        const updated = await prisma.user.update({
             where: { id: user.id },
             data: {
-                passwordHash: newHash,
+                passwordHash: await hashPassword(newPassword),
                 mustChangePassword: false,
+                tokenVersion: { increment: 1 },
             }
         });
 
         res.status(200).json({
             message: 'Password changed successfully',
-            mustChangePassword: false
+            mustChangePassword: false,
+            token: generateToken(updated),
+            user: toSafeUser(updated),
         });
     } catch (err) {
         console.error('Password change error:', err);

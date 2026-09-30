@@ -288,5 +288,81 @@ describe('Lab 3: Administrator User Management & Safety Rules APIs (Issue 5)', (
 
             expect(res.status).toBe(400);
         });
+
+        it('applies the same password policy boundaries as change-password (7 chars rejected, 8 accepted)', async () => {
+            const tooShort = await request(app)
+                .post(`/api/admin/users/${resetTargetUserId}/reset-password`)
+                .set('Authorization', `Bearer ${adminToken}`)
+                .send({ initialPassword: 'Abcdef1' });
+            expect(tooShort.status).toBe(400);
+
+            const noDigit = await request(app)
+                .post(`/api/admin/users/${resetTargetUserId}/reset-password`)
+                .set('Authorization', `Bearer ${adminToken}`)
+                .send({ initialPassword: 'Abcdefgh' });
+            expect(noDigit.status).toBe(400);
+
+            const minimum = await request(app)
+                .post(`/api/admin/users/${resetTargetUserId}/reset-password`)
+                .set('Authorization', `Bearer ${adminToken}`)
+                .send({ initialPassword: 'Abcdef12' });
+            expect(minimum.status).toBe(200);
+        });
+
+        it('revokes the target user\'s existing sessions when a new initial password is set', async () => {
+            await request(app)
+                .post(`/api/admin/users/${resetTargetUserId}/reset-password`)
+                .set('Authorization', `Bearer ${adminToken}`)
+                .send({ initialPassword: 'SessionTest123!' });
+            const login = await request(app)
+                .post('/api/auth/login')
+                .send({ email: resetTargetEmail, password: 'SessionTest123!' });
+            const oldToken = login.body.token;
+
+            await request(app)
+                .post(`/api/admin/users/${resetTargetUserId}/reset-password`)
+                .set('Authorization', `Bearer ${adminToken}`)
+                .send({ initialPassword: 'SessionTest456!' });
+
+            const me = await request(app).get('/api/auth/me').set('Authorization', `Bearer ${oldToken}`);
+            expect(me.status).toBe(401);
+        });
+    });
+
+    describe('Input validation', () => {
+        it('rejects an invalid email address when creating a user', async () => {
+            const res = await request(app)
+                .post('/api/admin/users')
+                .set('Authorization', `Bearer ${adminToken}`)
+                .send({ name: 'Bad Email', email: 'not-an-email', role: 'REQUESTER', initialPassword: 'Password123!' });
+            expect(res.status).toBe(400);
+            expect(res.body.error).toMatch(/email/i);
+        });
+
+        it('rejects an invalid role value', async () => {
+            const res = await request(app)
+                .post('/api/admin/users')
+                .set('Authorization', `Bearer ${adminToken}`)
+                .send({ name: 'Bad Role', email: `bad.role.${Date.now()}@example.com`, role: 'SUPERUSER', initialPassword: 'Password123!' });
+            expect(res.status).toBe(400);
+        });
+
+        it('a deactivated user\'s existing token stops working immediately', async () => {
+            const email = `deactivate.session.${Date.now()}@example.com`;
+            const created = await request(app)
+                .post('/api/admin/users')
+                .set('Authorization', `Bearer ${adminToken}`)
+                .send({ name: 'Session User', email, role: 'REQUESTER', initialPassword: 'Password123!' });
+            const login = await request(app).post('/api/auth/login').send({ email, password: 'Password123!' });
+            expect(login.status).toBe(200);
+
+            await request(app)
+                .patch(`/api/admin/users/${created.body.id}`)
+                .set('Authorization', `Bearer ${adminToken}`)
+                .send({ isActive: false });
+
+            const me = await request(app).get('/api/auth/me').set('Authorization', `Bearer ${login.body.token}`);
+            expect(me.status).toBe(401);
+        });
     });
 });

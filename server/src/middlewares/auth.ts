@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import { verifyToken, TokenPayload } from '../utils/auth';
+import { getPrisma } from '../prisma';
+import { verifyToken, toSafeUser, TokenPayload } from '../utils/auth';
 
 export interface AuthenticatedRequest extends Request {
     user?: TokenPayload;
@@ -7,38 +8,38 @@ export interface AuthenticatedRequest extends Request {
 
 /**
  * Authentication Middleware:
- * Extracts and verifies JWT bearer token from Authorization header.
- * Provides fallback to X-Requester-Id for Lab 2 test backward compatibility.
+ * Verifies the JWT bearer token, then loads the user from the database so that
+ * deactivation, role changes, password changes, and logout take effect immediately.
+ * There is no fallback identity: requests without a valid token receive 401.
  */
-export function authenticate(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
+export async function authenticate(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        res.status(401).json({ error: 'Authentication required' });
+        return;
+    }
 
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-        const token = authHeader.substring(7);
-        try {
-            const decoded = verifyToken(token);
-            req.user = decoded;
-            return next();
-        } catch (err) {
+    let claims: { userId: number; tokenVersion: number };
+    try {
+        claims = verifyToken(authHeader.substring(7));
+    } catch {
+        res.status(401).json({ error: 'Invalid or expired authentication token' });
+        return;
+    }
+
+    try {
+        const user = await getPrisma().user.findUnique({ where: { id: claims.userId } });
+        // Unknown user, deactivated account, or a token issued before logout / password change
+        if (!user || !user.isActive || user.tokenVersion !== claims.tokenVersion) {
             res.status(401).json({ error: 'Invalid or expired authentication token' });
             return;
         }
+        req.user = toSafeUser(user);
+        next();
+    } catch (err) {
+        console.error('Authentication lookup failed:', err);
+        res.status(500).json({ error: 'An unexpected error occurred' });
     }
-
-    // Backward compatibility for Lab 2 tests that provide X-Requester-Id
-    const legacyRequesterId = req.headers['x-requester-id'];
-    if (legacyRequesterId) {
-        req.user = {
-            id: Number(legacyRequesterId),
-            email: `requester${legacyRequesterId}@example.com`,
-            name: `Requester ${legacyRequesterId}`,
-            role: 'REQUESTER',
-            mustChangePassword: false,
-        };
-        return next();
-    }
-
-    res.status(401).json({ error: 'Authentication required' });
 }
 
 /**
@@ -75,3 +76,8 @@ export function requirePasswordChanged(req: AuthenticatedRequest, res: Response,
     }
     next();
 }
+
+/**
+ * Standard guard chain for normal application routes.
+ */
+export const requireAppAccess = [authenticate, requirePasswordChanged];

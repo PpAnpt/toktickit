@@ -227,13 +227,38 @@ describe('Lab 3: Staff Ticket Detail & Operations APIs (Issue 4)', () => {
             expect(res.body.message).toMatch(/indicated problem appears resolved/i);
         });
 
-        it('should reject non-owner requester from indicating resolved with 403 Forbidden', async () => {
+        it('should reject a second indication with 409 Conflict', async () => {
+            const res = await request(app)
+                .post(`/api/tickets/${testTicketId}/indicate-resolved`)
+                .set('Authorization', `Bearer ${requesterToken}`);
+
+            expect(res.status).toBe(409);
+        });
+
+        it('should reject non-owner requester with 404 (existence not revealed)', async () => {
             const res = await request(app)
                 .post(`/api/tickets/${testTicketId}/indicate-resolved`)
                 .set('Authorization', `Bearer ${otherRequesterToken}`);
 
+            expect(res.status).toBe(404);
+        });
+
+        it('should reject IT Staff indicating resolved with 403 (staff resolve through status workflow)', async () => {
+            const res = await request(app)
+                .post(`/api/tickets/${testTicketId}/indicate-resolved`)
+                .set('Authorization', `Bearer ${staffToken}`);
+
             expect(res.status).toBe(403);
-            expect(res.body.error).toMatch(/access denied/i);
+        });
+
+        it('should not change the ticket status when the requester indicates resolution (BR-14)', async () => {
+            const res = await request(app)
+                .get(`/api/staff/tickets/${testTicketId}`)
+                .set('Authorization', `Bearer ${staffToken}`);
+
+            expect(res.status).toBe(200);
+            expect(res.body.status).not.toBe('Resolved');
+            expect(res.body.indicatedResolvedAt).toBeTruthy();
         });
     });
 });
