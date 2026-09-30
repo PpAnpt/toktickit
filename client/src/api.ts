@@ -28,6 +28,10 @@ export function clearAuthToken(): void {
   localStorage.removeItem(TOKEN_KEY);
 }
 
+// Dispatched on window when the server rejects the stored token (expired, logged out elsewhere,
+// account deactivated). App listens for it and returns to the login screen.
+export const SESSION_EXPIRED_EVENT = 'toktickit:session-expired';
+
 /**
  * Perform authenticated fetch request, injecting JWT Bearer token
  */
@@ -40,10 +44,21 @@ export async function authFetch(endpoint: string, options: RequestInit = {}): Pr
   }
 
   const url = endpoint.startsWith('http') ? endpoint : `${API_URL}${endpoint}`;
-  return fetch(url, {
+  const res = await fetch(url, {
     ...options,
     headers,
   });
+
+  if (res.status === 401 && token) {
+    clearAuthToken();
+    window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
+  }
+  return res;
+}
+
+async function readError(res: Response, fallback: string): Promise<Error> {
+  const data = await res.json().catch(() => ({}));
+  return new Error(data.error || fallback);
 }
 
 /**
@@ -89,9 +104,9 @@ export async function getMe(): Promise<UserProfile> {
 }
 
 /**
- * Change user password
+ * Change user password. The server revokes older tokens and returns a fresh one.
  */
-export async function changePassword(currentPassword: string, newPassword: string): Promise<{ message: string; mustChangePassword: boolean }> {
+export async function changePassword(currentPassword: string, newPassword: string): Promise<{ message: string; mustChangePassword: boolean; user?: UserProfile }> {
   const res = await authFetch('/api/auth/change-password', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -102,7 +117,98 @@ export async function changePassword(currentPassword: string, newPassword: strin
   if (!res.ok) {
     throw new Error(data.error || 'Failed to update password');
   }
+  if (data.token) {
+    setAuthToken(data.token);
+  }
   return data;
+}
+
+// ---------------------------------------------------------------------------
+// Requester ticket APIs (Lab 2 functions, now using the authenticated identity)
+// ---------------------------------------------------------------------------
+
+export interface OptionItem {
+  id: number;
+  name: string;
+}
+
+export async function fetchCategories(): Promise<OptionItem[]> {
+  const res = await authFetch('/api/categories');
+  if (!res.ok) throw await readError(res, 'Failed to load categories');
+  return res.json();
+}
+
+export async function fetchRelatedSystems(): Promise<OptionItem[]> {
+  const res = await authFetch('/api/related-systems');
+  if (!res.ok) throw await readError(res, 'Failed to load related systems');
+  return res.json();
+}
+
+export async function fetchMyTickets<T>(params: URLSearchParams): Promise<{ data: T[]; meta: { totalItems: number; totalPages: number; currentPage: number; limit: number } }> {
+  const res = await authFetch(`/api/tickets?${params.toString()}`);
+  if (!res.ok) throw await readError(res, 'Failed to load tickets');
+  return res.json();
+}
+
+export async function fetchMyTicket<T>(id: number): Promise<T> {
+  const res = await authFetch(`/api/tickets/${id}`);
+  if (res.status === 404) {
+    throw new Error('Ticket not found, or you do not have access to it.');
+  }
+  if (!res.ok) throw await readError(res, 'Failed to load ticket details.');
+  return res.json();
+}
+
+export async function createTicket(data: {
+  summary: string;
+  description: string;
+  categoryId: number;
+  relatedSystemId: number;
+  requestedPriority: string;
+}): Promise<{ id: number; ticketNumber: string }> {
+  const res = await authFetch('/api/tickets', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw await readError(res, 'Failed to create ticket.');
+  return res.json();
+}
+
+export async function uploadAttachment(ticketId: number, file: File): Promise<void> {
+  const formData = new FormData();
+  formData.append('file', file);
+  const res = await authFetch(`/api/tickets/${ticketId}/attachments`, {
+    method: 'POST',
+    body: formData,
+  });
+  if (!res.ok) throw await readError(res, `Failed to upload ${file.name}.`);
+}
+
+export async function removeAttachment(ticketId: number, attachmentId: number, reason: string): Promise<void> {
+  const res = await authFetch(`/api/tickets/${ticketId}/attachments/${attachmentId}`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ reason }),
+  });
+  if (!res.ok) throw await readError(res, 'Failed to remove attachment.');
+}
+
+/**
+ * Downloads an attachment with the bearer token and saves it through a temporary object URL.
+ */
+export async function downloadAttachment(ticketId: number, attachmentId: number, fileName: string): Promise<void> {
+  const res = await authFetch(`/api/tickets/${ticketId}/attachments/${attachmentId}/download`);
+  if (!res.ok) throw await readError(res, 'File download failed or the file was removed.');
+  const blob = await res.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(url);
 }
 
 export interface StaffTicket {

@@ -68,7 +68,7 @@ describe('UI-03 (AC-08, AC-14): Staff Ticket Queue Component Tests', () => {
     await waitFor(() => {
       expect(screen.getByText('TKT-2026-000001')).toBeInTheDocument();
       expect(screen.getByText('Laptop display flickering issue')).toBeInTheDocument();
-      expect(screen.getByText('David Lee')).toBeInTheDocument();
+      expect(screen.getByText(/David Lee/)).toBeInTheDocument();
       expect(screen.getAllByText('URGENT').length).toBeGreaterThan(0);
       expect(screen.getAllByText(/Sarah Connor/i).length).toBeGreaterThan(0);
 

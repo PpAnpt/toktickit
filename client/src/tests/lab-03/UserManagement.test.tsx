@@ -125,7 +125,7 @@ describe('UI-05 (AC-17, AC-18, AC-19, AC-20, AC-22): User Management Component T
     fireEvent.change(screen.getByPlaceholderText(/e.g., alex.mercer@example.com/i), {
       target: { value: 'new.emp@example.com' },
     });
-    fireEvent.change(screen.getByPlaceholderText(/At least 6 characters/i), {
+    fireEvent.change(screen.getByPlaceholderText(/8\+ characters/i), {
       target: { value: 'TempPass123!' },
     });
 
@@ -182,7 +182,7 @@ describe('UI-05 (AC-17, AC-18, AC-19, AC-20, AC-22): User Management Component T
       expect(screen.getByRole('heading', { name: /Reset User Password/i })).toBeInTheDocument();
     });
 
-    const passInput = screen.getByPlaceholderText(/At least 6 characters/i);
+    const passInput = screen.getByPlaceholderText(/8\+ characters/i);
     fireEvent.change(passInput, { target: { value: 'NewTempPassword123!' } });
 
     const confirmBtn = screen.getByRole('button', { name: /Confirm Reset Password/i });
