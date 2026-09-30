@@ -59,8 +59,9 @@
     - **Requester**: `My Tickets`, `Create Ticket`
     - **IT Staff**: `Ticket Queue`
     - **Administrator**: `User Management`, `Ticket Queue`
-  - Right-aligned Profile Area: User full name, Role badge, and `Logout` button.
-  - Development Requester Selector: **Completely removed**.
+  - Right-aligned Profile Area: User full name and Role badge (visible on all viewports; email hidden on phones), `Change Password` button, and `Logout` button.
+  - Development Requester Selector: **Completely removed** (no selector, no `X-Requester-Id`, no stored requester id).
+  - Session feedback: after logout the login screen shows "You have been signed out."; if the server rejects the session (expired, revoked, deactivated) it shows "Your session has ended. Please sign in again."
 
 ---
 
@@ -73,11 +74,12 @@
 - Error alerts: Invalid credentials, inactive account warning banner.
 
 ### 4.2 Mandatory Change Password Screen
-- Modal or dedicated view intercepting entry if `mustChangePassword === true`.
+- Full-screen dialog that replaces the application if `mustChangePassword === true`; only a small "Sign out" button remains.
 - Explanatory prompt notifying that the initial password must be updated.
 - Inputs: Current Password, New Password, Confirm New Password.
-- Password criteria checklist (minimum length, confirmation matching).
-- Normal application navigation is hidden until completed.
+- Password rule hint under the field: 8–72 characters, at least one letter and one number; confirmation must match.
+- Normal application navigation is not rendered and no application data is loaded until completed.
+- The same dialog opens from the `Change Password` button for a voluntary change, with a `Cancel` button and a success message afterwards.
 
 ### 4.3 IT Staff Ticket Queue Screen
 - **Header & Stats Bar**: Shows active queue count.
@@ -102,13 +104,20 @@
   - Left Column: Issue details (Summary, Category, Related System, Full Description, Attachments download list).
   - Right Column: Requester info card, Resolution indication notice (if flagged by requester), and Activity / Discussion feed (Public Comments and Internal Notes tabs).
 
-### 4.5 Administrator User Management Screen
+### 4.5 Requester Ticket Detail Screen (Lab 2 view, extended)
+- Header: ticket number, status badge, and `My Problem Appears Resolved` button (hidden once indicated or when Resolved/Closed/Cancelled; replaced by an "indicated" badge with the date).
+- Read-only metadata row, description, and attachments (download, remove with required reason, upload more).
+- **Public Comments** thread: author name, role badge, timestamp, plain-text content, empty state, loading and retry-on-error states, textarea with 2,000-character counter, and "Comment posted." confirmation. Hidden form on Closed/Cancelled tickets. Internal Notes are never shown.
+- Inline success / error alerts instead of browser pop-ups.
+- A ticket that is missing or belongs to another Requester shows "Ticket Unavailable" without revealing whether it exists.
+
+### 4.6 Administrator User Management Screen
 - **Header**: Title "User Management", total active users counter, and "+ Create User" primary action button.
 - **Filter Bar**: Search input (Name or Email), Role filter (`All`, `Requester`, `IT Staff`, `Administrator`).
 - **User Table**:
   - Columns: Full Name, Email Address, Role (with badge), Status (`Active` / `Inactive` badge), Actions.
   - Actions: "Edit" button and "Reset Password" button.
-- **Create User Modal**: Name, Email, Role dropdown (single role), Initial Password input.
+- **Create User Modal**: Name, Email, Role dropdown (single role), Initial Password input (same password rules as Change Password; invalid email and duplicate email shown inside the modal).
 - **Edit User Modal**: Name, Email, Role, and Active/Inactive toggle switch (deactivation alert).
 - **Safety Safeguards**:
   - Deactivate button disabled for current logged-in Administrator account.

@@ -1,316 +1,184 @@
 # Lab 3 API Specification
 
 ## 1. General Principles
-- **Base Path**: All endpoints are prefixed with `/api`.
-- **Authentication**: JWT token issued upon login, transmitted via `Authorization: Bearer <token>` header or `token` cookie.
-- **Role-Based Access Control (RBAC)**: Enforced server-side via middleware. Unauthorized requests return `401 Unauthorized`. Authorized users lacking necessary role privileges return `403 Forbidden`.
-- **Safe Error Responses**: Error messages must not disclose system internals or leak existence of confidential records (e.g., internal notes). Format: `{ "error": "Descriptive message" }`.
-- **Payload Format**: Standard requests/responses use `application/json`. File attachments continue using `multipart/form-data`.
+- **Base Path**: All endpoints are prefixed with `/api`. Unknown `/api` routes return `404 { "error": "Not found" }`.
+- **Payload Format**: JSON (`application/json`). Attachment uploads use `multipart/form-data` with field `file`.
+- **Error Format**: `{ "error": "Human-readable message" }`. Create-ticket validation errors also include `details: { field: message }`. Error messages never include stack traces, SQL, or internal ids of records the caller may not see.
+
+### 1.1 Authentication and Session Decisions
+| Topic | Decision |
+| :--- | :--- |
+| Credential check | Email (case-insensitive, trimmed) + password compared with a bcrypt hash (`bcryptjs`, 10 salt rounds). Plaintext passwords are never stored or returned. |
+| Token | JWT (HS256) returned by login/change-password. Sent as `Authorization: Bearer <token>`. Payload contains only `sub` (user id) and `tv` (token version). |
+| Storage | Client keeps the token in `localStorage` (local lab). No auth cookies are used, so CSRF does not apply; XSS risk is mitigated by rendering all user text as plain text. |
+| Expiry | 8 hours. |
+| Per-request check | The server loads the user on every request. Unknown user, `isActive=false`, or a token version that no longer matches → `401`. Role and `mustChangePassword` always come from the database. |
+| Logout / revocation | `tokenVersion` is incremented on logout, password change, and admin password reset, which invalidates all earlier tokens for that user. |
+| Secret | `JWT_SECRET` from `server/.env` (never committed). If unset, a random per-process secret is generated. |
+| Password policy | 8–72 characters, at least one letter and one number, no leading/trailing spaces; applies to change-password and admin-set initial passwords. |
+
+### 1.2 Status Codes
+| Code | Meaning |
+| :--- | :--- |
+| `200` / `201` / `204` | Success / created / success with no body |
+| `400` | Invalid input or invalid state transition |
+| `401` | Missing, invalid, expired, or revoked token; wrong credentials; deactivated account at login |
+| `403` | Authenticated but the role is not permitted, or `mustChangePassword=true` (body includes `"mustChangePassword": true`) |
+| `404` | Record does not exist **or** belongs to another Requester (same response, so existence is not revealed) |
+| `409` | Conflict (duplicate email, resolution already indicated) |
+| `500` | Unexpected error with a generic message |
 
 ---
 
 ## 2. Authentication APIs
 
 ### 2.1 User Login
-- **Endpoint**: `POST /api/auth/login`
-- **Access**: Public
-- **Request Body**:
-  ```json
-  {
-    "email": "sarah.connor@example.com",
-    "password": "Password123!"
-  }
-  ```
-- **Success (200 OK)**:
+- **Endpoint**: `POST /api/auth/login` — **Access**: Public
+- **Request**: `{ "email": "sarah.connor@example.com", "password": "Password123!" }`
+- **Success (200)**:
   ```json
   {
     "token": "eyJhbGciOiJIUzI1NiIsIn...",
-    "user": {
-      "id": 5,
-      "email": "sarah.connor@example.com",
-      "name": "Sarah Connor",
-      "role": "IT_STAFF",
-      "mustChangePassword": false
-    }
+    "user": { "id": 5, "email": "sarah.connor@example.com", "name": "Sarah Connor", "role": "IT_STAFF", "mustChangePassword": false }
   }
   ```
-- **Failure Responses**:
-  - `400 Bad Request`: Missing email or password.
-  - `401 Unauthorized`: Invalid credentials or inactive account (`Account is inactive or credentials invalid`).
+- **Failures**: `400` email/password missing or not strings · `401 "Invalid email or password"` (wrong password or unknown email — identical) · `401 "Account is deactivated. Please contact an administrator."` (only after a correct password).
 
 ### 2.2 User Logout
-- **Endpoint**: `POST /api/auth/logout`
-- **Access**: Authenticated users
-- **Success (200 OK)**:
-  ```json
-  {
-    "message": "Logged out successfully"
-  }
-  ```
+- **Endpoint**: `POST /api/auth/logout` — **Access**: Authenticated
+- **Success (200)**: `{ "message": "Logged out successfully" }`. All of the user's previously issued tokens now return `401`.
+- **Failure**: `401` without a valid token.
 
-### 2.3 Get Current Authenticated User Profile
-- **Endpoint**: `GET /api/auth/me`
-- **Access**: Authenticated users
-- **Success (200 OK)**:
-  ```json
-  {
-    "id": 5,
-    "email": "sarah.connor@example.com",
-    "name": "Sarah Connor",
-    "role": "IT_STAFF",
-    "mustChangePassword": false
-  }
-  ```
-- **Failure (401 Unauthorized)**: Invalid or expired token.
+### 2.3 Current User
+- **Endpoint**: `GET /api/auth/me` — **Access**: Authenticated (allowed while `mustChangePassword=true`)
+- **Success (200)**: `{ "id": 5, "email": "...", "name": "Sarah Connor", "role": "IT_STAFF", "mustChangePassword": false }`
+- **Failure**: `401`.
 
-### 2.4 Mandatory Password Change
-- **Endpoint**: `POST /api/auth/change-password`
-- **Access**: Authenticated users
-- **Request Body**:
+### 2.4 Change Password (mandatory first login or voluntary)
+- **Endpoint**: `POST /api/auth/change-password` — **Access**: Authenticated (allowed while `mustChangePassword=true`)
+- **Request**: `{ "currentPassword": "Initial123!", "newPassword": "NewSecurePassword456!" }`
+- **Success (200)**:
   ```json
-  {
-    "currentPassword": "InitialPassword123!",
-    "newPassword": "NewSecurePassword456!"
-  }
+  { "message": "Password changed successfully", "mustChangePassword": false, "token": "<fresh JWT>", "user": { "...": "safe user" } }
   ```
-- **Success (200 OK)**:
-  ```json
-  {
-    "message": "Password changed successfully",
-    "mustChangePassword": false
-  }
-  ```
-- **Failure (400 Bad Request)**: New password does not meet requirements or equals current password.
+  The old token is revoked; the client must store the returned token.
+- **Failures**: `400` missing fields, policy violation, same as current password, or current password incorrect · `401`.
 
 ---
 
 ## 3. IT Staff Ticket Queue & Operations APIs
+All `/api/staff/*` endpoints require an active `IT_STAFF` or `ADMINISTRATOR` who has completed any mandatory password change (`401` / `403` otherwise).
 
-### 3.1 Get Ticket Queue (List)
+### 3.1 Ticket Queue
 - **Endpoint**: `GET /api/staff/tickets`
-- **Access**: `IT_STAFF`, `ADMINISTRATOR`
 - **Query Parameters**:
-  - `page` (integer, default: 1)
-  - `limit` (integer, default: 10, max: 50)
-  - `search` (string: matches ticketNumber, summary, requester name)
-  - `status` (string: `New`, `Open`, `In Progress`, etc.)
-  - `priority` (string: `LOW`, `MEDIUM`, `HIGH`, `URGENT`)
-  - `owner` (string/integer: `unassigned`, or specific staff user ID)
-  - `sortBy` (string: `createdAt`, `updatedAt`, `priority`, default: `createdAt`)
-  - `sortOrder` (string: `asc`, `desc`, default: `desc`)
-- **Success (200 OK)**:
+  | Parameter | Allowed values | Default | Invalid value |
+  | :--- | :--- | :--- | :--- |
+  | `page` | integer ≥ 1 | 1 | clamped to 1 |
+  | `limit` | integer 1–50 | 10 | clamped |
+  | `search` | text ≤ 100 chars; matches ticket number, summary, requester name (case-insensitive) | — | `400` if longer |
+  | `status` | `All`, `New`, `Open`, `In Progress`, `Waiting for Requester`, `Resolved`, `Closed`, `Reopened`, `Cancelled` | All | `400` |
+  | `priority` | `All`, `LOW`, `MEDIUM`, `HIGH`, `URGENT` (matches effective IT Priority) | All | `400` |
+  | `owner` | `All`, `unassigned`, `me`, or a numeric user id | All | `400` |
+  | `sortBy` | `createdAt`, `updatedAt`, `ticketNumber`, `status`, `priority` | `createdAt` | `400` |
+  | `sortOrder` | `asc`, `desc` | `desc` | `400` |
+  Filters combine with AND. Ties are broken by id for stable pagination.
+- **Success (200)**:
   ```json
   {
     "tickets": [
       {
-        "id": 12,
-        "ticketNumber": "TKT-2026-000012",
-        "summary": "VPN connection dropping repeatedly",
-        "status": "In Progress",
-        "requestedPriority": "HIGH",
-        "itPriority": "URGENT",
-        "requester": { "id": 1, "name": "David Lee", "email": "david@example.com" },
-        "owner": { "id": 5, "name": "Sarah Connor" },
-        "createdAt": "2026-09-12T10:30:00.000Z",
-        "updatedAt": "2026-09-13T08:00:00.000Z"
+        "id": 12, "ticketNumber": "TKT-2026-000012", "summary": "VPN connection dropping repeatedly",
+        "status": "In Progress", "requestedPriority": "HIGH", "itPriority": "URGENT",
+        "requester": { "id": 1, "name": "David Lee", "email": "david.lee@example.com" },
+        "owner": { "id": 5, "name": "Sarah Connor", "email": "sarah.connor@example.com" },
+        "category": { "id": 1, "name": "Network" }, "relatedSystem": { "id": 3, "name": "VPN" },
+        "createdAt": "2026-09-12T10:30:00.000Z", "updatedAt": "2026-09-13T08:00:00.000Z"
       }
     ],
-    "pagination": {
-      "total": 45,
-      "page": 1,
-      "limit": 10,
-      "totalPages": 5
-    }
+    "pagination": { "total": 45, "page": 1, "limit": 10, "totalPages": 5 }
   }
   ```
-- **Failure (403 Forbidden)**: User role is `REQUESTER`.
 
-### 3.2 Get Staff Ticket Detail
+### 3.2 Staff Members (for owner filter and assignment)
+- **Endpoint**: `GET /api/staff/members` → `200 [{ "id", "name", "email", "role" }]` (active IT Staff and Administrators).
+
+### 3.3 Staff Ticket Detail
 - **Endpoint**: `GET /api/staff/tickets/:id`
-- **Access**: `IT_STAFF`, `ADMINISTRATOR`
-- **Success (200 OK)**: Full ticket object including category, related system, owner, attachments, and resolution indication status.
-- **Failure**: `403 Forbidden` (Requester access), `404 Not Found`.
+- **Success (200)**: Ticket with requester, owner, category, related system, active attachments, public comments, internal notes, and `indicatedResolvedAt`.
+- **Failures**: `400` non-numeric id · `404` not found.
 
-### 3.3 Claim / Assign Ticket Owner
-- **Endpoint**: `PATCH /api/staff/tickets/:id/owner`
-- **Access**: `IT_STAFF`, `ADMINISTRATOR`
-- **Request Body**:
-  ```json
-  {
-    "ownerId": 5
-  }
-  ```
-  *(Pass `ownerId: null` to unassign)*
-- **Success (200 OK)**: Returns updated ticket with new owner metadata.
-- **Failure**: `400 Bad Request` (Owner is not an active staff/admin), `404 Not Found`.
+### 3.4 Claim / Assign / Unassign Owner
+- **Endpoint**: `PATCH /api/staff/tickets/:id/owner` — **Request**: `{ "ownerId": 5 }` (`null` to unassign)
+- **Rules**: Owner must be an active IT Staff or Administrator. Assigning an owner to a `New` ticket moves it to `Open`.
+- **Failures**: `400` invalid or ineligible owner · `404`.
 
-### 3.4 Update IT Priority
-- **Endpoint**: `PATCH /api/staff/tickets/:id/priority`
-- **Access**: `IT_STAFF`, `ADMINISTRATOR`
-- **Request Body**:
-  ```json
-  {
-    "itPriority": "URGENT"
-  }
-  ```
-- **Success (200 OK)**: Updated ticket reflecting `itPriority`. Requested Priority is left unchanged.
+### 3.5 Update IT Priority
+- **Endpoint**: `PATCH /api/staff/tickets/:id/priority` — **Request**: `{ "itPriority": "URGENT" }`
+- **Success (200)**: Updated ticket; `requestedPriority` is unchanged. **Failures**: `400` invalid value · `404`.
 
-### 3.5 Update Ticket Status (Workflow Transition)
-- **Endpoint**: `PATCH /api/staff/tickets/:id/status`
-- **Access**: `IT_STAFF`, `ADMINISTRATOR`
-- **Request Body**:
-  ```json
-  {
-    "status": "In Progress"
-  }
-  ```
-- **Success (200 OK)**: Returns ticket with updated status.
-- **Failure (400 Bad Request)**: Invalid status transition according to BR-13 transition matrix.
+### 3.6 Update Status (workflow transition)
+- **Endpoint**: `PATCH /api/staff/tickets/:id/status` — **Request**: `{ "status": "In Progress" }`
+- **Rules**: Only transitions in the specification's Status Transition Matrix (BR-13) are allowed. `Closed` and `Cancelled` are terminal.
+- **Failures**: `400 "Invalid status transition from 'New' to 'Closed'"` · `404`.
 
 ---
 
-## 4. Comments & Internal Notes APIs
+## 4. Comments, Internal Notes & Resolution Indication
+Requires authentication and a completed password change. For Requesters, tickets they do not own return `404` (BR-25).
 
-### 4.1 Get Public Comments
-- **Endpoint**: `GET /api/tickets/:id/comments`
-- **Access**: Requester (owner only), `IT_STAFF`, `ADMINISTRATOR`
-- **Success (200 OK)**:
-  ```json
-  [
-    {
-      "id": 1,
-      "ticketId": 12,
-      "author": { "id": 5, "name": "Sarah Connor", "role": "IT_STAFF" },
-      "content": "We are looking into the VPN gateway logs now.",
-      "createdAt": "2026-09-13T08:15:00.000Z"
-    }
-  ]
-  ```
+### 4.1 Public Comments
+- `GET /api/tickets/:id/comments` → `200 [ { "id", "ticketId", "content", "createdAt", "author": { "id", "name", "role" } } ]` (oldest first)
+- `POST /api/tickets/:id/comments` with `{ "content": "The issue is still occurring." }` → `201` created comment
+- **Access**: owning Requester, IT Staff, Administrator.
+- **Failures**: `400` empty/whitespace or over 2,000 characters · `404` missing or not the Requester's ticket.
+- Author and time are set by the server. Comments are append-only (no edit or delete). Content is stored as plain text.
 
-### 4.2 Post Public Comment
-- **Endpoint**: `POST /api/tickets/:id/comments`
-- **Access**: Requester (owner only), `IT_STAFF`, `ADMINISTRATOR`
-- **Request Body**:
-  ```json
-  {
-    "content": "The issue is still occurring after restarting router."
-  }
-  ```
-- **Success (201 Created)**: Returns created comment object.
-- **Failure**: `400 Bad Request` (Empty or whitespace content), `403 Forbidden` (Requester doesn't own ticket).
+### 4.2 Internal Notes
+- `GET /api/tickets/:id/internal-notes` → `200` list · `POST /api/tickets/:id/internal-notes` with `{ "content": "..." }` → `201`
+- **Access**: IT Staff and Administrator only. Requesters receive `403` with no note data.
+- Same validation and append-only rules as comments.
 
-### 4.3 Get Internal Notes
-- **Endpoint**: `GET /api/tickets/:id/internal-notes`
-- **Access**: `IT_STAFF`, `ADMINISTRATOR` only
-- **Success (200 OK)**: Returns list of internal operational notes.
-- **Failure (403 Forbidden)**: Requester access strictly rejected without disclosing note existence.
-
-### 4.4 Post Internal Note
-- **Endpoint**: `POST /api/tickets/:id/internal-notes`
-- **Access**: `IT_STAFF`, `ADMINISTRATOR` only
-- **Request Body**:
-  ```json
-  {
-    "content": "Switch port 12 on Rack 3 had 15% packet loss. Resetting port."
-  }
-  ```
-- **Success (201 Created)**: Returns created internal note object.
-
-### 4.5 Requester Indicate Problem Resolved
-- **Endpoint**: `POST /api/tickets/:id/indicate-resolved`
-- **Access**: Requester (ticket owner only)
-- **Success (200 OK)**:
-  ```json
-  {
-    "message": "Indicated problem appears resolved",
-    "indicatedResolvedAt": "2026-09-13T08:45:00.000Z"
-  }
-  ```
+### 4.3 Requester Indicates Problem Resolved
+- **Endpoint**: `POST /api/tickets/:id/indicate-resolved` — **Access**: owning Requester only (`403` for IT Staff/Administrator)
+- **Success (200)**: `{ "message": "Indicated problem appears resolved", "indicatedResolvedAt": "2026-09-13T08:45:00.000Z" }`. The ticket status does not change.
+- **Failures**: `400` ticket already Resolved/Closed/Cancelled · `404` not the Requester's ticket · `409` already indicated.
 
 ---
 
 ## 5. Administrator User Management APIs
+All `/api/admin/*` endpoints require an active `ADMINISTRATOR` (`403` for other roles).
 
 ### 5.1 List Users
-- **Endpoint**: `GET /api/admin/users`
-- **Access**: `ADMINISTRATOR` only
-- **Query Parameters**:
-  - `search` (string: matches name or email)
-  - `role` (string: `REQUESTER`, `IT_STAFF`, `ADMINISTRATOR`)
-- **Success (200 OK)**:
-  ```json
-  [
-    {
-      "id": 1,
-      "name": "David Lee",
-      "email": "david.lee@example.com",
-      "role": "REQUESTER",
-      "isActive": true,
-      "mustChangePassword": false,
-      "createdAt": "2026-09-01T00:00:00.000Z"
-    }
-  ]
-  ```
-- **Failure (403 Forbidden)**: Non-admin users.
+- `GET /api/admin/users?search=<name or email>&role=<REQUESTER|IT_STAFF|ADMINISTRATOR|All>`
+- **Success (200)**: `[ { "id", "name", "email", "role", "isActive", "mustChangePassword", "createdAt", "updatedAt" } ]` ordered by id. No pagination (not required in Lab 3).
 
 ### 5.2 Create User
-- **Endpoint**: `POST /api/admin/users`
-- **Access**: `ADMINISTRATOR` only
-- **Request Body**:
-  ```json
-  {
-    "name": "Alex Mercer",
-    "email": "alex.mercer@example.com",
-    "role": "IT_STAFF",
-    "initialPassword": "InitialPass123!"
-  }
-  ```
-- **Success (201 Created)**: Returns created user object (password excluded).
-- **Failure**:
-  - `400 Bad Request`: Missing fields or invalid role.
-  - `409 Conflict`: Email already exists.
+- `POST /api/admin/users` with `{ "name": "Alex Mercer", "email": "alex.mercer@example.com", "role": "IT_STAFF", "initialPassword": "InitialPass123!" }`
+- **Success (201)**: created user (no password data); `isActive=true`, `mustChangePassword=true`.
+- **Failures**: `400` missing name, name > 100 chars, invalid email, invalid role, or password policy violation · `409` email already exists (case-insensitive).
 
-### 5.3 Edit User Information
-- **Endpoint**: `PATCH /api/admin/users/:id`
-- **Access**: `ADMINISTRATOR` only
-- **Request Body**:
-  ```json
-  {
-    "name": "Alex Mercer Updated",
-    "email": "alex.new@example.com",
-    "role": "IT_STAFF",
-    "isActive": false
-  }
-  ```
-- **Success (200 OK)**: Returns updated user record.
-- **Failure**:
-  - `400 Bad Request`: Validation error, admin deactivating own account (BR-19), or removing last active admin (BR-20).
-  - `404 Not Found`: User not found.
+### 5.3 Edit User
+- `PATCH /api/admin/users/:id` with any of `{ "name", "email", "role", "isActive" }`
+- **Failures**: `400` validation error, deactivating own account (BR-19), or deactivating/demoting the last active Administrator (BR-20) · `404` · `409` duplicate email.
+- Deactivation and role changes apply to the user's next request.
 
-### 5.4 Reset User Initial Password
-- **Endpoint**: `POST /api/admin/users/:id/reset-password`
-- **Access**: `ADMINISTRATOR` only
-- **Request Body**:
-  ```json
-  {
-    "initialPassword": "NewTempPassword123!"
-  }
-  ```
-- **Success (200 OK)**:
-  ```json
-  {
-    "message": "Initial password set. User must change password at next login."
-  }
-  ```
+### 5.4 Set New Initial Password
+- `POST /api/admin/users/:id/reset-password` with `{ "initialPassword": "NewTempPassword123!" }`
+- **Success (200)**: `{ "message": "Initial password set. User must change password at next login." }`. Sets `mustChangePassword=true` and revokes the user's existing tokens.
+- **Failures**: `400` password policy violation · `404`.
 
 ---
 
-## 6. Backward Compatible Requester APIs (Lab 2 Continuation)
-All Lab 2 endpoints continue to function with authentication identity enforced server-side:
-- `GET /api/categories`: Returns categories.
-- `GET /api/related-systems`: Returns related systems.
-- `POST /api/tickets`: Creates ticket; sets `requesterId = req.user.id`.
-- `GET /api/tickets`: Retrieves owned tickets for `req.user.id`.
-- `GET /api/tickets/:id`: Retrieves ticket if `ticket.requesterId === req.user.id`.
-- `POST /api/tickets/:id/attachments`: Upload attachment (ownership enforced).
-- `DELETE /api/tickets/:id/attachments/:attachmentId`: Soft-remove attachment with reason.
+## 6. Requester Ticket APIs (Lab 2 continuation)
+All require an authenticated `REQUESTER` with a completed password change, unless noted. The requester is always taken from the token; `X-Requester-Id` headers and `requesterId` body fields are ignored.
+
+| Endpoint | Purpose | Notes |
+| :--- | :--- | :--- |
+| `GET /api/categories`, `GET /api/related-systems` | Reference data for the form | Public, read-only |
+| `POST /api/tickets` | Create ticket | `400` with `details` for missing/invalid summary (≤200), description (≤5000), category, related system, or priority. `itPriority` starts equal to `requestedPriority`. |
+| `GET /api/tickets` | My Tickets (search, `categoryId`, `status`, `sortBy`, `sortOrder`, `page`, `limit`) | Only the caller's tickets. `400` for invalid `status`, `categoryId`, or `sortBy`. |
+| `GET /api/tickets/:id` | Ticket detail | `404` if missing or owned by someone else |
+| `POST /api/tickets/:id/attachments` | Upload (JPG, PNG, WEBP, PDF; ≤ 5 MB; ≤ 5 active per ticket) | Owner only; `404` otherwise |
+| `DELETE /api/tickets/:id/attachments/:attachmentId` | Soft-remove with `{ "reason": "..." }` (required, ≤ 500 chars) | Owner only → `204` |
+| `GET /api/tickets/:id/attachments/:attachmentId/download` | Download | Owner, IT Staff, or Administrator; removed files → `404` |
