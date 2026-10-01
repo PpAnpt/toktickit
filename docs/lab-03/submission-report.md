@@ -10,40 +10,43 @@
 # Answer Part 1: Git Use with Engineering Workflow (10 Points)
 
 ### 1.1 ลำดับการทำงานและการแตกกิ่ง Feature Branches
-การพัฒนาใน Lab 3 ยึดตามกระบวนการวิศวกรรมซอฟต์แวร์มาตรฐาน โดยแบ่งงานออกเป็น 6 GitHub Issues ย่อย และสร้าง Feature Branch แยกตามแต่ละ Issue เพื่อพัฒนาและทดสอบอย่างเป็นระบบ ก่อนที่จะรวมเข้าสู่ `lab3-staging` และปล่อยขึ้น `main`:
+การพัฒนาใน Lab 3 ยึดตามกระบวนการวิศวกรรมซอฟต์แวร์มาตรฐาน โดยแบ่งงานเป็น Feature Branch แยกตามงานแต่ละส่วน พัฒนาและทดสอบอย่างเป็นระบบ ก่อนรวมเข้าสู่ `lab3-staging` และปล่อยขึ้น `main` หลังตรวจทานงานเทียบกับ Labsheet พบช่องโหว่และข้อกำหนดที่ยังขาด จึงเพิ่ม Feature Branch ที่ 7 สำหรับแก้ไขก่อนปล่อยขึ้น `main`:
 
 ```text
 main
   └── lab3-staging
-        ├── feature/lab3-1-specs-contract        (PR #18 - Merged)
-        ├── feature/lab3-2-auth-foundation       (PR #19 - Merged)
-        ├── feature/lab3-3-staff-queue           (PR #20 - Merged)
-        ├── feature/lab3-4-staff-operation       (PR #21 - Merged)
-        ├── feature/lab3-5-admin-user-management (PR #22 - Merged)
-        └── feature/lab3-6-e2e-regression-release(PR #23 - Merged)
+        ├── feature/lab3-1-specs-contract           (PR #18 - Merged)
+        ├── feature/lab3-2-auth-foundation          (PR #19 - Merged)
+        ├── feature/lab3-3-staff-queue              (PR #20 - Merged)
+        ├── feature/lab3-4-staff-operation          (PR #21 - Merged)
+        ├── feature/lab3-5-admin-user-management    (PR #22 - Merged)
+        ├── feature/lab3-6-e2e-regression-release   (PR #23 - Merged)
+        └── feature/lab3-7-security-hardening       (PR #[เลข PR] - [สถานะ])
 ```
 
 **หลักฐาน Git Commit History (`git log --oneline`):**
 ```text
+542cf4c docs(lab-03): specification v1.1, API/UI specs, traceability, and README
+6be2b0e test(e2e): rewrite requester regression, harden flows, add screenshot capture
+f324e09 feat(client): authenticated requester flow, public comments, and responsive fixes
+215969d fix(server): enforce authenticated identity, real logout, and Lab 3 migration
+c0f6fff fix(client): remove legacy dev requester selector from login page
+7f49cf4 Merge pull request #23 from PpAnpt/feature/lab3-6-e2e-regression-release
 6af3169 docs(lab-03): add peer review template and pull request tracking matrix
 32e1073 docs(lab-03): add AI reflection documentation and update README with Lab 3 milestone
-9098474 fix(e2e): enhance backwards compatibility and dynamic ticket summaries
-a839c25 chore: add playwright test results to gitignore
-66b1da8 feat: add e2e test suites for authentication and user administration flows
-be48775 test: add E2E test and test results for lab-03 staff ticket flow
-9f3f080 test: add last-run.json test results
-b6e9c11 test: add E2E tests for authentication and password change flow
-e844aa0 test: add Playwright configuration and end-to-end test suites for authentication, staff workflows, and user administration
 b4d20f9 Merge pull request #22 from PpAnpt/feature/lab3-5-admin-user-management
 5b23c4c Merge pull request #21 from PpAnpt/feature/lab3-4-staff-operation
-77140e8 fix(client): add optional metadata fields to StaffTicket type interface
+28f2653 Merge pull request #20 from PpAnpt/feature/lab3-3-staff-queue
+83d7a92 Merge pull request #19 from PpAnpt/feature/lab3-2-auth-foundation
+2d35451 Merge pull request #18 from PpAnpt/feature/1-specs-contract
 ```
+> ⚠️ หลัง merge PR ของ branch ที่ 7 และ `lab3-staging` → `main` แล้ว ให้รัน `git log --oneline --graph -20` บน `main` แล้ววางผลจริงแทนบล็อกด้านบน
 
 ---
 
 > 📷 **[แทรกรูปภาพที่ 1.1: ภาพหน้าจอ GitHub Network Graph หรือ Commit History]**  
 > * **สิ่งที่ต้องแคป/ใส่รูป**: หน้าจอแสดงประวัติ Git Commits / Network Graph บน GitHub หรือจาก Terminal ที่แสดงการแตกกิ่งและการผสานโค้ดเข้า staging และ main  
-> * **คำบรรยายภาพ**: แสดงประวัติการคอมมิตและการผสานสาขา (Merge) จาก 6 Feature Branches เข้าสู่ `lab3-staging` และ `main` อย่างเป็นลำดับขั้นตอน  
+> * **คำบรรยายภาพ**: แสดงประวัติการคอมมิตและการผสานสาขา (Merge) จาก 7 Feature Branches เข้าสู่ `lab3-staging` และ `main` อย่างเป็นลำดับขั้นตอน  
 
 ---
 
@@ -55,11 +58,14 @@ b4d20f9 Merge pull request #22 from PpAnpt/feature/lab3-5-admin-user-management
 - **Issue #4**: Staff Operations, State Machine Transitions & Two-Tier Notes (`Done`)
 - **Issue #5**: Minimalist Administrator User Management & Safety Guards (`Done`)
 - **Issue #6**: E2E Test Automation, Zero Regression & Release Packaging (`Done`)
+- **Issue #[เลข]**: Security Hardening, Lab 3 Migration & Requester Public Comments (`Done`)
+
+> ⚠️ ตรวจเลข Issue ให้ตรงกับบน GitHub ก่อนส่ง: บน GitHub เลข #1–#23 เป็น Pull Request ทั้งหมด หาก Kanban ใช้ draft item ให้กด "Convert to issue" ก่อน แล้วแก้เลขในรายการด้านบนให้ตรง
 
 ---
 
 > 📷 **[แทรกรูปภาพที่ 1.2: ภาพหน้าจอ GitHub Projects Kanban Board]**  
-> * **สิ่งที่ต้องแคป/ใส่รูป**: หน้าจอ GitHub Projects แสดงคอลัมน์ Done ที่มี Issue #1 ถึง Issue #6 อยู่ครบทั้งหมด  
+> * **สิ่งที่ต้องแคป/ใส่รูป**: หน้าจอ GitHub Projects แสดงคอลัมน์ Done ที่มี Issue ทั้ง 7 รายการอยู่ครบทั้งหมด  
 > * **คำบรรยายภาพ**: กระดานติดตามงาน GitHub Project แสดง Issue ทั้งหมดอยู่ในสถานะ Done สำเร็จครบ 100%  
 
 ---
@@ -77,11 +83,14 @@ b4d20f9 Merge pull request #22 from PpAnpt/feature/lab3-5-admin-user-management
 | **PR #21** (`Feature/lab3 4 staff operation`) | Status transition matrix และ RBAC comments/notes ทำงานถูกต้องตาม spec ครับ | ขอบคุณครับ ควบคุม State Machine ห้ามข้ามขั้นตอน และแยก Internal Notes อย่างปลอดภัย | Merge เข้าสู่ `lab3-staging` |
 | **PR #22** (`Feature/lab3 5 admin user management`) | ถูกต้องครบถ้วน เทสผ่านหมดครับ | ขอบคุณครับ มีระบบ Self-deactivation guard และ Sole Admin guard ครบถ้วน | Merge เข้าสู่ `lab3-staging` |
 | **PR #23** (`Feature/lab3 6 e2e regression release`) | ครบถ้วนเรียบร้อยดีครับ | ขอบคุณครับ 110 automated tests + 7 E2E tests ผ่าน 100% Zero Regression | Merge เข้าสู่ `lab3-staging` |
+| **PR #[เลข PR]** (`Lab 3 hardening: authenticated identity, real logout, migration, requester comments`) | [คัดลอกความเห็นจริงของ reviewer จาก PR] | [คัดลอกคำตอบจริงของคุณจาก PR] | [Merge เข้าสู่ `lab3-staging`] |
 
 
 ### 1.4 โครงสร้างโปรเจกต์และสุขอนามัยของ Repository
-- `.gitignore` ป้องกันไม่ให้ไฟล์สภาวะแวดล้อม (.env), dependencies (`node_modules/`), และผลการทดสอบ (`coverage/`, `test-results/`) หลุดขึ้น Repository
-- `README.md` อัปเดตครอบคลุมภาพรวมของ Lab 3, สถาปัตยกรรมระบบ, คู่มือการรัน Container และคำสั่งทดสอบครบถ้วน
+- `.gitignore` ป้องกันไม่ให้ไฟล์สภาวะแวดล้อม (`.env`), dependencies (`node_modules/`), ไฟล์แนบที่อัปโหลด (`uploads/`) และผลการทดสอบ (`coverage/`, `test-results/`, `playwright-report/`) หลุดขึ้น Repository
+- ไม่มี secret ในโค้ด: `JWT_SECRET` อ่านจาก `server/.env` และ `server/.env.example` มีเพียงค่าตัวอย่างพร้อมวิธีสร้าง
+- `README.md` อัปเดตครอบคลุมภาพรวมของ Lab 3, โครงสร้างโปรเจกต์, การตั้งค่าด้วย `prisma migrate deploy` + seed, บัญชีทดสอบที่ถูกต้อง และคำสั่งทดสอบครบถ้วน
+- โครงสร้าง Repository ตาม Labsheet §12: `docs/lab-03/` (6 ไฟล์), `server/tests/lab-03/` (6 ไฟล์), `client/src/tests/lab-03/` (Login, ChangePassword, StaffTicketQueue, StaffTicketDetail, UserManagement + AppShell, PublicComments), `e2e/lab-03/` (3 ไฟล์), `artifacts/lab-03/screenshots/` (authentication, staff-queue, staff-ticket-detail, user-management + requester-ticket-detail)
 
 ---
 
@@ -270,194 +279,316 @@ Running 7 tests using 1 worker
 
 # Answer Part 5: Working Login and Password Change UI (5 Points)
 
-แสดงผลการทำงานของระบบเข้าสู่ระบบ, การตรวจสอบความถูกต้องของข้อมูล, การแจ้งเตือนข้อผิดพลาดที่ปลอดภัย, และการบังคับเปลี่ยนรหัสผ่านในครั้งแรก
+แสดงการเข้าสู่ระบบที่ถูกต้องและไม่ถูกต้อง, การปฏิเสธบัญชีที่ถูกปิด, สถานะกำลังทำงาน (busy) และข้อความผิดพลาดที่ปลอดภัย, การบังคับเปลี่ยนรหัสผ่านครั้งแรก, การแสดงชื่อและบทบาทของผู้ใช้, การออกจากระบบ และการบล็อกการเข้าถึงหลังออกจากระบบ
+
+### สรุปการทำงาน
+- **ข้อความผิดพลาดที่ปลอดภัย**: รหัสผ่านผิดและอีเมลที่ไม่มีในระบบได้ข้อความเดียวกัน ("Invalid email or password") ข้อความ "Account is deactivated" จะแสดงก็ต่อเมื่อรหัสผ่านถูกเท่านั้น จึงไม่เปิดเผยสถานะบัญชีให้ผู้เดารหัส (BR-24)
+- **บังคับเปลี่ยนรหัสผ่านครั้งแรก**: หน้าเปลี่ยนรหัสผ่านแทนที่แอปทั้งหมด ไม่แสดงเมนูและไม่โหลดข้อมูลใดๆ จนกว่าจะบันทึกรหัสผ่านใหม่สำเร็จ ฝั่ง server ก็ปฏิเสธ API อื่นด้วย 403 (BR-02)
+- **นโยบายรหัสผ่าน**: 8–72 ตัวอักษร ต้องมีตัวอักษรและตัวเลข แสดงข้อความแนะนำใต้ช่องกรอกและแจ้งข้อผิดพลาดทันที (BR-22)
+- **Session จริง**: หลังเปลี่ยนรหัสผ่านจะได้ token ใหม่ทันที ส่วน Logout จะยกเลิก token เดิมที่ฝั่ง server (BR-05, BR-23) ทุกบทบาทมีปุ่ม **Change Password** สำหรับเปลี่ยนรหัสผ่านเองได้
 
 ---
 
-> 📷 **[แทรกรูปภาพ 5.1: หน้าจอเข้าสู่ระบบปกติ (Login Desktop)]**  
+> 📷 **[แทรกรูปภาพ 5.1: หน้าจอเข้าสู่ระบบ (Login Desktop)]**  
 > * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/authentication/01-login-desktop.png`  
-> * **คำบรรยายภาพ**: หน้าจอ Login ออกแบบด้วยธีม Zen Green เรียบง่าย สวยงาม แสดงฟิลด์ Email, Password และปุ่ม Sign In  
+> * **คำบรรยายภาพ**: หน้าจอ Login ธีม Zen Green มีช่อง Email, Password และปุ่ม Sign In (ไม่มี Development Requester Selector แล้ว)  
 
 ---
 
-> 📷 **[แทรกรูปภาพ 5.2: การแจ้งเตือนกรณีรหัสผ่านไม่ถูกต้อง (Invalid Credentials)]**  
+> 📷 **[แทรกรูปภาพ 5.2: รหัสผ่านไม่ถูกต้อง (Invalid Credentials)]**  
 > * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/authentication/02-login-invalid-credentials.png`  
-> * **คำบรรยายภาพ**: กล่องข้อความแจ้งเตือนสีแดงแสดงข้อความที่ปลอดภัย "Invalid email or password" เมื่อกรอกรหัสผ่านผิด  
+> * **คำบรรยายภาพ**: แจ้งเตือนสีแดงด้วยข้อความที่ปลอดภัย "Invalid email or password"  
 
 ---
 
-> 📷 **[แทรกรูปภาพ 5.3: การปฏิเสธบัญชีที่ถูกปิดการใช้งาน (Inactive Account)]**  
+> 📷 **[แทรกรูปภาพ 5.3: บัญชีที่ถูกปิดการใช้งาน (Inactive Account)]**  
 > * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/authentication/03-login-inactive-account.png`  
-> * **คำบรรยายภาพ**: ปฏิเสธการเข้าสู่ระบบทันทีหากบัญชีอยู่ในสถานะ Inactive / Soft-deactivated พร้อมข้อความเตือนชัดเจน  
+> * **คำบรรยายภาพ**: Robert Taylor (บัญชี Inactive) ถูกปฏิเสธการเข้าสู่ระบบพร้อมข้อความให้ติดต่อผู้ดูแลระบบ  
 
 ---
 
-> 📷 **[แทรกรูปภาพ 5.4: หน้าจอบังคับเปลี่ยนรหัสผ่านครั้งแรก (Mandatory Password Change)]**  
+> 📷 **[แทรกรูปภาพ 5.4: บังคับเปลี่ยนรหัสผ่านครั้งแรก (Mandatory Password Change)]**  
 > * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/authentication/04-mandatory-password-change.png`  
-> * **คำบรรยายภาพ**: ระบบตรวจพบแฟล็ก `mustChangePassword=true` และเปิดหน้าต่างบังคับเปลี่ยนรหัสผ่าน โดยยังไม่ให้เข้าสู่หน้าหลักของแอปพลิเคชัน  
+> * **คำบรรยายภาพ**: เมื่อ `mustChangePassword=true` ระบบแสดงเฉพาะหน้าเปลี่ยนรหัสผ่าน ไม่มีเมนูหรือข้อมูลของแอปอยู่ด้านหลัง  
 
 ---
 
-> 📷 **[แทรกรูปภาพ 5.5: เข้าสู่ระบบสำเร็จหลังเปลี่ยนรหัสผ่าน (After Password Change)]**  
+> 📷 **[แทรกรูปภาพ 5.5: ตรวจสอบรหัสผ่านใหม่ (Password Validation)]**  
+> * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/authentication/04b-password-validation-error.png`  
+> * **คำบรรยายภาพ**: รหัสผ่านใหม่ที่สั้นเกินไปถูกปฏิเสธพร้อมข้อความอธิบายกฎ 8–72 ตัวอักษร มีตัวอักษรและตัวเลข  
+
+---
+
+> 📷 **[แทรกรูปภาพ 5.6: เข้าสู่ระบบสำเร็จหลังเปลี่ยนรหัสผ่าน (After Password Change)]**  
 > * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/authentication/05-after-password-change-logged-in.png`  
-> * **คำบรรยายภาพ**: ผู้ใช้เข้าสู่หน้า Dashboard หลังตั้งรหัสผ่านใหม่สำเร็จ และระบบเคลียร์แฟล็ก `mustChangePassword` เป็น `false`  
+> * **คำบรรยายภาพ**: หลังบันทึกรหัสผ่านใหม่ ผู้ใช้เข้าสู่หน้า Create Ticket ได้ทันทีด้วย token ใหม่  
 
 ---
 
-> 📷 **[แทรกรูปภาพ 5.6: แถบ Navbar แสดงข้อมูลผู้ใช้และบทบาท (Authenticated Navbar)]**  
-> * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/authentication/08-navigation-requester.png`  
-> * **คำบรรยายภาพ**: แสดงชื่อผู้ใช้งาน, ป้าย Role Badge แสดงสิทธิ์, และปุ่ม Logout โดยไม่มี Dev Selector หลงเหลืออยู่  
+> 📷 **[แทรกรูปภาพ 5.7: เปลี่ยนรหัสผ่านด้วยตนเอง (Voluntary Change Password)]**  
+> * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/authentication/06-voluntary-change-password.png`  
+> * **คำบรรยายภาพ**: ปุ่ม Change Password ที่แถบด้านบนเปิดหน้าต่างเดียวกัน แต่มีปุ่ม Cancel ให้ยกเลิกได้  
 
 ---
 
-> 📷 **[แทรกรูปภาพ 5.7: ออกจากระบบสำเร็จ (After Logout)]**  
+> 📷 **[แทรกรูปภาพ 5.8: ชื่อผู้ใช้และบทบาทบนแถบนำทาง (Authenticated User & Role)]**  
+> * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/authentication/08-navigation-requester.png`, `08-navigation-it-staff.png`, `08-navigation-administrator.png`  
+> * **คำบรรยายภาพ**: แต่ละบทบาทเห็นชื่อ, Role Badge, ปุ่ม Change Password, Logout และเมนูเฉพาะของตน — Requester: Create Ticket / My Tickets, IT Staff: Ticket Queue, Administrator: User Management / Ticket Queue  
+
+---
+
+> 📷 **[แทรกรูปภาพ 5.9: ออกจากระบบสำเร็จ (After Logout)]**  
 > * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/authentication/07-after-logout.png`  
-> * **คำบรรยายภาพ**: เมื่อคลิก Logout เซสชันจะถูกทำลายและนำผู้ใช้กลับสู่หน้า Login โดยไม่สามารถกดย้อนกลับเพื่อเข้าถึงข้อมูลเดิมได้  
+> * **คำบรรยายภาพ**: กลับสู่หน้า Login พร้อมข้อความ "You have been signed out."  
+
+### หลักฐานการบล็อกการเข้าถึงหลัง Logout
+token เดิมถูกยกเลิกที่ฝั่ง server จึงใช้เรียก API ตรงไม่ได้อีก (ผลจริงจาก `scripts/api-authorization-evidence.sh`):
+```text
+POST  /api/auth/logout (David)                               -> 200 {"message":"Logged out successfully"}
+GET   /api/tickets (David's old token after logout)          -> 401 {"error":"Invalid or expired authentication token"}
+```
+ทดสอบอัตโนมัติด้วย API-05 (`server/tests/lab-03/auth.api.test.ts`) และ E2E-01a (`e2e/lab-03/authentication.spec.ts`) ซึ่ง reload หน้าแล้วยังอยู่ที่หน้า Login
 
 ---
 
 # Answer Part 6: Working IT Staff Ticket Queue UI (5 Points)
 
-แสดงผลหน้าจอคิวงานของฝ่ายบริการไอที พร้อมข้อมูลตั๋วเสมือนจริง รองรับการค้นหา การกรองหลายมิติ (Status, Priority, Owner) การเรียงลำดับ (Sorting) การแบ่งหน้า (Pagination) การแสดงสถานะ Assigned/Unassigned การแสดง Status/Priority Badge การเปิด Ticket Detail รวมถึงการแสดง Empty/No Results และ Failure State อย่างเหมาะสม
+แสดงคิวงานของ IT Staff ด้วยข้อมูลตัวอย่างที่สมจริง (seed 16 ตั๋ว ครบทุกสถานะและระดับความสำคัญ ทั้งที่มีและไม่มีผู้รับผิดชอบ) พร้อมการค้นหา ตัวกรอง การเรียงลำดับ การแบ่งหน้า ป้ายสถานะและความสำคัญ การเปิดดูรายละเอียด และการรองรับหน้าจอทุกขนาด
 
-### สรุปฟังก์ชันการทำงานในหน้า Staff Ticket Queue:
-1. **การค้นหาและกรองหลายมิติ (Search & Multi-Filter)**: ค้นหาตั๋วด้วยคีย์เวิร์ด (เลขตั๋ว, สรุปปัญหา, หรือชื่อผู้แจ้ง) พร้อมตัวกรองสถานะ (`New`, `Open`, `In Progress`, `Waiting for Requester`, `Resolved`, `Closed`), ตัวกรองระดับความสำคัญ (`LOW`, `MEDIUM`, `HIGH`, `URGENT`), และตัวกรองผู้รับผิดชอบงาน (`All`, `Unassigned`, `Assigned to Me`, หรือระบุช่างเฉพาะบุคคล)
-2. **การเรียงลำดับและการแบ่งหน้า (Sorting & Pagination)**: รองรับการจัดเรียงตามวันที่อัปเดตหรือระดับความสำคัญ พร้อมปุ่ม Previous / Next และตัวระบุหน้าปัจจุบัน
-3. **การเปิดดูรายละเอียดตั๋ว (Open Ticket Detail)**: สามารถคลิกที่แถวของตั๋วในตารางเพื่อเปิดเข้าสู่หน้า IT Staff Ticket Detail ได้โดยตรง
-4. **การจัดการสถานะพิเศษ (Empty, No Results & Failure States)**:
-   - กรณีไม่มีตั๋วในระบบเลย จะแสดง Empty Queue Graphic
-   - กรณีค้นหาหรือกรองแล้วไม่พบตั๋วตรงเงื่อนไข จะแสดง No Results State พร้อมปุ่ม Clear Filters เพื่อคืนค่าการค้นหาทันที
-   - กรณีเกิดข้อผิดพลาดในการดึงข้อมูล จะแสดง Failure State แจ้งเตือนอย่างปลอดภัย
+### สรุปฟังก์ชันการทำงาน
+1. **ค้นหาและกรอง**: ค้นหาด้วยเลขตั๋ว หัวข้อ หรือชื่อผู้แจ้ง กรองสถานะครบ 8 สถานะ (`New`, `Open`, `In Progress`, `Waiting for Requester`, `Resolved`, `Closed`, `Reopened`, `Cancelled`), ระดับความสำคัญ (`LOW`–`URGENT`) และผู้รับผิดชอบ (`Unassigned`, `Assigned to Me`, หรือระบุเจ้าหน้าที่)
+2. **เรียงลำดับและแบ่งหน้า**: เรียงตามวันที่สร้าง เลขตั๋ว หรือความสำคัญ แสดงหน้าละ 10 ตั๋ว พร้อมปุ่ม Previous / Next และเลขหน้า
+3. **ป้าย (Badges)**: แสดงทั้ง IT Priority และ Requested Priority ("Req:") ในทุกแถว
+4. **สถานะพิเศษ**: แสดง Loading, คิวว่าง, ไม่พบผลลัพธ์ (พร้อมปุ่ม Clear Filters) และข้อความผิดพลาดที่ปลอดภัย
+5. **ความปลอดภัย**: server ตรวจ query parameter ทุกตัว ค่าที่ไม่ถูกต้องได้ 400 พร้อมระบุชื่อ parameter แทนที่จะเกิด error 500 (BR-28) และ Requester ที่เรียก API คิวโดยตรงได้ 403
+6. **Responsive**: Desktop แสดงตารางครบทุกคอลัมน์รวมปุ่ม View ส่วนมือถือเปลี่ยนเป็นการ์ดทีละตั๋ว จึงไม่มีข้อมูลถูกตัดหรือต้องเลื่อนแนวนอน
 
 ---
 
-> 📷 **[แทรกรูปภาพ 6.1: ภาพรวมคิวงาน IT Staff (Queue Desktop)]**  
+> 📷 **[แทรกรูปภาพ 6.1: ภาพรวมคิวงาน (Queue Desktop)]**  
 > * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/staff-queue/01-queue-desktop.png`  
-> * **คำบรรยายภาพ**: ตารางคิวงาน IT Staff แสดงรายการตั๋ว, เลขตั๋ว, ผู้แจ้ง, ป้ายสถานะ, ป้ายระดับความสำคัญ, และสถานะการมอบหมายงาน (Assigned / Unassigned)  
+> * **คำบรรยายภาพ**: ตารางคิวพร้อมเลขตั๋ว, หัวข้อ/ผู้แจ้ง, ป้ายสถานะ, IT/Requested Priority, ผู้รับผิดชอบ (Assigned / Unassigned) และปุ่ม View  
 
 ---
 
-> 📷 **[แทรกรูปภาพ 6.2: การค้นหาตั๋วงานด้วยคีย์เวิร์ด (Search Results)]**  
+> 📷 **[แทรกรูปภาพ 6.2: การค้นหา (Search Results)]**  
 > * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/staff-queue/02-queue-search-results.png`  
-> * **คำบรรยายภาพ**: ช่องค้นหาทำงานแบบ Real-time ดึงตั๋วที่มีคำค้นหาตรงกับหัวข้อปัญหา หรือชื่อผู้แจ้งได้อย่างแม่นยำ  
+> * **คำบรรยายภาพ**: ค้นหาคำว่า "VPN" แสดงเฉพาะตั๋วที่ตรงกับคำค้น  
 
 ---
 
-> 📷 **[แทรกรูปภาพ 6.3: การกรองตั๋วตามสถานะ (Filtered by Status)]**  
+> 📷 **[แทรกรูปภาพ 6.3: กรองตามสถานะ (Filter by Status)]**  
 > * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/staff-queue/03-queue-filtered-by-status.png`  
-> * **คำบรรยายภาพ**: ผลการกรองเฉพาะตั๋วที่มีสถานะ `In Progress` ช่วยให้เจ้าหน้าที่จัดการงานได้อย่างสะดวกรวดเร็ว  
+> * **คำบรรยายภาพ**: แสดงเฉพาะตั๋วสถานะ `In Progress`  
+
+---
+
+> 📷 **[แทรกรูปภาพ 6.4: กรองตั๋วที่ยังไม่มีผู้รับผิดชอบ (Unassigned)]**  
+> * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/staff-queue/04-queue-unassigned-owner-filter.png`  
+> * **คำบรรยายภาพ**: ตัวกรอง Owner = Unassigned แสดงตั๋วที่รอเจ้าหน้าที่รับงาน  
+
+---
+
+> 📷 **[แทรกรูปภาพ 6.5: เรียงตามความสำคัญ (Sorted by Priority)]**  
+> * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/staff-queue/05-queue-sorted-by-priority.png`  
+> * **คำบรรยายภาพ**: ตั๋ว `URGENT` และ `HIGH` ขึ้นมาก่อน  
+
+---
+
+> 📷 **[แทรกรูปภาพ 6.6: การแบ่งหน้า (Pagination)]**  
+> * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/staff-queue/06-queue-page-2.png`  
+> * **คำบรรยายภาพ**: หน้าที่ 2 ของคิว พร้อมข้อความ "Showing page 2 of 2"  
+
+---
+
+> 📷 **[แทรกรูปภาพ 6.7: ไม่พบผลลัพธ์ (No Results)]**  
+> * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/staff-queue/07-queue-no-results.png`  
+> * **คำบรรยายภาพ**: เมื่อไม่มีตั๋วตรงเงื่อนไข แสดงข้อความ "No tickets found" พร้อมปุ่ม Clear Filters  
+
+---
+
+> 📷 **[แทรกรูปภาพ 6.8: Tablet และ Mobile]**  
+> * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/staff-queue/08-queue-tablet.png`, `09-queue-mobile.png`  
+> * **คำบรรยายภาพ**: Tablet ซ่อนคอลัมน์รองแต่ยังเห็นปุ่ม View ส่วนมือถือแสดงตั๋วเป็นการ์ดพร้อมสถานะ ความสำคัญ ผู้รับผิดชอบ และปุ่ม View ครบ  
 
 ---
 
 # Answer Part 7: Working IT Staff Ticket Detail UI (10 Points)
 
-แสดงรายละเอียดตั๋วงานแบบ 2 คอลัมน์, การรับมอบหมายงาน (Claim) และการมอบหมาย/เปลี่ยนผู้รับผิดชอบ (Reassign), การปรับลำดับความสำคัญของช่าง (IT Priority), การเปลี่ยนสถานะตาม Lifecycle State Machine, การแยกส่วน Public Comments กับ Internal Notes, และการแสดงสถานะ/การดำเนินการที่ผู้แจ้งสามารถระบุว่า “Problem Appears Resolved” เพื่อยืนยันว่าปัญหาได้รับการแก้ไขแล้ว
+แสดงการ Claim / Reassign, การตั้ง IT Priority, การเปลี่ยนสถานะตามที่อนุญาต, Public Comments, Internal Notes, ไฟล์แนบที่ยังใช้งานได้ต่อเนื่อง, การที่ Requester ระบุว่าปัญหาน่าจะแก้แล้ว, การจำกัดสิทธิ์ตามบทบาท, การตรวจสอบข้อมูล และหลักฐานการตรวจสิทธิ์ที่ API โดยตรง
 
-### กฎความปลอดภัยและการตรวจสอบสิทธิ์:
-- **Validation & Safe Failure**: ระบบตรวจสอบข้อมูลก่อนดำเนินการทุก action และเมื่อเกิดข้อผิดพลาดจะแสดงข้อความแจ้งเตือนที่เหมาะสมโดยไม่เปิดเผยข้อมูลภายในหรือข้อมูลทางเทคนิคที่ไม่จำเป็น
-- **Direct API Authorization**: การควบคุมสิทธิ์ทำทั้งฝั่ง UI และ Server/API โดยการเรียก API ที่ไม่ได้รับอนุญาต (เช่น Requester พยายามเรียกขอข้อมูล Internal Notes) จะถูกปฏิเสธด้วย HTTP 403 Forbidden เสมอ
+### สรุปการทำงาน
+- **Claim / Reassign**: ปุ่ม Claim Ticket ตั้งตัวเองเป็นผู้รับผิดชอบ และตั๋ว `New` เปลี่ยนเป็น `Open` อัตโนมัติ ส่วน Reassign เลือกได้เฉพาะ IT Staff / Administrator ที่ Active (BR-09)
+- **IT Priority**: ปรับได้อิสระ Requested Priority ของผู้แจ้งแสดงเป็น "Immutable" และไม่เปลี่ยน (BR-10, BR-11)
+- **Status Workflow**: ปุ่มแสดงเฉพาะสถานะถัดไปที่อนุญาตตาม Transition Matrix ส่วน server ปฏิเสธการเปลี่ยนที่ไม่อนุญาตด้วย 400 (BR-13)
+- **Public Comments / Internal Notes**: แยกแท็บชัดเจน Internal Notes เป็นการ์ดสีเหลืองพร้อมไอคอนแม่กุญแจ จำกัด 2,000 ตัวอักษร และแสดงเป็นข้อความธรรมดา ป้องกันการฝังโค้ด HTML (BR-15–BR-17)
+- **ไฟล์แนบ**: IT Staff ดาวน์โหลดไฟล์แนบของผู้แจ้งได้ผ่าน token ที่ยืนยันตัวตนแล้ว
+- **Requester ระบุว่าปัญหาแก้แล้ว**: Requester กดปุ่ม "My Problem Appears Resolved" ในหน้าตั๋วของตน เจ้าหน้าที่จะเห็นสถานะนี้ แต่สถานะตั๋วไม่เปลี่ยนเป็น Resolved เอง (BR-14)
+- **Requester Public Comments**: Requester เห็นและตอบ Public Comments ในหน้าตั๋วของตนได้ แต่จะไม่เห็น Internal Notes
 
 ---
 
-> 📷 **[แทรกรูปภาพ 7.1: หน้ารายละเอียดตั๋วงาน (Ticket Detail Overview)]**  
+> 📷 **[แทรกรูปภาพ 7.1: รายละเอียดตั๋วก่อน Claim (Ticket Detail)]**  
 > * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/staff-ticket-detail/01-ticket-detail-before-claim.png`  
-> * **คำบรรยายภาพ**: แสดงข้อมูลตั๋วครบถ้วน: หัวข้อ, หมวดหมู่, ระบบที่เกี่ยวข้อง, คำอธิบายปัญหา, รายการไฟล์แนบ, บัตรข้อมูลผู้แจ้ง, และสถานะการระบุ Problem Resolved ของผู้แจ้ง  
+> * **คำบรรยายภาพ**: ข้อมูลตั๋ว, ไฟล์แนบ, ข้อมูลผู้แจ้ง, ปุ่ม Claim Ticket, การ์ด Ownership / Priority / Status Workflow  
 
 ---
 
-> 📷 **[แทรกรูปภาพ 7.2: ปุ่มรับมอบหมายงานและการมอบหมายงาน (Claim / Reassign)]**  
-> * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/staff-ticket-detail/01-ticket-detail-before-claim.png`  
-> * **คำบรรยายภาพ**: แสดงปุ่ม "Claim Ticket" สำหรับตั๋วที่ยังไม่มีผู้รับผิดชอบ หรือตัวเลือก Reassign เพื่อเปลี่ยนเจ้าหน้าที่ผู้รับผิดชอบตั๋ว  
-
----
-
-> 📷 **[แทรกรูปภาพ 7.3: ข้อมูลเจ้าหน้าที่หลังกด Claim (After Claim)]**  
+> 📷 **[แทรกรูปภาพ 7.2: หลัง Claim (After Claim)]**  
 > * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/staff-ticket-detail/02-after-claim-status-open.png`  
-> * **คำบรรยายภาพ**: ชื่อผู้รับผิดชอบตั๋วถูกปรับเป็นเจ้าหน้าที่ที่กด Claim ทันที พร้อมบันทึกประวัติ  
+> * **คำบรรยายภาพ**: ผู้รับผิดชอบเป็นเจ้าหน้าที่ที่กด Claim และสถานะเปลี่ยนจาก New เป็น Open  
 
 ---
 
-> 📷 **[แทรกรูปภาพ 7.4: กระดานข้อความสาธารณะ (Public Comments)]**  
+> 📷 **[แทรกรูปภาพ 7.3: ปรับ IT Priority]**  
+> * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/staff-ticket-detail/03-it-priority-updated.png`  
+> * **คำบรรยายภาพ**: IT Priority เปลี่ยนเป็น HIGH ขณะที่ Requested Priority ยังเป็น MEDIUM  
+
+---
+
+> 📷 **[แทรกรูปภาพ 7.4: Public Comments]**  
 > * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/staff-ticket-detail/04-public-comments.png`  
-> * **คำบรรยายภาพ**: เธรดการสื่อสารสาธารณะระหว่างเจ้าหน้าที่ไอทีและผู้แจ้งปัญหา แสดงการตอบรับและซักถาม  
+> * **คำบรรยายภาพ**: ข้อความสาธารณะถึงผู้แจ้ง แสดงชื่อ บทบาท และเวลาโพสต์  
 
 ---
 
-> 📷 **[แทรกรูปภาพ 7.5: บันทึกภายในเฉพาะเจ้าหน้าที่ (Internal Notes - สีเหลืองทอง)]**  
+> 📷 **[แทรกรูปภาพ 7.5: Internal Notes]**  
 > * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/staff-ticket-detail/05-internal-notes.png`  
-> * **คำบรรยายภาพ**: บันทึกภายในแสดงด้วยพื้นหลังสีเหลืองทองและไอคอนล็อก ชี้ชัดว่าเป็นข้อมูลลับของทีมช่าง ซึ่ง Requester จะไม่เห็นและไม่สามารถเข้าถึงได้ (API บล็อกด้วย 403 Forbidden)  
+> * **คำบรรยายภาพ**: บันทึกภายในพื้นหลังสีเหลืองพร้อมไอคอนแม่กุญแจ มองเห็นเฉพาะ IT Staff และ Administrator  
 
 ---
 
-> 📷 **[แทรกรูปภาพ 7.6: การเปลี่ยนสถานะตาม State Machine (Status Dropdown)]**  
+> 📷 **[แทรกรูปภาพ 7.6: การเปลี่ยนสถานะ (Status Transition)]**  
 > * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/staff-ticket-detail/06-status-transition-in-progress.png`  
-> * **คำบรรยายภาพ**: Dropdown แสดงเฉพาะสถานะถัดไปที่ได้รับอนุญาตตามกฎ State Machine เท่านั้น ไม่สามารถข้ามขั้นตอนผิดกฎได้  
+> * **คำบรรยายภาพ**: หลังย้ายเป็น In Progress ปุ่มที่เหลือมีเฉพาะสถานะที่อนุญาต (Waiting for Requester, Resolved, Cancelled)  
+
+---
+
+> 📷 **[แทรกรูปภาพ 7.7: ผู้แจ้งระบุว่าปัญหาแก้แล้ว (Requester Resolution Indication)]**  
+> * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/staff-ticket-detail/09-requester-resolution-indicated.png` และ `artifacts/lab-03/screenshots/requester-ticket-detail/04-problem-appears-resolved.png`  
+> * **คำบรรยายภาพ**: มุมมองเจ้าหน้าที่เห็นว่าผู้แจ้งยืนยันแล้ว และมุมมองผู้แจ้งเห็นป้าย "You indicated this appears resolved" ขณะที่สถานะยังเป็น In Progress  
+
+---
+
+> 📷 **[แทรกรูปภาพ 7.8: Requester ใช้ Public Comments]**  
+> * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/requester-ticket-detail/02-detail-with-public-comments.png`, `03-comment-posted.png`  
+> * **คำบรรยายภาพ**: ผู้แจ้งเห็นและตอบความคิดเห็นของเจ้าหน้าที่ได้ แต่ไม่มีแท็บ Internal Notes  
+
+---
+
+> 📷 **[แทรกรูปภาพ 7.9: ไม่เปิดเผยตั๋วของผู้อื่น (Role Restriction)]**  
+> * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/requester-ticket-detail/06-other-requesters-ticket-unavailable.png`  
+> * **คำบรรยายภาพ**: Requester อีกคนเปิด URL ตั๋วของ David ได้หน้า "Ticket Unavailable" โดยไม่มีข้อมูลตั๋วรั่วไหล  
+
+---
+
+### 7.10 หลักฐานการตรวจสิทธิ์ที่ API โดยตรง (Direct API Authorization)
+ผลจริงจากการเรียก API โดยตรงด้วย curl ซึ่งไม่ผ่าน UI (`bash scripts/api-authorization-evidence.sh`):
+```text
+# Ticket TKT-2026-000001 (id=1) belongs to David Lee (Requester)
+GET   /api/tickets (no token)                                -> 401 {"error":"Authentication required"}
+GET   /api/tickets (only header X-Requester-Id: 1)           -> 401 {"error":"Authentication required"}
+GET   /api/tickets/1 (Jennifer, not the owner)               -> 404 {"error":"Ticket not found."}
+GET   /api/tickets/1/comments (Jennifer, not the owner)      -> 404 {"error":"Ticket not found"}
+GET   /api/tickets/1/internal-notes (David, Requester)       -> 403 {"error":"Access denied: insufficient permissions"}
+GET   /api/staff/tickets (David, Requester)                  -> 403 {"error":"Access denied: insufficient permissions"}
+PATCH /api/staff/tickets/1/status (David, Requester)         -> 403 {"error":"Access denied: insufficient permissions"}
+GET   /api/admin/users (Sarah, IT Staff)                     -> 403 {"error":"Access denied: insufficient permissions"}
+POST  /api/tickets/1/indicate-resolved (Sarah, IT Staff)     -> 403 {"error":"Access denied: insufficient permissions"}
+GET   /api/tickets/1/internal-notes (Sarah, IT Staff)        -> 200 [{"id":1,"content":"Known GPU driver bug with Thunderbolt dock firmware. Need to
+POST  /api/auth/logout (David)                               -> 200 {"message":"Logged out successfully"}
+GET   /api/tickets (David's old token after logout)          -> 401 {"error":"Invalid or expired authentication token"}
+```
+- **401**: ไม่มี token หรือ token ถูกยกเลิก — header `X-Requester-Id` ไม่ถูกใช้เป็นตัวตนอีกต่อไป
+- **403**: มี token แต่บทบาทไม่มีสิทธิ์ และไม่ส่งข้อมูลใดกลับมา
+- **404**: Requester เปิดตั๋วของผู้อื่น ได้ผลเหมือนตั๋วที่ไม่มีอยู่ จึงไม่รู้ว่าตั๋วนั้นมีจริง
+- ทดสอบอัตโนมัติแบบตารางสิทธิ์ทุกบทบาทใน `server/tests/lab-03/authorization.api.test.ts` (API-06b)
 
 ---
 
 # Answer Part 8: Working Administrator User Management UI (5 Points)
 
-แสดงหน้าจอการจัดการบัญชีผู้ใช้งานของผู้ดูแลระบบ, การสร้างผู้ใช้, การแก้ไขข้อมูล, การสลับสถานะ Active, กฎความปลอดภัย Safety Rules และการป้องกันสิทธิ์แบบ RBAC
+แสดงหน้าจอจัดการผู้ใช้แบบเรียบง่าย: รายชื่อพร้อม Name, Email, Role, Status และปุ่ม Edit, การค้นหาด้วยชื่อหรืออีเมล, การกรองตามบทบาท, การสร้างผู้ใช้ 1 บทบาทพร้อมรหัสผ่านเริ่มต้น, การตรวจอีเมลซ้ำและข้อมูลไม่ถูกต้อง, การแก้ไขข้อมูล, การตั้งรหัสผ่านเริ่มต้นใหม่, กฎความปลอดภัย และการป้องกันผู้ที่ไม่ใช่ Admin
 
-### กฎความปลอดภัยระดับผู้ดูแลระบบ (Safety Safeguards):
-1. **Self-Deactivation Guard (BR-19)**: ระบบป้องกันไม่ให้ Admin ปิดการใช้งานบัญชีของตนเอง โดยสวิตช์ปิดบัญชีจะถูกปิดกั้น (Disabled) ทันทีเมื่อเปิดบัญชีตนเอง พร้อมแสดงข้อความแจ้งเตือนสีแดง
-2. **Last Active Administrator Protection (BR-20)**: ระบบป้องกันไม่ให้ Admin ปิดการใช้งานบัญชีหรือเปลี่ยน Role ของ Administrator คนสุดท้ายที่ยัง Active อยู่ เพื่อป้องกันระบบไม่เหลือผู้ดูแล (Sole Admin Guard)
-3. **Initial Temporary Password (BR-21)**: แอดมินสามารถตั้งรหัสผ่านชั่วคราวใหม่ให้ผู้ใช้ได้ โดยระบบจะบังคับให้ผู้ใช้ต้องเปลี่ยนรหัสผ่าน (`mustChangePassword=true`) ทันทีที่ล็อกอินในครั้งถัดไป
-4. **RBAC Endpoint Protection**: ป้องกันไม่ให้ผู้ใช้ที่ไม่ใช่ Admin เข้าถึงหน้าจอหรือเรียกใช้ API จัดการผู้ใช้ โดยคำขอจะถูกปฏิเสธด้วย HTTP 403 Forbidden
+### กฎความปลอดภัย (Safety Safeguards)
+1. **Self-Deactivation Guard (BR-19)**: Admin ปิดบัญชีตัวเองไม่ได้ สวิตช์ถูก Disabled พร้อมข้อความเตือน และ server ก็ปฏิเสธด้วย 400
+2. **Last Active Administrator Protection (BR-20)**: ปิดบัญชีหรือเปลี่ยนบทบาทของ Admin คนสุดท้ายที่ยัง Active ไม่ได้
+3. **Set New Initial Password (BR-21)**: ผู้ใช้ต้องเปลี่ยนรหัสผ่านเมื่อเข้าสู่ระบบครั้งถัดไป และ session เดิมของผู้ใช้นั้นถูกยกเลิกทันที
+4. **Validation (BR-04, BR-22, BR-29)**: ป้องกันอีเมลซ้ำ (409), ตรวจรูปแบบอีเมลและบทบาท, รหัสผ่านเริ่มต้นใช้กฎเดียวกับการเปลี่ยนรหัสผ่าน
+5. **Deactivation มีผลทันที**: token ของผู้ใช้ที่ถูกปิดบัญชีใช้ไม่ได้ตั้งแต่ request ถัดไป
+6. **RBAC**: ผู้ที่ไม่ใช่ Admin ไม่เห็นเมนู และเรียก API `/api/admin/*` ได้ 403 (ดูหลักฐานใน Part 7.10)
 
 ---
 
-> 📷 **[แทรกรูปภาพ 8.1: ตารางรายชื่อผู้ใช้งานระบบ (User List Desktop)]**  
+> 📷 **[แทรกรูปภาพ 8.1: รายชื่อผู้ใช้ (User List)]**  
 > * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/user-management/01-user-list-desktop.png`  
-> * **คำบรรยายภาพ**: แสดงตารางผู้ใช้ทั้งหมดพร้อม Name, Email, Role badge, Status badge, แฟล็กบังคับเปลี่ยนรหัสผ่าน และปุ่ม Action (Edit / Reset Pass)  
+> * **คำบรรยายภาพ**: ตารางผู้ใช้พร้อม Name, Email, Role badge, Status badge, สถานะบังคับเปลี่ยนรหัสผ่าน และปุ่ม Edit / Reset Pass  
 
 ---
 
-> 📷 **[แทรกรูปภาพ 8.2: การค้นหาผู้ใช้ด้วยชื่อหรืออีเมล (User Search)]**  
+> 📷 **[แทรกรูปภาพ 8.2: ค้นหาผู้ใช้ (User Search)]**  
 > * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/user-management/02-user-search.png`  
-> * **คำบรรยายภาพ**: การค้นหาผู้ใช้งานแบบไดนามิก รองรับทั้งค้นหาตามชื่อและค้นหาตามอีเมล  
+> * **คำบรรยายภาพ**: ค้นหาด้วยชื่อหรืออีเมล  
 
 ---
 
-> 📷 **[แทรกรูปภาพ 8.3: การกรองผู้ใช้งานตามบทบาท (Filter by Role)]**  
+> 📷 **[แทรกรูปภาพ 8.3: กรองตามบทบาท (Filter by Role)]**  
 > * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/user-management/03-filter-by-role.png`  
-> * **คำบรรยายภาพ**: คัดกรองรายชื่อเฉพาะกลุ่มผู้ใช้ เช่น IT_STAFF หรือ ADMINISTRATOR  
+> * **คำบรรยายภาพ**: แสดงเฉพาะผู้ใช้บทบาท IT Staff  
 
 ---
 
-> 📷 **[แทรกรูปภาพ 8.4: หน้าต่างสร้างบัญชีผู้ใช้ใหม่ (Create User Modal)]**  
+> 📷 **[แทรกรูปภาพ 8.4: สร้างผู้ใช้ใหม่ (Create User)]**  
 > * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/user-management/04-create-user-modal.png`  
-> * **คำบรรยายภาพ**: Modal สร้างผู้ใช้ใหม่ กำหนดชื่อ, อีเมล, เลือก 1 บทบาทที่อนุญาต และตั้งรหัสผ่านเริ่มต้น (Temporary Password)  
+> * **คำบรรยายภาพ**: กรอกชื่อ อีเมล เลือก 1 บทบาท และรหัสผ่านเริ่มต้น  
 
 ---
 
-> 📷 **[แทรกรูปภาพ 8.5: การแจ้งเตือนป้องกันการใช้อีเมลซ้ำ (Duplicate Email 409 Conflict)]**  
+> 📷 **[แทรกรูปภาพ 8.5: อีเมลซ้ำ (Duplicate Email)]**  
 > * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/user-management/04b-duplicate-email-validation.png`  
-> * **คำบรรยายภาพ**: เมื่อกรอกอีเมลที่มีในระบบแล้ว ระบบจะแสดงกล่องข้อความเตือนความผิดพลาดสีแดง ป้องกันอีเมลซ้ำซ้อนตามกฎความปลอดภัย (HTTP 409 Conflict)  
+> * **คำบรรยายภาพ**: อีเมลที่มีอยู่แล้วถูกปฏิเสธด้วยข้อความในหน้าต่าง (HTTP 409)  
 
 ---
 
-> 📷 **[แทรกรูปภาพ 8.6: หน้าต่างแก้ไขข้อมูลผู้ใช้และสวิตช์ Active (Edit User Modal)]**  
+> 📷 **[แทรกรูปภาพ 8.6: ข้อมูลไม่ถูกต้อง (Invalid Input)]**  
+> * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/user-management/04c-invalid-input-validation.png`  
+> * **คำบรรยายภาพ**: อีเมลผิดรูปแบบหรือรหัสผ่านสั้นเกินไปถูกแจ้งเตือนก่อนส่ง  
+
+---
+
+> 📷 **[แทรกรูปภาพ 8.7: แก้ไขผู้ใช้ (Edit User)]**  
 > * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/user-management/07-edit-user-modal.png`  
-> * **คำบรรยายภาพ**: แก้ไขชื่อ, อีเมล, บทบาท และสวิตช์เปิด/ปิดการใช้งานบัญชี (Active/Inactive Toggle Switch)  
+> * **คำบรรยายภาพ**: แก้ไขชื่อ อีเมล บทบาท และสวิตช์ Active / Inactive  
 
 ---
 
-> 📷 **[แทรกรูปภาพ 8.7: กฎความปลอดภัยห้ามแอดมินปิดบัญชีตัวเอง (Self-Deactivation Guard)]**  
+> 📷 **[แทรกรูปภาพ 8.8: ห้ามปิดบัญชีตัวเอง (Self-Deactivation Guard)]**  
 > * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/user-management/05-self-deactivation-guard.png`  
-> * **คำบรรยายภาพ**: Safety Rule BR-19: สวิตช์ปิดบัญชีจะถูกปิดกั้น (Disabled) ทันทีเมื่อ Admin เปิดดูบัญชีของตัวเอง พร้อมข้อความเตือนสีแดง  
+> * **คำบรรยายภาพ**: สวิตช์ของบัญชีตัวเองถูก Disabled พร้อมข้อความ BR-19  
 
 ---
 
-> 📷 **[แทรกรูปภาพ 8.8: การรีเซ็ตรหัสผ่านชั่วคราวโดยผู้ดูแลระบบ (Reset Password Modal)]**  
+> 📷 **[แทรกรูปภาพ 8.9: ป้องกัน Admin คนสุดท้าย (Last Active Admin Guard)]**  
+> * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/user-management/06-last-active-admin-guard.png`  
+> * **คำบรรยายภาพ**: พยายามเปลี่ยนบทบาทของ Admin คนเดียวที่เหลือเป็น IT Staff แล้ว server ปฏิเสธพร้อมข้อความ "Cannot deactivate or reassign the last remaining active Administrator"  
+
+---
+
+> 📷 **[แทรกรูปภาพ 8.10: ตั้งรหัสผ่านเริ่มต้นใหม่ (Set New Initial Password)]**  
 > * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/user-management/08-set-new-initial-password-modal.png`  
-> * **คำบรรยายภาพ**: Admin สามารถตั้งรหัสผ่านชั่วคราวใหม่ให้ผู้ใช้ โดยระบบจะบังคับให้ผู้ใช้ต้องเปลี่ยนรหัสผ่านทันทีเมื่อเข้าสู่ระบบในครั้งถัดไป  
+> * **คำบรรยายภาพ**: Admin ตั้งรหัสผ่านเริ่มต้นใหม่ ผู้ใช้จะถูกบังคับเปลี่ยนเมื่อเข้าสู่ระบบครั้งถัดไป (ทดสอบครบลูปใน E2E-03)  
 
 ---
 
-> 📷 **[แทรกรูปภาพ 8.9: การป้องกันการเข้าถึงของสิทธิ์อื่นที่ไม่ใช่แอดมิน (Non-Admin Navigation Guard)]**  
+> 📷 **[แทรกรูปภาพ 8.11: ผู้ที่ไม่ใช่ Admin (Non-Admin)]**  
 > * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/user-management/11-non-admin-has-no-user-management.png`  
-> * **คำบรรยายภาพ**: การป้องกันสิทธิ์ RBAC: เมื่อล็อกอินด้วยผู้ใช้ทั่วไปหรือ IT Staff แท็บเมนู "User Management" จะถูกซ่อนอย่างสมบูรณ์ และการเรียก API ตรงจะถูกบล็อกด้วย 403 Forbidden  
+> * **คำบรรยายภาพ**: IT Staff ไม่มีเมนู User Management และการเรียก API โดยตรงได้ 403  
+
+---
+
+> 📷 **[แทรกรูปภาพ 8.12: Tablet และ Mobile]**  
+> * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/user-management/09-user-management-tablet.png`, `10-user-management-mobile.png`  
+> * **คำบรรยายภาพ**: บนมือถือแสดงผู้ใช้เป็นการ์ด เห็นชื่อ อีเมล บทบาท สถานะ และปุ่ม Edit / Reset Pass ครบโดยไม่ถูกตัด  
 
 ---
 
@@ -465,55 +596,57 @@ Running 7 tests using 1 worker
 
 **ลิงก์เอกสารข้อกำหนดด้าน UI**: [`docs/lab-03/ui-spec.md`](./ui-spec.md)
 
-### 9.1 หลักฐานความเข้ากันได้บนอุปกรณ์พกพา (Tablet และ Mobile Viewports)
+ภาพทั้งหมดสร้างใหม่จาก UI ปัจจุบันด้วย `npm run screenshots` ที่ขนาด Desktop 1280px, Tablet 768px และ Mobile 375px
 
-#### 1. หน้าจอ Authentication (Login)
----
-> 📷 **[แทรกรูปภาพ 9.1A: หน้า Login บน Tablet (768×1024)]**  
-> * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/authentication/09-login-tablet.png`  
-> * **คำบรรยายภาพ**: การจัดวางการ์ด Login กึ่งกลางหน้าจออย่างสมดุลบน Tablet Viewport  
+### 9.1 หลักฐาน Desktop / Tablet / Mobile
 
-> 📷 **[แทรกรูปภาพ 9.1B: หน้า Login บน Mobile (375×812)]**  
-> * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/authentication/10-login-mobile.png`  
-> * **คำบรรยายภาพ**: การ์ด Login ปรับความกว้างเต็มหน้าจอมือถือ ปุ่มและอินพุตกดง่าย ไม่ล้นจอ  
----
+| หน้าจอ | Desktop | Tablet (768px) | Mobile (375px) |
+|---|---|---|---|
+| Login | `authentication/01-login-desktop.png` | `authentication/09-login-tablet.png` | `authentication/10-login-mobile.png` |
+| Application shell / navbar | `authentication/08-navigation-*.png` | — | `authentication/11-navbar-mobile.png` |
+| IT Staff Ticket Queue | `staff-queue/01-queue-desktop.png` | `staff-queue/08-queue-tablet.png` | `staff-queue/09-queue-mobile.png` |
+| IT Staff Ticket Detail | `staff-ticket-detail/01-ticket-detail-before-claim.png` | `staff-ticket-detail/07-ticket-detail-tablet.png` | `staff-ticket-detail/08-ticket-detail-mobile.png` |
+| Requester Ticket Detail | `requester-ticket-detail/02-detail-with-public-comments.png` | — | `requester-ticket-detail/05-detail-mobile.png` |
+| User Management | `user-management/01-user-list-desktop.png` | `user-management/09-user-management-tablet.png` | `user-management/10-user-management-mobile.png` |
 
-#### 2. หน้าจอ IT Staff Ticket Queue
----
-> 📷 **[แทรกรูปภาพ 9.2A: หน้า Queue บน Tablet (768×1024)]**  
-> * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/staff-queue/08-queue-tablet.png`  
-> * **คำบรรยายภาพ**: ตารางตั๋วและแถบค้นหา/ตัวกรองแสดงผลกระชับ พอดีกับหน้าจอ Tablet  
+(ทุก path อยู่ใต้ `artifacts/lab-03/screenshots/`)
 
-> 📷 **[แทรกรูปภาพ 9.2B: หน้า Queue บน Mobile (375×812)]**  
-> * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/staff-queue/09-queue-mobile.png`  
-> * **คำบรรยายภาพ**: แถบเครื่องมือและตารางจัดเรียงแนวตั้ง เลื่อนอ่านง่าย ไม่มี Horizontal Scroll  
 ---
 
-#### 3. หน้าจอ IT Staff Ticket Detail
----
-> 📷 **[แทรกรูปภาพ 9.3A: หน้า Ticket Detail บน Tablet (768×1024)]**  
-> * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/staff-ticket-detail/07-ticket-detail-tablet.png`  
-> * **คำบรรยายภาพ**: เลย์เอาต์ 2 คอลัมน์ปรับขนาดการ์ดแสดงผลรายละเอียดตั๋วและเธรดความคิดเห็นอย่างลงตัว  
+> 📷 **[แทรกรูปภาพ 9.1: Login บน Tablet และ Mobile]**  
+> * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/authentication/09-login-tablet.png`, `10-login-mobile.png`  
+> * **คำบรรยายภาพ**: การ์ด Login อยู่กึ่งกลาง ปุ่มและช่องกรอกขนาดพอดีมือถือ  
 
-> 📷 **[แทรกรูปภาพ 9.3B: หน้า Ticket Detail บน Mobile (375×812)]**  
-> * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/staff-ticket-detail/08-ticket-detail-mobile.png`  
-> * **คำบรรยายภาพ**: เลย์เอาต์เปลี่ยนเป็นการเรียงซ้อนแบบ Single-column แท็บความคิดเห็นสลับใช้งานได้คล่องตัว  
+> 📷 **[แทรกรูปภาพ 9.2: แถบนำทางบนมือถือ]**  
+> * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/authentication/11-navbar-mobile.png`  
+> * **คำบรรยายภาพ**: ชื่อผู้ใช้และ Role Badge ยังมองเห็นบนมือถือ พร้อมปุ่ม Change Password และ Logout  
+
+> 📷 **[แทรกรูปภาพ 9.3: IT Staff Queue บน Tablet และ Mobile]**  
+> * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/staff-queue/08-queue-tablet.png`, `09-queue-mobile.png`  
+> * **คำบรรยายภาพ**: Tablet เป็นตารางกระชับ ส่วน Mobile เป็นการ์ดต่อตั๋ว ไม่มีคอลัมน์ถูกตัดหรือต้องเลื่อนแนวนอน  
+
+> 📷 **[แทรกรูปภาพ 9.4: IT Staff Ticket Detail บน Tablet และ Mobile]**  
+> * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/staff-ticket-detail/07-ticket-detail-tablet.png`, `08-ticket-detail-mobile.png`  
+> * **คำบรรยายภาพ**: เลย์เอาต์ 2 คอลัมน์เรียงเป็นคอลัมน์เดียวบนมือถือ การ์ด Status / Ownership / Priority ใช้งานได้ครบ  
+
+> 📷 **[แทรกรูปภาพ 9.5: Requester Ticket Detail บนมือถือ]**  
+> * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/requester-ticket-detail/05-detail-mobile.png`  
+> * **คำบรรยายภาพ**: รายละเอียดตั๋ว ไฟล์แนบ และ Public Comments อ่านและตอบได้บนมือถือ  
+
+> 📷 **[แทรกรูปภาพ 9.6: User Management บน Tablet และ Mobile]**  
+> * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/user-management/09-user-management-tablet.png`, `10-user-management-mobile.png`  
+> * **คำบรรยายภาพ**: Mobile แสดงผู้ใช้เป็นการ์ดพร้อม Role / Status / Edit ครบ  
+
 ---
 
-#### 4. หน้าจอ Administrator User Management
----
-> 📷 **[แทรกรูปภาพ 9.4A: หน้า User Management บน Tablet (768×1024)]**  
-> * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/user-management/09-user-management-tablet.png`  
-> * **คำบรรยายภาพ**: ตารางแสดงข้อมูลผู้ใช้และการดำเนินการ Edit / Reset Pass อ่านง่าย ชัดเจนบน Tablet  
-
-> 📷 **[แทรกรูปภาพ 9.4B: หน้า User Management บน Mobile (375×812)]**  
-> * **ไฟล์ภาพ**: `artifacts/lab-03/screenshots/user-management/10-user-management-mobile.png`  
-> * **คำบรรยายภาพ**: การแสดงผลบน Mobile รองรับการสัมผัส และ Modal หน้าต่างป๊อปอัปแสดงพอดีกับหน้าจอมือถือ ไม่ถูกตัดขอบ  
----
-
-### 9.2 แบบตรวจสอบความสอดคล้องด้านการออกแบบและการตอบสนอง (Visual & Responsive Checklist)
-- [x] **การเลือกใช้ชุดสี Zen Green**: ใช้งานสีหลัก `#006B3C` (เขียวเข้มสุภาพ), สีลำดับรอง `#0B7A46`, สีพื้นหลังโทนอ่อน `#EAF6EF` และ `#F5F7F6` อย่างกลมกลืนทั่วทั้งระบบ
-- [x] **การไร้การเลื่อนหน้าจอในแนวนอน (Zero Horizontal Scrolling)**: ทุกหน้าจอทั้ง Desktop, Tablet (768px), และ Mobile (375px) ปรับขนาดอัตโนมัติ ไม่มีข้อความหรือตารางล้นออกนอกจอ
-- [x] **หน้าต่างกล่องโต้ตอบ (Modal Dialogs)**: หน้าต่างสร้างบัญชี, แก้ไขบัญชี, รีเซ็ตรหัสผ่าน และเปลี่ยนรหัสผ่านครั้งแรก มีขนาดพอดีกับหน้าจอมือถือ ไม่ถูกบดบังหรือตกขอบ
-- [x] **ความชัดเจนของตัวอักษรและป้ายสถานะ**: สีของตัวอักษรและป้ายสถานะมีความแตกต่างจากพื้นหลังอย่างชัดเจน เพื่อให้อ่านข้อมูลได้ง่าย
-- [x] **การแยกแยะแถบการสนทนา**: แยกแยะระหว่าง Public Comments (การ์ดขาวขอบมาตรฐาน) และ Internal Notes (การ์ดสีเหลืองทอง `#FFFBEB` ขอบทอง พร้อมไอคอนแม่กุญแจ) อย่างชัดเจน
+### 9.2 แบบตรวจสอบความสอดคล้องด้านการออกแบบ (Visual & Responsive Checklist)
+- [x] **Zen Green**: ใช้สีหลัก `#006B3C`, สีรอง `#0B7A46`, พื้นหลัง `#EAF6EF` / `#F5F7F6` สม่ำเสมอทุกหน้า
+- [x] **Role navigation**: แต่ละบทบาทเห็นเฉพาะเมนูของตน (`authentication/08-navigation-*.png`)
+- [x] **Badges**: Role Badge แบบเดียวกันทุกหน้า (Requester / IT Staff / Administrator), ป้ายสถานะและความสำคัญอ่านง่าย คิวแสดงทั้ง IT และ Requested Priority
+- [x] **Editable vs read-only**: ช่องที่แก้ไขได้มีกรอบชัดเจน ส่วน Requested Priority แสดงเป็น "Immutable" ในหน้า Staff Detail
+- [x] **Validation placement**: ข้อความผิดพลาดอยู่ใต้ช่องกรอกหรือด้านบนของหน้าต่าง (`authentication/04b-*`, `user-management/04b-*`, `04c-*`, `06-*`)
+- [x] **Focus**: ช่องกรอกที่กำลังใช้งานมีกรอบสีเขียว (เช่นช่องค้นหาใน `staff-queue/09-queue-mobile.png`) ปุ่มทั้งหมดเข้าถึงได้ด้วยคีย์บอร์ด
+- [x] **Clipping / overlap**: ไม่มีคอลัมน์หรือปุ่มถูกตัด คิวและรายชื่อผู้ใช้เปลี่ยนเป็นการ์ดเมื่อกว้างน้อยกว่า 768px
+- [x] **Horizontal overflow**: ไม่มีการเลื่อนแนวนอนระดับหน้าเว็บที่ 1280px, 768px และ 375px
+- [x] **Modal dialogs**: หน้าต่างสร้าง/แก้ไขผู้ใช้, ตั้งรหัสผ่าน, เปลี่ยนรหัสผ่าน และยืนยันลบไฟล์แนบ พอดีกับมือถือ
+- [x] **Comments vs Notes**: Public Comments เป็นการ์ดสีเทาอ่อน ส่วน Internal Notes เป็นการ์ดสีเหลืองพร้อมไอคอนแม่กุญแจ

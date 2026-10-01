@@ -144,6 +144,26 @@ npx playwright test
 
 # 4. Regenerate responsive screenshots (after `npx prisma db seed` in server/)
 npx playwright test --config scripts/screenshots.config.ts
+
+# 5. Direct API authorization evidence with curl (API must be running: npm --prefix server run dev)
+bash scripts/api-authorization-evidence.sh
+```
+
+**Direct API authorization evidence** (output of command 5, recorded 2026-10-01):
+```text
+# Ticket TKT-2026-000001 (id=1) belongs to David Lee (Requester)
+GET   /api/tickets (no token)                                -> 401 {"error":"Authentication required"}
+GET   /api/tickets (only header X-Requester-Id: 1)           -> 401 {"error":"Authentication required"}
+GET   /api/tickets/1 (Jennifer, not the owner)               -> 404 {"error":"Ticket not found."}
+GET   /api/tickets/1/comments (Jennifer, not the owner)      -> 404 {"error":"Ticket not found"}
+GET   /api/tickets/1/internal-notes (David, Requester)       -> 403 {"error":"Access denied: insufficient permissions"}
+GET   /api/staff/tickets (David, Requester)                  -> 403 {"error":"Access denied: insufficient permissions"}
+PATCH /api/staff/tickets/1/status (David, Requester)         -> 403 {"error":"Access denied: insufficient permissions"}
+GET   /api/admin/users (Sarah, IT Staff)                     -> 403 {"error":"Access denied: insufficient permissions"}
+POST  /api/tickets/1/indicate-resolved (Sarah, IT Staff)     -> 403 {"error":"Access denied: insufficient permissions"}
+GET   /api/tickets/1/internal-notes (Sarah, IT Staff)        -> 200 [{"id":1,"content":"Known GPU driver bug with Thunderbolt dock firmware. Need to
+POST  /api/auth/logout (David)                               -> 200 {"message":"Logged out successfully"}
+GET   /api/tickets (David's old token after logout)          -> 401 {"error":"Invalid or expired authentication token"}
 ```
 
 ---

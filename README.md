@@ -118,6 +118,7 @@ npm --prefix server test    # API, security, and Lab 1/2 regression tests (121)
 npm --prefix client test    # UI component tests (40)
 npm run test:e2e            # Playwright end-to-end tests (7); starts server and client
 npm run screenshots         # Regenerates artifacts/lab-03/screenshots
+bash scripts/api-authorization-evidence.sh   # curl evidence of 401/403/404 rules (API must be running)
 ```
 The API tests use a separate database (`localdb_test` by default, or `TEST_DATABASE_URL`) that they create, migrate, and seed automatically, so they never add data to your development database. The E2E tests and screenshot script use the development servers and database.
 

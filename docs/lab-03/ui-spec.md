@@ -85,21 +85,23 @@
 - **Header & Stats Bar**: Shows active queue count.
 - **Search & Filter Bar**:
   - Keyword search input (ticket number, summary, requester name).
-  - Status filter dropdown (`All`, `New`, `Open`, `In Progress`, etc.).
+  - Status filter dropdown (`All` plus all 8 statuses, including `Reopened` and `Cancelled`).
   - Priority filter dropdown (`All`, `LOW`, `MEDIUM`, `HIGH`, `URGENT`).
   - Owner filter dropdown (`All`, `Unassigned`, `Assigned to Me`, `Specific Staff`).
-- **Data Table / Card List**:
-  - Columns: Ticket Number, Summary, Requester, Status, Requested Priority, IT Priority, Owner, Last Updated.
-  - Row click opens IT Staff Ticket Detail.
-- **States**: Loading skeleton, Empty queue illustration, No-search-results prompt with clear filters button.
-- **Pagination**: Previous/Next buttons, current page indicator, page size selector.
+  - Sort dropdown (Newest / Oldest, Ticket # ascending / descending, Priority).
+- **Table (≥ 768px)**:
+  - Columns: Ticket #, Summary with Requester and Category underneath, Status, IT Priority badge with "Req:" Requested Priority underneath, Owner (≥ 992px; otherwise shown under the summary), Created (≥ 1400px), and a `View` button.
+  - Row click or `View` opens IT Staff Ticket Detail.
+- **Card list (< 768px)**: one card per ticket with number, status badge, summary, requester and category, priorities, owner, and a full-width `View` button.
+- **States**: Loading spinner, empty queue message, no-results message with a Clear Filters button, safe error message.
+- **Pagination**: Previous / Next buttons, numbered pages, and "Showing page X of Y (N tickets)"; 10 tickets per page.
 
 ### 4.4 IT Staff Ticket Detail Screen
 - **Top Navigation Bar**: "Back to Queue" button, Ticket Number heading, and current Status badge.
 - **Action Control Bar**:
-  - Ownership: "Claim Ticket" button or dropdown to assign/reassign to staff member.
-  - IT Priority: Select dropdown to adjust IT Priority independently.
-  - Status Workflow: Dropdown / Action buttons showing only valid next statuses.
+  - Ownership: "Claim Ticket" button, plus an owner dropdown (active IT Staff and Administrators, or Unassign) with "Save Owner Assignment".
+  - IT Priority: Select dropdown with "Save IT Priority"; Requested Priority is shown read-only and labelled "Immutable".
+  - Status Workflow: one "Move to …" button per permitted next status; terminal statuses show an explanation instead of buttons.
 - **Main Section (2-Column Layout on Desktop)**:
   - Left Column: Issue details (Summary, Category, Related System, Full Description, Attachments download list).
   - Right Column: Requester info card, Resolution indication notice (if flagged by requester), and Activity / Discussion feed (Public Comments and Internal Notes tabs).
@@ -114,14 +116,15 @@
 ### 4.6 Administrator User Management Screen
 - **Header**: Title "User Management", total active users counter, and "+ Create User" primary action button.
 - **Filter Bar**: Search input (Name or Email), Role filter (`All`, `Requester`, `IT Staff`, `Administrator`).
-- **User Table**:
-  - Columns: Full Name, Email Address, Role (with badge), Status (`Active` / `Inactive` badge), Actions.
-  - Actions: "Edit" button and "Reset Password" button.
+- **User Table (≥ 768px)**:
+  - Columns: Name, Email, Role (shared role badge), Status (`Active` / `Inactive` badge), 1st Login Change, Actions.
+  - Actions: "Edit" button and "Reset Pass" (set new initial password) button.
+- **Card list (< 768px)**: one card per user with name, status, email, role badge, password-change flag, and Edit / Reset Pass buttons.
 - **Create User Modal**: Name, Email, Role dropdown (single role), Initial Password input (same password rules as Change Password; invalid email and duplicate email shown inside the modal).
 - **Edit User Modal**: Name, Email, Role, and Active/Inactive toggle switch (deactivation alert).
 - **Safety Safeguards**:
-  - Deactivate button disabled for current logged-in Administrator account.
-  - Warning alert if trying to deactivate the sole active Administrator.
+  - Active switch disabled (with a BR-19 warning) when editing the current Administrator's own account.
+  - Server error shown inside the modal when trying to deactivate or demote the last active Administrator (BR-20).
 
 ---
 
@@ -129,15 +132,21 @@
 
 | Viewport | Target Width | Layout Strategy |
 | :--- | :--- | :--- |
-| **Desktop** | `>= 992px` | Multi-column layouts; full data tables with sortable columns; side-by-side Ticket Detail panels. |
-| **Tablet** | `768px - 991px` | Condensed tables or responsive card rows; stacked filter bars; responsive drawer navigation if needed. |
-| **Mobile** | `< 768px` | Single-column vertical stacking; ticket cards instead of wide tables; sticky bottom action bars; full-width modal dialogs. |
+| **Desktop** | `>= 992px` | Multi-column layouts; queue and user tables with all key columns visible without scrolling at 1280px; side-by-side Ticket Detail panels. |
+| **Tablet** | `768px - 991px` | Condensed tables (secondary columns folded under the summary); filter bar wraps to two rows; Ticket Detail stacks. |
+| **Mobile** | `< 768px` | Single-column stacking; queue and user list rendered as cards instead of tables; header keeps name and role badge visible; full-width modal dialogs. |
+
+Evidence: `artifacts/lab-03/screenshots/` (desktop 1280px, tablet 768px, mobile 375px), regenerated with `npm run screenshots`.
 
 ### Visual Checklist (for Lab 3 Part 9 Evidence)
-- [x] Consistent Zen Green color tokens applied across all screens.
-- [x] Clear visual distinction between editable fields and read-only elements.
-- [x] Required field indicators (`*`) paired with descriptive error messages.
-- [x] Status and Priority badges render with distinct color schemes and readable text.
-- [x] Dual discussion tabs (Public Comments vs. Internal Notes) visually differentiated.
-- [x] Zero horizontal scrolling on Mobile (<768px) and Tablet viewports.
-- [x] All modals and dropdowns fit comfortably within mobile viewports without clipping.
+- [x] **Design consistency**: Zen Green colour tokens applied across all screens; new screens match the Lab 2 cards, buttons, and forms.
+- [x] **Role navigation**: each role sees only its permitted destinations (`authentication/08-navigation-*.png`, `user-management/11-non-admin-has-no-user-management.png`).
+- [x] **Badges**: one shared role badge style everywhere; status and priority badges use distinct colours with readable text; the queue shows both IT and Requested Priority.
+- [x] **Editable vs read-only**: editable inputs have white backgrounds and borders; read-only values (e.g. Requested Priority "Immutable", ticket metadata) are plain text or tinted panels.
+- [x] **Validation placement**: required fields marked `*`; errors appear directly under the field or at the top of the dialog (`authentication/04b-*`, `user-management/04b-*`, `04c-*`, `06-*`).
+- [x] **Focus**: the active input shows a green focus ring; all actions are buttons reachable by keyboard; dialogs use `aria-modal` with a title.
+- [x] **Clipping**: no truncated columns or cut-off buttons at 1280px, 768px, or 375px.
+- [x] **Overlap**: header, tabs, and dialogs do not overlap content; full-page screenshots are captured from the top of the page.
+- [x] **Horizontal overflow**: no page-level horizontal scrolling on any viewport; wide lists switch to cards under 768px.
+- [x] **Discussion threads**: Public Comments (grey cards) and Internal Notes (amber cards with a lock icon) are clearly distinguished; Requesters never see Internal Notes.
+- [x] **Modals**: create/edit user, set initial password, change password, and attachment removal dialogs fit within mobile viewports.

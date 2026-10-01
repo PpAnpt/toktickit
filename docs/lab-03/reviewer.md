@@ -12,6 +12,8 @@
 - **PR 4 (#21)**: https://github.com/PpAnpt/toktickit/pull/21
 - **PR 5 (#22)**: https://github.com/PpAnpt/toktickit/pull/22
 - **PR 6 (#23)**: https://github.com/PpAnpt/toktickit/pull/23
+- **PR 7 (#[เลข PR])**: https://github.com/PpAnpt/toktickit/pull/[เลข PR] — Lab 3 hardening (`feature/lab3-7-security-hardening`)
+- **Release PR (#[เลข PR])**: https://github.com/PpAnpt/toktickit/pull/[เลข PR] — `lab3-staging` → `main`
 
 ## 3. Comments and Responses
 | PR / Context | Reviewer Comment (@BBINGOAL) | Author Response (@PpAnpt) | Action Taken |
@@ -22,7 +24,9 @@
 | **PR #21** (`Feature/lab3 4 staff operation`) | Status transition matrix และ RBAC comments/notes ทำงานถูกต้องตาม spec ครับ | ขอบคุณครับ ควบคุม State Machine ห้ามข้ามขั้นตอน และแยกระหว่าง Public Comments กับ Internal Notes อย่างปลอดภัยครับ | รันเทสผ่านและ Merge เข้าสู่ `lab3-staging` |
 | **PR #22** (`Feature/lab3 5 admin user management`) | ถูกต้องครบถ้วน เทสผ่านหมดครับ | ขอบคุณครับ มีระบบ Self-deactivation guard และ Sole Admin guard พร้อมระบบรีเซ็ตรหัสผ่านเริ่มต้นเรียบร้อยครับ | รันเทสผ่านและ Merge เข้าสู่ `lab3-staging` |
 | **PR #23** (`Feature/lab3 6 e2e regression release`) | ครบถ้วนเรียบร้อยดีครับ | ขอบคุณครับ ครอบคลุมการรันเทส 110 ข้อ และ E2E 7 ข้อ รันผ่าน 100% Zero Regression ครับ | ตรวจสอบผลการรันเทสต์และ Merge เข้าสู่ `lab3-staging` |
+| **PR #[เลข PR]** (`Lab 3 hardening: authenticated identity, real logout, migration, requester comments`) | [คัดลอกความเห็นจริงของ reviewer จาก PR] | [คัดลอกคำตอบจริงจาก PR] | [การแก้ไขที่ทำตามความเห็น / Merge เข้าสู่ `lab3-staging`] |
+| **PR #[เลข PR]** (`lab3-staging` → `main`) | [คัดลอกความเห็นจริงของ reviewer จาก PR] | [คัดลอกคำตอบจริงจาก PR] | Merge เข้าสู่ `main` |
 
 ## 4. Final Approval
-- [x] Approved by Reviewer (@BBINGOAL)
+- [ ] Approved by Reviewer (@BBINGOAL) — PR #18–#23 approved; รออนุมัติ PR hardening และ release PR (`lab3-staging` → `main`)
 
