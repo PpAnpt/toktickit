@@ -8,7 +8,8 @@
   },
   "scripts": {
     "test:e2e": "playwright test",
-    "screenshots": "playwright test --config scripts/screenshots.config.ts"
+    "screenshots": "playwright test --config scripts/screenshots.config.ts",
+    "report": "node scripts/build-report-pdf.mjs"
   },
   "repository": {
     "type": "git",
@@ -23,6 +24,7 @@
   },
   "homepage": "https://github.com/PpAnpt/toktickit#readme",
   "devDependencies": {
-    "@playwright/test": "^1.63.0"
+    "@playwright/test": "^1.63.0",
+    "marked": "^14.1.4"
   }
 }
