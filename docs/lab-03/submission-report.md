@@ -22,7 +22,7 @@ main
         ├── feature/lab3-5-admin-user-management    (PR #22 - Merged)
         ├── feature/lab3-6-e2e-regression-release   (PR #23 - Merged)
         ├── feature/lab3-7-security-hardening       (PR #24 - Merged)
-        └── feature/lab3-8-release-docs             (PR #[เลข PR] - [สถานะ])
+        └── feature/lab3-8-release-docs             (PR #25 - [สถานะ])
 ```
 
 **หลักฐาน Git Commit History (`git log --oneline lab3-staging`):**
@@ -67,7 +67,7 @@ Issue ของ Lab 3 อยู่ใน repository [`PpAnpt/Lab1-TokTickIT`](ht
 | [#15](https://github.com/PpAnpt/Lab1-TokTickIT/issues/15) | [Lab 3] Administrator User Management & Safety Rules | toktickit #22 | Done |
 | [#16](https://github.com/PpAnpt/Lab1-TokTickIT/issues/16) | [Lab 3] E2E Regression, Visual Inspection & Final Release | toktickit #23 | Done |
 | [#17](https://github.com/PpAnpt/Lab1-TokTickIT/issues/17) | [Lab 3] Security Hardening, Lab 3 Migration & Requester Public Comments | toktickit #24 | Done |
-| [#18](https://github.com/PpAnpt/Lab1-TokTickIT/issues/18) | [Lab 3] Release Documentation & Integration to main | toktickit #[เลข PR] และ release PR | [Done หลัง merge ขึ้น `main`] |
+| [#18](https://github.com/PpAnpt/Lab1-TokTickIT/issues/18) | [Lab 3] Release Documentation & Integration to main | toktickit #25 และ release PR | [Done หลัง merge ขึ้น `main`] |
 
 ---
 
@@ -91,7 +91,7 @@ Issue ของ Lab 3 อยู่ใน repository [`PpAnpt/Lab1-TokTickIT`](ht
 | **PR #22** (`Feature/lab3 5 admin user management`) | ถูกต้องครบถ้วน เทสผ่านหมดครับ | ขอบคุณครับ มีระบบ Self-deactivation guard และ Sole Admin guard ครบถ้วน | Merge เข้าสู่ `lab3-staging` |
 | **PR #23** (`Feature/lab3 6 e2e regression release`) | ครบถ้วนเรียบร้อยดีครับ | ขอบคุณครับ 110 automated tests + 7 E2E tests ผ่าน 100% Zero Regression | Merge เข้าสู่ `lab3-staging` |
 | **PR #24** (`Feature/lab3 7 security hardening`) | เรียบร้อยครับ (Approved) | ขอบคุณครับ | Approved และ Merge เข้าสู่ `lab3-staging` โดย @BBINGOAL |
-| **PR #[เลข PR]** (`Feature/lab3 8 release docs`) | [คัดลอกความเห็นจริงของ reviewer] | [คัดลอกคำตอบจริง] | Merge เข้าสู่ `lab3-staging` |
+| **PR #25** (`Feature/lab3 8 release docs`) | [คัดลอกความเห็นจริงของ reviewer] | [คัดลอกคำตอบจริง] | Merge เข้าสู่ `lab3-staging` |
 | **PR #[เลข PR]** (`lab3-staging` → `main`) | [คัดลอกความเห็นจริงของ reviewer] | [คัดลอกคำตอบจริง] | Merge เข้าสู่ `main` |
 
 
