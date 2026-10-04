@@ -14,7 +14,8 @@
 - **PR 6 (#23)**: https://github.com/PpAnpt/toktickit/pull/23
 - **PR 7 (#24)**: https://github.com/PpAnpt/toktickit/pull/24 — Lab 3 hardening (`feature/lab3-7-security-hardening`)
 - **PR 8 (#25)**: https://github.com/PpAnpt/toktickit/pull/25 — Release documentation (`feature/lab3-8-release-docs`)
-- **Release PR (#[เลข PR])**: https://github.com/PpAnpt/toktickit/pull/[เลข PR] — `lab3-staging` → `main`
+- **PR 9 (#26)**: https://github.com/PpAnpt/toktickit/pull/26 — Release preparation (`feature/lab3-9-release-prep`)
+- **Release PR (#27)**: https://github.com/PpAnpt/toktickit/pull/27 — `lab3-staging` → `main`
 
 ## 3. Comments and Responses
 | PR / Context | Reviewer Comment (@BBINGOAL) | Author Response (@PpAnpt) | Action Taken |
@@ -26,9 +27,11 @@
 | **PR #22** (`Feature/lab3 5 admin user management`) | ถูกต้องครบถ้วน เทสผ่านหมดครับ | ขอบคุณครับ มีระบบ Self-deactivation guard และ Sole Admin guard พร้อมระบบรีเซ็ตรหัสผ่านเริ่มต้นเรียบร้อยครับ | รันเทสผ่านและ Merge เข้าสู่ `lab3-staging` |
 | **PR #23** (`Feature/lab3 6 e2e regression release`) | ครบถ้วนเรียบร้อยดีครับ | ขอบคุณครับ ครอบคลุมการรันเทส 110 ข้อ และ E2E 7 ข้อ รันผ่าน 100% Zero Regression ครับ | ตรวจสอบผลการรันเทสต์และ Merge เข้าสู่ `lab3-staging` |
 | **PR #24** (`Feature/lab3 7 security hardening`) | เรียบร้อยครับ (Approved) | ขอบคุณครับ | Approved และ Merge เข้าสู่ `lab3-staging` โดย @BBINGOAL (2026-10-04) |
-| **PR #25** (`Feature/lab3 8 release docs`) | [คัดลอกความเห็นจริงของ reviewer จาก PR] | [คัดลอกคำตอบจริงจาก PR] | Merge เข้าสู่ `lab3-staging` |
-| **PR #[เลข PR]** (`lab3-staging` → `main`) | [คัดลอกความเห็นจริงของ reviewer จาก PR] | [คัดลอกคำตอบจริงจาก PR] | Merge เข้าสู่ `main` |
+| **PR #25** (`Feature/lab3 8 release docs`) | เรียบร้อยดีครับ (Approved) | ขอบคุณครับ | Approved และ Merge เข้าสู่ `lab3-staging` โดย @BBINGOAL (2026-10-04) |
+| **PR #26** (`Feature/lab3 9 release prep`) | ดูความเห็นใน PR #26 | ดูคำตอบใน PR #26 | Merge เข้าสู่ `lab3-staging` |
+| **PR #27** (`Release: Lab 3 lab3-staging → main`) | ดูความเห็นใน PR #27 | ดูคำตอบใน PR #27 | Merge เข้าสู่ `main` |
 
 ## 4. Final Approval
-- [ ] Approved by Reviewer (@BBINGOAL) — PR #18–#24 approved; รออนุมัติ PR release docs และ release PR (`lab3-staging` → `main`)
+- [x] Approved by Reviewer (@BBINGOAL) — PR #18–#25 approved and merged into `lab3-staging`
+- [ ] PR #26 (release preparation) และ PR #27 (`lab3-staging` → `main`) — รอ Approve และ Merge
 

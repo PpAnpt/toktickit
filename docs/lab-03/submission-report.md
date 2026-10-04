@@ -22,7 +22,9 @@ main
         ├── feature/lab3-5-admin-user-management    (PR #22 - Merged)
         ├── feature/lab3-6-e2e-regression-release   (PR #23 - Merged)
         ├── feature/lab3-7-security-hardening       (PR #24 - Merged)
-        └── feature/lab3-8-release-docs             (PR #25 - [สถานะ])
+        ├── feature/lab3-8-release-docs             (PR #25 - Merged)
+        └── feature/lab3-9-release-prep             (PR #26)
+   lab3-staging → main                             (PR #27 - Release)
 ```
 
 **หลักฐาน Git Commit History (`git log --oneline lab3-staging`):**
@@ -67,7 +69,7 @@ Issue ของ Lab 3 อยู่ใน repository [`PpAnpt/Lab1-TokTickIT`](ht
 | [#15](https://github.com/PpAnpt/Lab1-TokTickIT/issues/15) | [Lab 3] Administrator User Management & Safety Rules | toktickit #22 | Done |
 | [#16](https://github.com/PpAnpt/Lab1-TokTickIT/issues/16) | [Lab 3] E2E Regression, Visual Inspection & Final Release | toktickit #23 | Done |
 | [#17](https://github.com/PpAnpt/Lab1-TokTickIT/issues/17) | [Lab 3] Security Hardening, Lab 3 Migration & Requester Public Comments | toktickit #24 | Done |
-| [#18](https://github.com/PpAnpt/Lab1-TokTickIT/issues/18) | [Lab 3] Release Documentation & Integration to main | toktickit #25 และ release PR | [Done หลัง merge ขึ้น `main`] |
+| [#18](https://github.com/PpAnpt/Lab1-TokTickIT/issues/18) | [Lab 3] Release Documentation & Integration to main | toktickit #25, #26 และ release #27 | Done หลัง merge ขึ้น `main` |
 
 ---
 
@@ -80,7 +82,7 @@ Issue ของ Lab 3 อยู่ใน repository [`PpAnpt/Lab1-TokTickIT`](ht
 ### 1.3 หลักฐานการตรวจทานโค้ด (Peer Review Sign-Off: `docs/lab-03/reviewer.md`)
 - **ผู้ตรวจทาน (Reviewer)**: ศิวรักษ์ ฉัตรวิชัย (Siwarak Chatvichai) &nbsp;|&nbsp; **GitHub**: @BBINGOAL
 - **รหัสนักศึกษา**: 67070501086
-- **สถานะการอนุมัติ**: PR #18–#24 Approved by Reviewer (@BBINGOAL) — [อัปเดตเมื่อ PR release docs และ release PR ขึ้น `main` ได้รับ Approve]
+- **สถานะการอนุมัติ**: PR #18–#25 Approved และ Merged โดย Reviewer (@BBINGOAL); PR #26 และ release PR #27 รอ Approve
 
 | Pull Request / บริบท | ความเห็นผู้ตรวจทาน (Reviewer Comment: @BBINGOAL) | คำตอบและการชี้แจง (Author Response: @PpAnpt) | การดำเนินการ (Action Taken) |
 |---|---|---|---|
@@ -91,8 +93,9 @@ Issue ของ Lab 3 อยู่ใน repository [`PpAnpt/Lab1-TokTickIT`](ht
 | **PR #22** (`Feature/lab3 5 admin user management`) | ถูกต้องครบถ้วน เทสผ่านหมดครับ | ขอบคุณครับ มีระบบ Self-deactivation guard และ Sole Admin guard ครบถ้วน | Merge เข้าสู่ `lab3-staging` |
 | **PR #23** (`Feature/lab3 6 e2e regression release`) | ครบถ้วนเรียบร้อยดีครับ | ขอบคุณครับ 110 automated tests + 7 E2E tests ผ่าน 100% Zero Regression | Merge เข้าสู่ `lab3-staging` |
 | **PR #24** (`Feature/lab3 7 security hardening`) | เรียบร้อยครับ (Approved) | ขอบคุณครับ | Approved และ Merge เข้าสู่ `lab3-staging` โดย @BBINGOAL |
-| **PR #25** (`Feature/lab3 8 release docs`) | [คัดลอกความเห็นจริงของ reviewer] | [คัดลอกคำตอบจริง] | Merge เข้าสู่ `lab3-staging` |
-| **PR #[เลข PR]** (`lab3-staging` → `main`) | [คัดลอกความเห็นจริงของ reviewer] | [คัดลอกคำตอบจริง] | Merge เข้าสู่ `main` |
+| **PR #25** (`Feature/lab3 8 release docs`) | เรียบร้อยดีครับ (Approved) | ขอบคุณครับ | Approved และ Merge เข้าสู่ `lab3-staging` โดย @BBINGOAL |
+| **PR #26** (`Feature/lab3 9 release prep`) | ดูความเห็นใน PR #26 | ดูคำตอบใน PR #26 | Merge เข้าสู่ `lab3-staging` |
+| **PR #27** (`lab3-staging` → `main`) | ดูความเห็นใน PR #27 | ดูคำตอบใน PR #27 | Merge เข้าสู่ `main` |
 
 
 ### 1.4 โครงสร้างโปรเจกต์และสุขอนามัยของ Repository

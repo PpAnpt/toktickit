@@ -26,3 +26,6 @@ playwright-report/
 .DS_Store
 Thumbs.db
 
+
+# Generated submission PDF (npm run report); attach it to the submission instead of committing
+docs/lab-03/lab-03-report.pdf
