@@ -16,6 +16,8 @@
 - **PR 8 (#25)**: https://github.com/PpAnpt/toktickit/pull/25 — Release documentation (`feature/lab3-8-release-docs`)
 - **PR 9 (#26)**: https://github.com/PpAnpt/toktickit/pull/26 — Release preparation (`feature/lab3-9-release-prep`)
 - **Release PR (#27)**: https://github.com/PpAnpt/toktickit/pull/27 — `lab3-staging` → `main`
+- **PR 10 (#28)**: https://github.com/PpAnpt/toktickit/pull/28 — Submission evidence & documentation sync (`feature/lab3-10-submission-evidence`)
+- **PR (#29)**: https://github.com/PpAnpt/toktickit/pull/29 — `lab3-staging` → `main` (submission evidence)
 
 ## 3. Comments and Responses
 | PR / Context | Reviewer Comment (@BBINGOAL) | Author Response (@PpAnpt) | Action Taken |
@@ -28,10 +30,10 @@
 | **PR #23** (`Feature/lab3 6 e2e regression release`) | ครบถ้วนเรียบร้อยดีครับ | ขอบคุณครับ ครอบคลุมการรันเทส 110 ข้อ และ E2E 7 ข้อ รันผ่าน 100% Zero Regression ครับ | ตรวจสอบผลการรันเทสต์และ Merge เข้าสู่ `lab3-staging` |
 | **PR #24** (`Feature/lab3 7 security hardening`) | เรียบร้อยครับ (Approved) | ขอบคุณครับ | Approved และ Merge เข้าสู่ `lab3-staging` โดย @BBINGOAL (2026-10-04) |
 | **PR #25** (`Feature/lab3 8 release docs`) | เรียบร้อยดีครับ (Approved) | ขอบคุณครับ | Approved และ Merge เข้าสู่ `lab3-staging` โดย @BBINGOAL (2026-10-04) |
-| **PR #26** (`Feature/lab3 9 release prep`) | ดูความเห็นใน PR #26 | ดูคำตอบใน PR #26 | Merge เข้าสู่ `lab3-staging` |
-| **PR #27** (`Release: Lab 3 lab3-staging → main`) | ดูความเห็นใน PR #27 | ดูคำตอบใน PR #27 | Merge เข้าสู่ `main` |
+| **PR #26** (`Feature/lab3 9 release prep`) | — (ไม่มีความเห็น) | — | Merge เข้าสู่ `lab3-staging` โดย @PpAnpt (2026-10-04) ไม่มี review |
+| **PR #27** (`Release: Lab 3 lab3-staging → main`) | — (ไม่มีความเห็น) | — | Merge เข้าสู่ `main` โดย @PpAnpt (2026-10-04, commit `13e94da`) ไม่มี review |
 
 ## 4. Final Approval
 - [x] Approved by Reviewer (@BBINGOAL) — PR #18–#25 approved and merged into `lab3-staging`
-- [ ] PR #26 (release preparation) และ PR #27 (`lab3-staging` → `main`) — รอ Approve และ Merge
+- [ ] PR #26 (release preparation) และ PR #27 (`lab3-staging` → `main`) — merge โดยผู้จัดทำโดยไม่มี review
 
