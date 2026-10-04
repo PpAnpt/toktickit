@@ -1,7 +1,7 @@
 # รายงานผลการทดลอง Lab 3: TokTickIT Users, Roles, IT Staff Ticketing, and Admin Screens
 **วิชา**: CPE 334 Introduction to Software Engineering in the Age of AI Agents  
 **ภาคการศึกษา**: 1/2026 &nbsp;|&nbsp; **คะแนนเต็ม**: 60 คะแนน  
-**ผู้จัดทำ**: นายอนภัทร พึ่งเทียน (Anapat Phungtian) &nbsp;|&nbsp; **รหัสนักศึกษา**: [ใส่รหัสนักศึกษาของคุณที่นี่] &nbsp;|&nbsp; **Section**: [ใส่ Section เช่น 1, 2, HS]  
+**ผู้จัดทำ**: Anapat Banjerdsilp &nbsp;|&nbsp; **รหัสนักศึกษา**: 67070501049 &nbsp;|&nbsp; **Section**: 1  
 **GitHub Repository**: https://github.com/PpAnpt/toktickit  
 **Staging Branch**: `lab3-staging` &nbsp;|&nbsp; **Release Branch**: `main`
 
@@ -24,7 +24,9 @@ main
         ├── feature/lab3-7-security-hardening       (PR #24 - Merged)
         ├── feature/lab3-8-release-docs             (PR #25 - Merged)
         └── feature/lab3-9-release-prep             (PR #26)
-   lab3-staging → main                             (PR #27 - Release)
+   lab3-staging → main                             (PR #27 - Release, Merged)
+        └── feature/lab3-10-submission-evidence     (PR #28)
+   lab3-staging → main                             (PR #29 - Submission evidence)
 ```
 
 **หลักฐาน Git Commit History (`git log --oneline lab3-staging`):**
@@ -69,12 +71,13 @@ Issue ของ Lab 3 อยู่ใน repository [`PpAnpt/Lab1-TokTickIT`](ht
 | [#15](https://github.com/PpAnpt/Lab1-TokTickIT/issues/15) | [Lab 3] Administrator User Management & Safety Rules | toktickit #22 | Done |
 | [#16](https://github.com/PpAnpt/Lab1-TokTickIT/issues/16) | [Lab 3] E2E Regression, Visual Inspection & Final Release | toktickit #23 | Done |
 | [#17](https://github.com/PpAnpt/Lab1-TokTickIT/issues/17) | [Lab 3] Security Hardening, Lab 3 Migration & Requester Public Comments | toktickit #24 | Done |
-| [#18](https://github.com/PpAnpt/Lab1-TokTickIT/issues/18) | [Lab 3] Release Documentation & Integration to main | toktickit #25, #26 และ release #27 | Done หลัง merge ขึ้น `main` |
+| [#18](https://github.com/PpAnpt/Lab1-TokTickIT/issues/18) | [Lab 3] Release Documentation & Integration to main | toktickit #25, #26 และ release #27 | Done |
+| [#19](https://github.com/PpAnpt/Lab1-TokTickIT/issues/19) | [Lab 3] Final Submission Evidence & Documentation Sync | toktickit #28 และ #29 | Done |
 
 ---
 
 > 📷 **[แทรกรูปภาพที่ 1.2: ภาพหน้าจอ GitHub Projects Kanban Board]**  
-> * **สิ่งที่ต้องแคป/ใส่รูป**: หน้าจอ GitHub Projects แสดงคอลัมน์ Done ที่มี Issue ของ Lab 3 ทั้ง 8 รายการ (#11–#18) อยู่ครบทั้งหมด  
+> * **สิ่งที่ต้องแคป/ใส่รูป**: หน้าจอ GitHub Projects แสดงคอลัมน์ Done ที่มี Issue ของ Lab 3 ทั้ง 9 รายการ (#11–#19) อยู่ครบทั้งหมด  
 > * **คำบรรยายภาพ**: กระดานติดตามงาน GitHub Project แสดง Issue ทั้งหมดอยู่ในสถานะ Done สำเร็จครบ 100%  
 
 ---
