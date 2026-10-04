@@ -1,12 +1,18 @@
 import React, { useState } from 'react';
 import { changePassword } from '../api';
+import { passwordPolicyError, PASSWORD_RULE_TEXT } from '../validation';
 
 interface ChangePasswordProps {
   onPasswordChanged: () => void;
   userEmail?: string;
+  // When provided, the dialog is a voluntary password change that can be cancelled.
+  // Without it, the dialog is the mandatory first-login change and cannot be dismissed.
+  onCancel?: () => void;
 }
 
-export const ChangePassword: React.FC<ChangePasswordProps> = ({ onPasswordChanged, userEmail }) => {
+
+export const ChangePassword: React.FC<ChangePasswordProps> = ({ onPasswordChanged, userEmail, onCancel }) => {
+  const isMandatory = !onCancel;
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -22,8 +28,9 @@ export const ChangePassword: React.FC<ChangePasswordProps> = ({ onPasswordChange
       return;
     }
 
-    if (newPassword.length < 8) {
-      setError('New password must be at least 8 characters long.');
+    const policyError = passwordPolicyError(newPassword, 'New password');
+    if (policyError) {
+      setError(policyError);
       return;
     }
 
@@ -49,7 +56,7 @@ export const ChangePassword: React.FC<ChangePasswordProps> = ({ onPasswordChange
   };
 
   return (
-    <div style={{
+    <div role="dialog" aria-modal="true" aria-labelledby="change-password-title" style={{
       position: 'fixed',
       top: 0,
       left: 0,
@@ -87,12 +94,14 @@ export const ChangePassword: React.FC<ChangePasswordProps> = ({ onPasswordChange
           }}>
             🔒
           </div>
-          <h3 style={{ margin: '0 0 0.5rem 0', color: '#1A2F25', fontWeight: 700 }}>
+          <h3 id="change-password-title" style={{ margin: '0 0 0.5rem 0', color: '#1A2F25', fontWeight: 700 }}>
             Change Your Password
           </h3>
           <p style={{ margin: 0, color: '#5C7164', fontSize: '0.875rem' }}>
             {userEmail ? `Signed in as ${userEmail}. ` : ''}
-            You are signing in with an initial password. You must set a new password before entering the application.
+            {isMandatory
+              ? 'You are signing in with an initial password. You must set a new password before entering the application.'
+              : 'Your other signed-in sessions will be signed out after the change.'}
           </p>
         </div>
 
@@ -119,7 +128,7 @@ export const ChangePassword: React.FC<ChangePasswordProps> = ({ onPasswordChange
               fontWeight: 600,
               marginBottom: '0.375rem'
             }}>
-              Current Initial Password <span style={{ color: '#B30000' }}>*</span>
+              {isMandatory ? 'Current Initial Password' : 'Current Password'} <span style={{ color: '#B30000' }}>*</span>
             </label>
             <input
               id="currentPassword"
@@ -156,6 +165,7 @@ export const ChangePassword: React.FC<ChangePasswordProps> = ({ onPasswordChange
               onChange={(e) => setNewPassword(e.target.value)}
               placeholder="Enter at least 8 characters"
               disabled={isLoading}
+              aria-describedby="newPasswordHelp"
               style={{
                 width: '100%',
                 padding: '0.6rem 0.8rem',
@@ -165,6 +175,9 @@ export const ChangePassword: React.FC<ChangePasswordProps> = ({ onPasswordChange
                 boxSizing: 'border-box'
               }}
             />
+            <div id="newPasswordHelp" style={{ color: '#5C7164', fontSize: '0.78rem', marginTop: '0.3rem' }}>
+              {PASSWORD_RULE_TEXT}.
+            </div>
           </div>
 
           <div style={{ marginBottom: '1.5rem' }}>
@@ -213,6 +226,27 @@ export const ChangePassword: React.FC<ChangePasswordProps> = ({ onPasswordChange
           >
             {isLoading ? 'Saving New Password...' : 'Save New Password'}
           </button>
+          {onCancel && (
+            <button
+              type="button"
+              onClick={onCancel}
+              disabled={isLoading}
+              style={{
+                width: '100%',
+                marginTop: '0.5rem',
+                backgroundColor: '#FFFFFF',
+                color: '#1A2F25',
+                border: '1px solid #CBD5E1',
+                borderRadius: '6px',
+                padding: '0.65rem',
+                fontWeight: 600,
+                fontSize: '0.9rem',
+                cursor: 'pointer'
+              }}
+            >
+              Cancel
+            </button>
+          )}
         </form>
       </div>
     </div>

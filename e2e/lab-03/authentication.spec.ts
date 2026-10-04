@@ -10,7 +10,7 @@ test.describe('E2E-01: Authentication & First-Login Password Change Flow', () =>
     await page.goto('/');
   });
 
-  test('AC-01 & AC-05: Authenticate with valid credentials and successfully logout', async ({ page }) => {
+  test('AC-01 & AC-05: Authenticate with valid credentials and successfully logout', async ({ page, request }) => {
     // 1. Verify Login page loaded
     await expect(page.locator('h2')).toContainText('TokTickIT');
     await expect(page.locator('text=Sign in to your account')).toBeVisible();
@@ -22,14 +22,32 @@ test.describe('E2E-01: Authentication & First-Login Password Change Flow', () =>
 
     // 3. Verify user enters main application shell
     await expect(page.locator('text=David Lee')).toBeVisible();
-    await expect(page.locator('.badge:has-text("REQUESTER")')).toBeVisible();
+    await expect(page.getByTestId('role-badge')).toHaveText('Requester');
     await expect(page.locator('button:has-text("Logout")')).toBeVisible();
+
+    // Role navigation: a Requester is never offered staff or admin destinations
+    await expect(page.locator('button:has-text("Ticket Queue")')).toHaveCount(0);
+    await expect(page.locator('button:has-text("User Management")')).toHaveCount(0);
+
+    const token = await page.evaluate(() => localStorage.getItem('toktickit_auth_token'));
+    expect(token).toBeTruthy();
 
     // 4. Logout
     await page.click('button:has-text("Logout")');
 
     // 5. Verify returned to login screen
     await expect(page.locator('h2')).toContainText('TokTickIT');
+    await expect(page.locator('#email')).toBeVisible();
+    await expect(page.locator('text=You have been signed out')).toBeVisible();
+
+    // 6. Direct API access with the old token is blocked after logout (session invalidated)
+    const direct = await request.get('http://localhost:3000/api/tickets', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    expect(direct.status()).toBe(401);
+
+    // 7. Reloading the page does not restore the session
+    await page.reload();
     await expect(page.locator('#email')).toBeVisible();
   });
 
@@ -77,9 +95,17 @@ test.describe('E2E-01: Authentication & First-Login Password Change Flow', () =>
     await page.fill('#password', 'Initial123!');
     await page.click('button[type="submit"]:has-text("Sign In")');
 
-    // Verify modal overlay forces password change
+    // Verify the password change screen is enforced and no application navigation is available
     await expect(page.locator('h3:has-text("Change Your Password")')).toBeVisible();
     await expect(page.locator('text=You are signing in with an initial password')).toBeVisible();
+    await expect(page.locator('button:has-text("Ticket Queue")')).toHaveCount(0);
+
+    // Invalid new password is rejected with visible validation feedback
+    await page.fill('#currentPassword', 'Initial123!');
+    await page.fill('#newPassword', 'short');
+    await page.fill('#confirmPassword', 'short');
+    await page.click('button[type="submit"]:has-text("Save New Password")');
+    await expect(page.locator('div[role="alert"]')).toContainText(/at least 8 characters/i);
 
     // Fill new password matching confirmation
     const newPass = `NewPass_${Date.now()}!`;
@@ -88,9 +114,11 @@ test.describe('E2E-01: Authentication & First-Login Password Change Flow', () =>
     await page.fill('#confirmPassword', newPass);
     await page.click('button[type="submit"]:has-text("Save New Password")');
 
-    // Verify modal closes and user reaches portal
-    await expect(page.locator('text=Elena Rostova')).toBeVisible();
-    await expect(page.locator('.badge:has-text("IT_STAFF")')).toBeVisible();
+    // Verify the user reaches the portal and the IT Staff queue loads with the new session
+    await expect(page.locator('.navbar').getByText('Elena Rostova')).toBeVisible();
+    await expect(page.getByTestId('role-badge')).toHaveText('IT Staff');
+    await expect(page.locator('text=IT Staff Ticket Queue')).toBeVisible();
+    await expect(page.locator('table tbody tr').first()).toBeVisible();
 
     // Logout
     await page.click('button:has-text("Logout")');

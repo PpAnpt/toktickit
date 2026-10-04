@@ -188,6 +188,27 @@ describe('Lab 3: Staff Ticket Queue APIs (Issue 3)', () => {
         });
     });
 
+    describe('Invalid queue query parameters (400 instead of server errors)', () => {
+        it.each([
+            ['status=Pending', /status/i],
+            ['priority=CRITICAL', /priority/i],
+            ['owner=somebody', /owner/i],
+            ['sortBy=passwordHash', /sortBy/i],
+            ['sortOrder=sideways', /sortOrder/i],
+        ])('rejects %s', async (query, message) => {
+            const res = await request(app)
+                .get(`/api/staff/tickets?${query}`)
+                .set('Authorization', `Bearer ${staffToken}`);
+            expect(res.status).toBe(400);
+            expect(res.body.error).toMatch(message);
+        });
+
+        it('rejects an unauthenticated queue request with 401', async () => {
+            const res = await request(app).get('/api/staff/tickets');
+            expect(res.status).toBe(401);
+        });
+    });
+
     describe('GET /api/staff/members', () => {
         it('should return list of active staff and admin members', async () => {
             const res = await request(app)

@@ -9,12 +9,14 @@ import {
   fetchInternalNotes,
   postInternalNote,
   fetchStaffMembers,
+  downloadAttachment,
   type StaffTicketDetail as StaffTicketDetailType,
   type StaffMember,
   type CommentItem,
   type NoteItem,
   type UserProfile
 } from '../api';
+import { RoleBadge, ROLE_LABELS } from './RoleBadge';
 
 interface StaffTicketDetailProps {
   ticketId: number;
@@ -367,14 +369,17 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
                           )}
                         </div>
                         {!att.isRemoved && (
-                          <a
-                            href={`http://localhost:3000/api/tickets/${ticket.id}/attachments/${att.id}/download`}
+                          <button
+                            type="button"
                             className="btn btn-sm btn-outline-primary"
-                            target="_blank"
-                            rel="noreferrer"
+                            onClick={() =>
+                              downloadAttachment(ticket.id, att.id, att.originalFileName).catch((err: Error) =>
+                                setError(err.message)
+                              )
+                            }
                           >
                             Download
-                          </a>
+                          </button>
                         )}
                       </li>
                     ))}
@@ -432,9 +437,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
                             <div className="d-flex justify-content-between align-items-center mb-2">
                               <span className="fw-semibold text-dark">
                                 {c.author.name}{' '}
-                                <span className="badge bg-secondary ms-1 small" style={{ fontSize: '0.7rem' }}>
-                                  {c.author.role}
-                                </span>
+                                <RoleBadge role={c.author.role} className="ms-1" />
                               </span>
                               <span className="text-muted small">
                                 {new Date(c.createdAt).toLocaleString()}
@@ -491,9 +494,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
                             <div className="d-flex justify-content-between align-items-center mb-2">
                               <span className="fw-semibold text-dark">
                                 🔒 {n.author.name}{' '}
-                                <span className="badge bg-warning text-dark ms-1 small" style={{ fontSize: '0.7rem' }}>
-                                  {n.author.role}
-                                </span>
+                                <RoleBadge role={n.author.role} className="ms-1" />
                               </span>
                               <span className="text-muted small">
                                 {new Date(n.createdAt).toLocaleString()}
@@ -583,9 +584,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
                 {ticket.owner ? (
                   <div className="fw-semibold text-dark">
                     👤 {ticket.owner.name}{' '}
-                    <span className="badge bg-light text-secondary border small ms-1">
-                      {ticket.owner.role}
-                    </span>
+                    <RoleBadge role={ticket.owner.role} className="ms-1" />
                   </div>
                 ) : (
                   <div className="text-danger fw-semibold">Unassigned</div>
@@ -605,7 +604,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
                   <option value="">-- Unassign (None) --</option>
                   {staffMembers.map((m) => (
                     <option key={m.id} value={m.id}>
-                      {m.name} ({m.role}) {m.id === currentUser.id ? '★ You' : ''}
+                      {m.name} ({ROLE_LABELS[m.role] ?? m.role}) {m.id === currentUser.id ? '★ You' : ''}
                     </option>
                   ))}
                 </select>

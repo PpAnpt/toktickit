@@ -90,17 +90,41 @@ describe('Lab 3: Public Comments & Internal Notes APIs (Issue 4)', () => {
             expect(resAdmin.status).toBe(200);
         });
 
-        it('should reject non-owner requester from posting or viewing comments with 403 Forbidden', async () => {
+        it('should reject non-owner requester with 404 so the ticket existence is not revealed', async () => {
             const postRes = await request(app)
                 .post(`/api/tickets/${testTicketId}/comments`)
                 .set('Authorization', `Bearer ${otherRequesterToken}`)
                 .send({ content: 'Trying to sneak into other ticket comment' });
-            expect(postRes.status).toBe(403);
+            expect(postRes.status).toBe(404);
 
             const getRes = await request(app)
                 .get(`/api/tickets/${testTicketId}/comments`)
                 .set('Authorization', `Bearer ${otherRequesterToken}`);
-            expect(getRes.status).toBe(403);
+            expect(getRes.status).toBe(404);
+            expect(Array.isArray(getRes.body)).toBe(false);
+        });
+
+        it('should reject unauthenticated access to comments with 401', async () => {
+            const res = await request(app).get(`/api/tickets/${testTicketId}/comments`);
+            expect(res.status).toBe(401);
+        });
+
+        it('should reject comment content longer than 2000 characters', async () => {
+            const res = await request(app)
+                .post(`/api/tickets/${testTicketId}/comments`)
+                .set('Authorization', `Bearer ${ownerToken}`)
+                .send({ content: 'a'.repeat(2001) });
+            expect(res.status).toBe(400);
+        });
+
+        it('should store comment content as plain text (rendered escaped by the client)', async () => {
+            const html = '<img src=x onerror=alert(1)>';
+            const res = await request(app)
+                .post(`/api/tickets/${testTicketId}/comments`)
+                .set('Authorization', `Bearer ${ownerToken}`)
+                .send({ content: html });
+            expect(res.status).toBe(201);
+            expect(res.body.content).toBe(html);
         });
 
         it('should reject comment with empty content with 400 Bad Request', async () => {

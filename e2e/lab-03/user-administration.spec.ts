@@ -17,7 +17,7 @@ test.describe('E2E-03: Administrator User Administration & Password Reset Lifecy
     await page.click('button[type="submit"]:has-text("Sign In")');
 
     // 2. Verify Administrator badge and User Management tab
-    await expect(page.locator('.badge:has-text("ADMINISTRATOR")')).toBeVisible();
+    await expect(page.getByTestId('role-badge')).toHaveText('Administrator');
     await expect(page.locator('button:has-text("User Management")')).toBeVisible();
 
     // 3. Open User Management
@@ -33,7 +33,7 @@ test.describe('E2E-03: Administrator User Administration & Password Reset Lifecy
     await page.fill('input[placeholder*="Alex Mercer"]', newStaffName);
     await page.fill('input[placeholder*="alex.mercer@example.com"]', newStaffEmail);
     await page.locator('.modal select').selectOption('IT_STAFF');
-    await page.fill('input[placeholder*="At least 6 characters"]', 'InitialPass123!');
+    await page.fill('input[placeholder*="8+ characters"]', 'InitialPass123!');
     await page.click('button[type="submit"]:has-text("Create Account")');
 
     // 5. Verify creation success alert
@@ -61,7 +61,7 @@ test.describe('E2E-03: Administrator User Administration & Password Reset Lifecy
     await staffRow.locator('button:has-text("Reset Pass")').click();
 
     await expect(page.locator('h5:has-text("Reset User Password")')).toBeVisible();
-    await page.fill('input[placeholder*="At least 6 characters"]', 'NewStaffResetPass123!');
+    await page.fill('input[placeholder*="8+ characters"]', 'NewStaffResetPass123!');
     await page.click('button:has-text("Confirm Reset Password")');
     await expect(page.locator('.alert-success')).toBeVisible();
 
