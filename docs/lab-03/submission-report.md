@@ -54,21 +54,25 @@ b4d20f9 Merge pull request #22 from PpAnpt/feature/lab3-5-admin-user-management
 ---
 
 ### 1.2 กระดานติดตามงาน GitHub Projects (Kanban Board)
-ทุก Issue ถูกติดตามสถานะผ่าน GitHub Projects Kanban Board โดยมีสถานะครบถ้วนจาก Backlog, In Progress สู่ **Done**:
-- **Issue #1**: Sprint 3 Engineering Contract & Specifications (`Done`)
-- **Issue #2**: Authentication Foundation, Bcrypt Hashing & MustChangePassword (`Done`)
-- **Issue #3**: IT Staff Ticket Queue API & Responsive UI (`Done`)
-- **Issue #4**: Staff Operations, State Machine Transitions & Two-Tier Notes (`Done`)
-- **Issue #5**: Minimalist Administrator User Management & Safety Guards (`Done`)
-- **Issue #6**: E2E Test Automation, Zero Regression & Release Packaging (`Done`)
-- **Issue #[เลข]**: Security Hardening, Lab 3 Migration & Requester Public Comments (`Done`)
+**ลิงก์ Kanban Board**: [TokTickIT Individual Sprints](https://github.com/users/PpAnpt/projects/3) (สถานะ: Backlog → Specified → Started → PR Review → Fixing → **Done**)
 
-> ⚠️ ตรวจเลข Issue ให้ตรงกับบน GitHub ก่อนส่ง: บน GitHub เลข #1–#23 เป็น Pull Request ทั้งหมด หาก Kanban ใช้ draft item ให้กด "Convert to issue" ก่อน แล้วแก้เลขในรายการด้านบนให้ตรง
+Issue ของ Lab 3 อยู่ใน repository [`PpAnpt/Lab1-TokTickIT`](https://github.com/PpAnpt/Lab1-TokTickIT/issues) แต่ละ Issue เขียนเกณฑ์การยอมรับเป็น `AC 1`, `AC 2`, … และเชื่อมกับ Pull Request ใน `PpAnpt/toktickit`:
+
+| Issue | งาน | Pull Request | สถานะ |
+|---|---|---|---|
+| [#11](https://github.com/PpAnpt/Lab1-TokTickIT/issues/11) | [Lab 3] Sprint Specification & Test Plan | toktickit #18 | Done |
+| [#12](https://github.com/PpAnpt/Lab1-TokTickIT/issues/12) | [Lab 3] Authentication Foundation & Mandatory Password Change | toktickit #19 | Done |
+| [#13](https://github.com/PpAnpt/Lab1-TokTickIT/issues/13) | [Lab 3] IT Staff Ticket Queue | toktickit #20 | Done |
+| [#14](https://github.com/PpAnpt/Lab1-TokTickIT/issues/14) | [Lab 3] IT Staff Ticket Operations & Discussion Threads | toktickit #21 | Done |
+| [#15](https://github.com/PpAnpt/Lab1-TokTickIT/issues/15) | [Lab 3] Administrator User Management & Safety Rules | toktickit #22 | Done |
+| [#16](https://github.com/PpAnpt/Lab1-TokTickIT/issues/16) | [Lab 3] E2E Regression, Visual Inspection & Final Release | toktickit #23 | Done |
+| [#17](https://github.com/PpAnpt/Lab1-TokTickIT/issues/17) | [Lab 3] Security Hardening, Lab 3 Migration & Requester Public Comments | toktickit #24 | Done |
+| [#18](https://github.com/PpAnpt/Lab1-TokTickIT/issues/18) | [Lab 3] Release Documentation & Integration to main | toktickit #[เลข PR] และ release PR | [Done หลัง merge ขึ้น `main`] |
 
 ---
 
 > 📷 **[แทรกรูปภาพที่ 1.2: ภาพหน้าจอ GitHub Projects Kanban Board]**  
-> * **สิ่งที่ต้องแคป/ใส่รูป**: หน้าจอ GitHub Projects แสดงคอลัมน์ Done ที่มี Issue ทั้ง 7 รายการอยู่ครบทั้งหมด  
+> * **สิ่งที่ต้องแคป/ใส่รูป**: หน้าจอ GitHub Projects แสดงคอลัมน์ Done ที่มี Issue ของ Lab 3 ทั้ง 8 รายการ (#11–#18) อยู่ครบทั้งหมด  
 > * **คำบรรยายภาพ**: กระดานติดตามงาน GitHub Project แสดง Issue ทั้งหมดอยู่ในสถานะ Done สำเร็จครบ 100%  
 
 ---
