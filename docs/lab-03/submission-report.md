@@ -21,11 +21,14 @@ main
         ├── feature/lab3-4-staff-operation          (PR #21 - Merged)
         ├── feature/lab3-5-admin-user-management    (PR #22 - Merged)
         ├── feature/lab3-6-e2e-regression-release   (PR #23 - Merged)
-        └── feature/lab3-7-security-hardening       (PR #[เลข PR] - [สถานะ])
+        ├── feature/lab3-7-security-hardening       (PR #24 - Merged)
+        └── feature/lab3-8-release-docs             (PR #[เลข PR] - [สถานะ])
 ```
 
-**หลักฐาน Git Commit History (`git log --oneline`):**
+**หลักฐาน Git Commit History (`git log --oneline lab3-staging`):**
 ```text
+ae201be Merge pull request #24 from PpAnpt/feature/lab3-7-security-hardening
+7fdc9cb docs(lab-03): update submission report, reviewer log, and UI spec for hardening work
 542cf4c docs(lab-03): specification v1.1, API/UI specs, traceability, and README
 6be2b0e test(e2e): rewrite requester regression, harden flows, add screenshot capture
 f324e09 feat(client): authenticated requester flow, public comments, and responsive fixes
@@ -40,7 +43,7 @@ b4d20f9 Merge pull request #22 from PpAnpt/feature/lab3-5-admin-user-management
 83d7a92 Merge pull request #19 from PpAnpt/feature/lab3-2-auth-foundation
 2d35451 Merge pull request #18 from PpAnpt/feature/1-specs-contract
 ```
-> ⚠️ หลัง merge PR ของ branch ที่ 7 และ `lab3-staging` → `main` แล้ว ให้รัน `git log --oneline --graph -20` บน `main` แล้ววางผลจริงแทนบล็อกด้านบน
+> ⚠️ หลัง merge `lab3-staging` → `main` แล้ว ให้รัน `git log --oneline --graph -20 main` แล้วแคปหน้าจอใส่รูปที่ 1.1 เพื่อแสดงว่างานขึ้น `main` แล้ว
 
 ---
 
@@ -73,7 +76,7 @@ b4d20f9 Merge pull request #22 from PpAnpt/feature/lab3-5-admin-user-management
 ### 1.3 หลักฐานการตรวจทานโค้ด (Peer Review Sign-Off: `docs/lab-03/reviewer.md`)
 - **ผู้ตรวจทาน (Reviewer)**: ศิวรักษ์ ฉัตรวิชัย (Siwarak Chatvichai) &nbsp;|&nbsp; **GitHub**: @BBINGOAL
 - **รหัสนักศึกษา**: 67070501086
-- **สถานะการอนุมัติ**: [x] Approved by Reviewer (@BBINGOAL) ครบถ้วนทุก PR
+- **สถานะการอนุมัติ**: PR #18–#24 Approved by Reviewer (@BBINGOAL) — [อัปเดตเมื่อ PR release docs และ release PR ขึ้น `main` ได้รับ Approve]
 
 | Pull Request / บริบท | ความเห็นผู้ตรวจทาน (Reviewer Comment: @BBINGOAL) | คำตอบและการชี้แจง (Author Response: @PpAnpt) | การดำเนินการ (Action Taken) |
 |---|---|---|---|
@@ -83,7 +86,9 @@ b4d20f9 Merge pull request #22 from PpAnpt/feature/lab3-5-admin-user-management
 | **PR #21** (`Feature/lab3 4 staff operation`) | Status transition matrix และ RBAC comments/notes ทำงานถูกต้องตาม spec ครับ | ขอบคุณครับ ควบคุม State Machine ห้ามข้ามขั้นตอน และแยก Internal Notes อย่างปลอดภัย | Merge เข้าสู่ `lab3-staging` |
 | **PR #22** (`Feature/lab3 5 admin user management`) | ถูกต้องครบถ้วน เทสผ่านหมดครับ | ขอบคุณครับ มีระบบ Self-deactivation guard และ Sole Admin guard ครบถ้วน | Merge เข้าสู่ `lab3-staging` |
 | **PR #23** (`Feature/lab3 6 e2e regression release`) | ครบถ้วนเรียบร้อยดีครับ | ขอบคุณครับ 110 automated tests + 7 E2E tests ผ่าน 100% Zero Regression | Merge เข้าสู่ `lab3-staging` |
-| **PR #[เลข PR]** (`Lab 3 hardening: authenticated identity, real logout, migration, requester comments`) | [คัดลอกความเห็นจริงของ reviewer จาก PR] | [คัดลอกคำตอบจริงของคุณจาก PR] | [Merge เข้าสู่ `lab3-staging`] |
+| **PR #24** (`Feature/lab3 7 security hardening`) | เรียบร้อยครับ (Approved) | ขอบคุณครับ | Approved และ Merge เข้าสู่ `lab3-staging` โดย @BBINGOAL |
+| **PR #[เลข PR]** (`Feature/lab3 8 release docs`) | [คัดลอกความเห็นจริงของ reviewer] | [คัดลอกคำตอบจริง] | Merge เข้าสู่ `lab3-staging` |
+| **PR #[เลข PR]** (`lab3-staging` → `main`) | [คัดลอกความเห็นจริงของ reviewer] | [คัดลอกคำตอบจริง] | Merge เข้าสู่ `main` |
 
 
 ### 1.4 โครงสร้างโปรเจกต์และสุขอนามัยของ Repository
@@ -176,7 +181,8 @@ b4d20f9 Merge pull request #22 from PpAnpt/feature/lab3-5-admin-user-management
 
 ### 3.2 ผลลัพธ์การรันชุดทดสอบอัตโนมัติ (API 121 + UI 40 + E2E 7 = 168 Tests Passed)
 
-> ⚠️ ผลด้านล่างรันบน branch `feature/lab3-7-security-hardening` เมื่อ 2026-10-01 — ให้รันใหม่บน `main` หลัง merge แล้ววางผลจริงแทน (Part 3 ต้องใช้ผลจาก main)
+> ผลด้านล่างรันเมื่อ 2026-10-04 บน `lab3-staging` commit `ae201be` (หลัง merge PR #24) ซึ่งเป็นโค้ดชุดเดียวกับที่ปล่อยขึ้น `main`  
+> ⚠️ หลัง merge ขึ้น `main` ให้รันคำสั่งเดียวกันบน `main` แล้วแคปหน้าจอ Terminal แนบเพิ่ม (Part 3 ต้องการผลจาก main)
 
 #### 1. ฝั่งเซิร์ฟเวอร์: API, Security & Regression Tests (12 Test Files, 121 Passed)
 ```text

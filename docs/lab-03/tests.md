@@ -185,7 +185,7 @@ Reviewed on the screenshots in `artifacts/lab-03/screenshots/` (desktop 1280px, 
 ---
 
 ## 6. Automated Test Execution Results
-Recorded on 2026-10-01 from branch `feature/lab3-7-security-hardening`. **Re-run on `main` after merging and paste that output into the PDF (Part 3).**
+Recorded on 2026-10-04 on `lab3-staging` at `ae201be` (after merging PR #24), the code released to `main`. Counts are identical to the earlier run on `feature/lab3-7-security-hardening`. Server type-check and client production build also pass. For the PDF (Part 3), add a screenshot of the same commands run on `main` after the release merge.
 
 ### 6.1 Server API, security, and regression tests — 12 files, 121 passed
 ```text
