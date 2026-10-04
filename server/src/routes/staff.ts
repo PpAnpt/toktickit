@@ -23,6 +23,9 @@ const statusQueryMap: Record<string, TicketStatus> = {
     'Cancelled': TicketStatus.Cancelled,
 };
 
+const PRIORITIES: TicketPriority[] = ['LOW', 'MEDIUM', 'HIGH', 'URGENT'];
+const QUEUE_SORT_FIELDS = ['createdAt', 'updatedAt', 'ticketNumber', 'status', 'priority'];
+
 const statusDisplayMap: Record<string, string> = {
     InProgress: 'In Progress',
     WaitingForRequester: 'Waiting for Requester',
@@ -37,12 +40,33 @@ router.get('/tickets', async (req: AuthenticatedRequest, res: Response) => {
         const prisma = getPrisma();
         const page = Math.max(1, parseInt(req.query.page as string) || 1);
         const limit = Math.min(50, Math.max(1, parseInt(req.query.limit as string) || 10));
-        const search = (req.query.search as string)?.trim();
+        const search = typeof req.query.search === 'string' ? req.query.search.trim() : '';
         const statusParam = req.query.status as string;
         const priorityParam = req.query.priority as string;
         const ownerParam = req.query.owner as string;
         const sortBy = (req.query.sortBy as string) || 'createdAt';
-        const sortOrder = (req.query.sortOrder as string)?.toLowerCase() === 'asc' ? 'asc' : 'desc';
+        const sortOrderParam = ((req.query.sortOrder as string) || 'desc').toLowerCase();
+
+        // Invalid query parameters are rejected with 400 instead of being silently ignored
+        if (!QUEUE_SORT_FIELDS.includes(sortBy)) {
+            return res.status(400).json({ error: `Invalid sortBy. Allowed values: ${QUEUE_SORT_FIELDS.join(', ')}` });
+        }
+        if (sortOrderParam !== 'asc' && sortOrderParam !== 'desc') {
+            return res.status(400).json({ error: 'Invalid sortOrder. Allowed values: asc, desc' });
+        }
+        if (statusParam && statusParam !== 'All' && !statusQueryMap[statusParam]) {
+            return res.status(400).json({ error: 'Invalid status filter' });
+        }
+        if (priorityParam && priorityParam !== 'All' && !PRIORITIES.includes(priorityParam.toUpperCase() as TicketPriority)) {
+            return res.status(400).json({ error: 'Invalid priority filter. Allowed values: LOW, MEDIUM, HIGH, URGENT' });
+        }
+        if (ownerParam && !['All', 'unassigned', 'me'].includes(ownerParam) && !/^\d+$/.test(ownerParam)) {
+            return res.status(400).json({ error: 'Invalid owner filter. Allowed values: unassigned, me, or a staff user id' });
+        }
+        if (search.length > 100) {
+            return res.status(400).json({ error: 'Search text must be at most 100 characters' });
+        }
+        const sortOrder: 'asc' | 'desc' = sortOrderParam;
 
         const andConditions: any[] = [];
 
@@ -59,8 +83,7 @@ router.get('/tickets', async (req: AuthenticatedRequest, res: Response) => {
 
         // Status filter
         if (statusParam && statusParam !== 'All') {
-            const mappedStatus = statusQueryMap[statusParam] || (statusParam as TicketStatus);
-            andConditions.push({ status: mappedStatus });
+            andConditions.push({ status: statusQueryMap[statusParam] });
         }
 
         // Priority filter (checks effective IT Priority, or requestedPriority if itPriority is null)
@@ -80,19 +103,19 @@ router.get('/tickets', async (req: AuthenticatedRequest, res: Response) => {
                 andConditions.push({ ownerId: null });
             } else if (ownerParam === 'me') {
                 andConditions.push({ ownerId: req.user!.id });
-            } else if (!isNaN(Number(ownerParam))) {
+            } else {
                 andConditions.push({ ownerId: Number(ownerParam) });
             }
         }
 
         const whereCondition = andConditions.length > 0 ? { AND: andConditions } : {};
 
-        // Sorting
-        let orderBy: any = { createdAt: sortOrder };
-        if (['ticketNumber', 'updatedAt', 'createdAt'].includes(sortBy)) {
-            orderBy = { [sortBy]: sortOrder };
-        } else if (sortBy === 'priority') {
-            orderBy = [{ itPriority: sortOrder }, { requestedPriority: sortOrder }];
+        // Sorting (single column; ties broken by id for stable pagination)
+        let orderBy: any;
+        if (sortBy === 'priority') {
+            orderBy = [{ itPriority: sortOrder }, { requestedPriority: sortOrder }, { id: 'desc' }];
+        } else {
+            orderBy = [{ [sortBy]: sortOrder }, { id: 'desc' }];
         }
 
         const total = await prisma.ticket.count({ where: whereCondition });
@@ -257,6 +280,9 @@ router.patch('/tickets/:id/owner', async (req: AuthenticatedRequest, res: Respon
 
         // If ownerId is provided, validate that user exists, is active, and is IT_STAFF or ADMIN
         if (ownerId !== null && ownerId !== undefined) {
+            if (!Number.isInteger(Number(ownerId)) || Number(ownerId) <= 0) {
+                return res.status(400).json({ error: 'ownerId must be a valid user id or null' });
+            }
             const targetUser = await prisma.user.findUnique({
                 where: { id: Number(ownerId) },
             });

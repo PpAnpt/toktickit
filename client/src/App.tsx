@@ -5,12 +5,32 @@ import { ChangePassword } from './components/ChangePassword';
 import { StaffTicketQueue } from './components/StaffTicketQueue';
 import { StaffTicketDetail } from './components/StaffTicketDetail';
 import { UserManagement } from './components/UserManagement';
-import { getMe, logout as apiLogout, type UserProfile, getAuthToken, indicateTicketResolved } from './api';
+import { PublicComments } from './components/PublicComments';
+import { RoleBadge } from './components/RoleBadge';
+import {
+  getMe,
+  logout as apiLogout,
+  type UserProfile,
+  type OptionItem,
+  getAuthToken,
+  indicateTicketResolved,
+  fetchCategories,
+  fetchRelatedSystems,
+  fetchMyTickets,
+  fetchMyTicket,
+  createTicket,
+  uploadAttachment,
+  removeAttachment,
+  downloadAttachment,
+  SESSION_EXPIRED_EVENT,
+} from './api';
 
+type Tab = 'create' | 'my-tickets' | 'staff-queue' | 'user-management';
 
-interface OptionItem {
-  id: number;
-  name: string;
+function defaultTabFor(role: UserProfile['role']): Tab {
+  if (role === 'ADMINISTRATOR') return 'user-management';
+  if (role === 'IT_STAFF') return 'staff-queue';
+  return 'create';
 }
 
 interface AttachmentItem {
@@ -30,7 +50,7 @@ interface TicketItem {
   summary: string;
   description: string;
   status: string;
-  requestedPriority: 'LOW' | 'MEDIUM' | 'HIGH';
+  requestedPriority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
   createdAt: string;
   updatedAt: string;
   category: OptionItem;
@@ -42,48 +62,58 @@ interface TicketItem {
 function App() {
   // Authentication & Navigation
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
-  const [currentRequesterId, setCurrentRequesterId] = useState<number | ''>('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [currentTab, setCurrentTab] = useState<'create' | 'my-tickets' | 'staff-queue' | 'user-management'>('create');
+  const [isRestoringSession, setIsRestoringSession] = useState(() => Boolean(getAuthToken()));
+  const [loginNotice, setLoginNotice] = useState('');
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [profileMessage, setProfileMessage] = useState('');
+  const [currentTab, setCurrentTab] = useState<Tab>('create');
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
+
+  const isRequester = currentUser?.role === 'REQUESTER';
+  const isStaffOrAdmin = currentUser?.role === 'IT_STAFF' || currentUser?.role === 'ADMINISTRATOR';
+  // Normal application screens stay unavailable until a mandatory password change is saved (BR-02)
+  const hasAppAccess = isLoggedIn && !!currentUser && !currentUser.mustChangePassword;
 
   // Check existing session on component mount
   useEffect(() => {
-    const token = getAuthToken();
-    if (token) {
-      getMe()
-        .then(user => {
-          setCurrentUser(user);
-          setCurrentRequesterId(user.id);
-          setIsLoggedIn(true);
-          if (user.role === 'IT_STAFF' || user.role === 'ADMINISTRATOR') {
-            setCurrentTab('staff-queue');
-          }
-        })
-        .catch(() => {
-          setIsLoggedIn(false);
-          setCurrentUser(null);
-        });
-    }
+    if (!getAuthToken()) return;
+    getMe()
+      .then(user => {
+        setCurrentUser(user);
+        setIsLoggedIn(true);
+        setCurrentTab(defaultTabFor(user.role));
+      })
+      .catch(() => {
+        setIsLoggedIn(false);
+        setCurrentUser(null);
+      })
+      .finally(() => setIsRestoringSession(false));
   }, []);
 
   const handleLoginSuccess = (user: UserProfile) => {
+    setLoginNotice('');
     setCurrentUser(user);
-    setCurrentRequesterId(user.id);
     setIsLoggedIn(true);
-    if (user.role === 'IT_STAFF' || user.role === 'ADMINISTRATOR') {
-      setCurrentTab('staff-queue');
-    } else {
-      setCurrentTab('create');
-    }
+    setCurrentTab(defaultTabFor(user.role));
   };
 
+  const handlePasswordChanged = async () => {
+    const wasVoluntary = showChangePassword;
+    setShowChangePassword(false);
+    try {
+      setCurrentUser(await getMe());
+    } catch {
+      setCurrentUser(prev => (prev ? { ...prev, mustChangePassword: false } : null));
+    }
+    if (wasVoluntary) setProfileMessage('Your password was changed successfully.');
+  };
 
-  const handleLogout = async () => {
-    await apiLogout();
+  const resetSessionState = () => {
     setCurrentUser(null);
     setIsLoggedIn(false);
-    setCurrentRequesterId('');
+    setShowChangePassword(false);
+    setProfileMessage('');
     setSelectedTicketId(null);
     setTickets([]);
     setTotalItems(0);
@@ -95,8 +125,26 @@ function App() {
     setSuccessMessage(null);
     setApiError('');
     setFormErrors({});
+    setDetailError('');
+    setDetailFeedback(null);
     window.history.pushState(null, '', '/');
   };
+
+  const handleLogout = async () => {
+    await apiLogout();
+    resetSessionState();
+    setLoginNotice('You have been signed out.');
+  };
+
+  // The server rejected the stored token (expired, revoked by logout/password reset, or deactivated)
+  useEffect(() => {
+    const onExpired = () => {
+      resetSessionState();
+      setLoginNotice('Your session has ended. Please sign in again.');
+    };
+    window.addEventListener(SESSION_EXPIRED_EVENT, onExpired);
+    return () => window.removeEventListener(SESSION_EXPIRED_EVENT, onExpired);
+  });
 
   // Reference Data
   const [categories, setCategories] = useState<OptionItem[]>([]);
@@ -126,11 +174,14 @@ function App() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
+  const [ticketsError, setTicketsError] = useState('');
 
   // Ticket Detail State
   const [ticketDetail, setTicketDetail] = useState<TicketItem | null>(null);
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [detailError, setDetailError] = useState('');
+  const [detailFeedback, setDetailFeedback] = useState<{ type: 'success' | 'danger'; text: string } | null>(null);
+  const [isIndicatingResolved, setIsIndicatingResolved] = useState(false);
   const [additionalFiles, setAdditionalFiles] = useState<File[]>([]);
   const [isUploadingMore, setIsUploadingMore] = useState(false);
 
@@ -138,27 +189,27 @@ function App() {
   const [removingAttachment, setRemovingAttachment] = useState<{ id: number; name: string } | null>(null);
   const [removalReasonInput, setRemovalReasonInput] = useState('');
   const [isSubmittingRemoval, setIsSubmittingRemoval] = useState(false);
+  const [removalError, setRemovalError] = useState('');
 
 
-  // 2. ดึง Categories & Systems เมื่อล็อกอิน
+  // 2. Load Categories & Related Systems for the Requester Create Ticket form
   useEffect(() => {
-    if (isLoggedIn) {
-      fetch('http://localhost:3000/api/categories')
-        .then(res => res.json())
-        .then(data => setCategories(data))
-        .catch(err => console.error('Failed to load categories:', err));
+    if (hasAppAccess && isRequester) {
+      fetchCategories()
+        .then(setCategories)
+        .catch(err => setApiError(err.message));
 
-      fetch('http://localhost:3000/api/related-systems')
-        .then(res => res.json())
-        .then(data => setRelatedSystems(data))
-        .catch(err => console.error('Failed to load systems:', err));
+      fetchRelatedSystems()
+        .then(setRelatedSystems)
+        .catch(err => setApiError(err.message));
     }
-  }, [isLoggedIn]);
+  }, [hasAppAccess, isRequester]);
 
   // 3. ฟังก์ชันดึงรายการตั๋ว (My Tickets)
   const fetchTickets = useCallback(async () => {
-    if (!isLoggedIn || !currentRequesterId) return;
+    if (!hasAppAccess || !isRequester) return;
     setIsLoadingTickets(true);
+    setTicketsError('');
     try {
       const params = new URLSearchParams({
         page: String(currentPage),
@@ -170,64 +221,47 @@ function App() {
       if (filterCategory) params.append('categoryId', String(filterCategory));
       if (filterStatus) params.append('status', filterStatus);
 
-      const res = await fetch(`http://localhost:3000/api/tickets?${params.toString()}`, {
-        headers: { 'X-Requester-Id': String(currentRequesterId) }
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setTickets(data.data || []);
-        setTotalPages(data.meta?.totalPages || 1);
-        setTotalItems(data.meta?.totalItems || 0);
-      }
-    } catch (err) {
-      console.error('Failed to fetch tickets:', err);
+      const data = await fetchMyTickets<TicketItem>(params);
+      setTickets(data.data || []);
+      setTotalPages(data.meta?.totalPages || 1);
+      setTotalItems(data.meta?.totalItems || 0);
+    } catch (err: any) {
+      setTicketsError(err.message || 'Failed to load tickets.');
     } finally {
       setIsLoadingTickets(false);
     }
-  }, [isLoggedIn, currentRequesterId, currentPage, search, filterCategory, filterStatus, sortBy, sortOrder]);
+  }, [hasAppAccess, isRequester, currentPage, search, filterCategory, filterStatus, sortBy, sortOrder]);
 
-  // ดึงรายการตั๋วและอัปเดตจำนวนทันทีเมื่อเข้าสู่ระบบ หรือเมื่อสลับผู้ใช้ หรือเมื่อเปลี่ยนแท็บ
+  // Reload the ticket list when signing in, switching tabs, or closing a ticket detail
   useEffect(() => {
-    if (isLoggedIn && currentRequesterId) {
+    if (hasAppAccess && isRequester) {
       fetchTickets();
     } else {
       setTickets([]);
       setTotalItems(0);
     }
-  }, [isLoggedIn, currentRequesterId, currentTab, selectedTicketId, fetchTickets]);
+  }, [hasAppAccess, isRequester, currentTab, selectedTicketId, fetchTickets]);
 
-  // 4. ฟังก์ชันดึงรายละเอียดตั๋ว (Ticket Detail)
+  // 4. Requester Ticket Detail (other requesters' tickets return 404 from the API)
   const fetchTicketDetail = useCallback(async (id: number) => {
     setIsLoadingDetail(true);
     setDetailError('');
     try {
-      const res = await fetch(`http://localhost:3000/api/tickets/${id}`, {
-        headers: { 'X-Requester-Id': String(currentRequesterId) }
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setTicketDetail(data);
-      } else {
-        if (res.status === 403) {
-          setDetailError('403 Forbidden: You are not authorized to view this ticket.');
-        } else if (res.status === 404) {
-          setDetailError('404 Not Found: Ticket not found.');
-        } else {
-          setDetailError(data.error || 'Failed to load ticket details.');
-        }
-      }
+      setTicketDetail(await fetchMyTicket<TicketItem>(id));
     } catch (err: any) {
-      setDetailError(err.message || 'Network error.');
+      setTicketDetail(null);
+      setDetailError(err.message || 'Failed to load ticket details.');
     } finally {
       setIsLoadingDetail(false);
     }
-  }, [currentRequesterId]);
+  }, []);
 
   useEffect(() => {
-    if (selectedTicketId !== null && isLoggedIn) {
+    if (selectedTicketId !== null && hasAppAccess && isRequester) {
+      setDetailFeedback(null);
       fetchTicketDetail(selectedTicketId);
     }
-  }, [selectedTicketId, isLoggedIn, fetchTicketDetail]);
+  }, [selectedTicketId, hasAppAccess, isRequester, fetchTicketDetail]);
 
   // Sync URL Routing: ตรวจสอบ /tickets/:id จาก Browser Address Bar อัตโนมัติ
   useEffect(() => {
@@ -293,34 +327,24 @@ function App() {
     await new Promise((resolve) => setTimeout(resolve, 700));
 
     try {
-      const ticketRes = await fetch('http://localhost:3000/api/tickets', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Requester-Id': String(currentRequesterId)
-        },
-        body: JSON.stringify({
-          summary,
-          description,
-          categoryId: Number(categoryId),
-          relatedSystemId: Number(relatedSystemId),
-          requestedPriority: priority
-        })
+      const ticketData = await createTicket({
+        summary,
+        description,
+        categoryId: Number(categoryId),
+        relatedSystemId: Number(relatedSystemId),
+        requestedPriority: priority
       });
 
-      const ticketData = await ticketRes.json();
-      if (!ticketRes.ok) throw new Error(ticketData.error || 'Failed to create ticket.');
-
-      if (selectedFiles.length > 0) {
-        for (const file of selectedFiles) {
-          const formData = new FormData();
-          formData.append('file', file);
-          await fetch(`http://localhost:3000/api/tickets/${ticketData.id}/attachments`, {
-            method: 'POST',
-            headers: { 'X-Requester-Id': String(currentRequesterId) },
-            body: formData
-          });
+      const failedUploads: string[] = [];
+      for (const file of selectedFiles) {
+        try {
+          await uploadAttachment(ticketData.id, file);
+        } catch (uploadErr: any) {
+          failedUploads.push(`${file.name}: ${uploadErr.message}`);
         }
+      }
+      if (failedUploads.length > 0) {
+        setApiError(`Ticket ${ticketData.ticketNumber} was created, but some attachments failed to upload. ${failedUploads.join(' ')}`);
       }
 
       setSuccessMessage({ ticketNumber: ticketData.ticketNumber });
@@ -338,128 +362,140 @@ function App() {
     }
   };
 
-  // ดาวน์โหลดไฟล์แนบ
+  // Download an attachment with the authenticated session
   const handleDownloadAttachment = (ticketId: number, attachmentId: number, fileName: string) => {
-    fetch(`http://localhost:3000/api/tickets/${ticketId}/attachments/${attachmentId}/download`, {
-      headers: { 'X-Requester-Id': String(currentRequesterId) }
-    })
-      .then(response => {
-        if (!response.ok) throw new Error('File download failed or file removed.');
-        return response.blob();
-      })
-      .then(blob => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = fileName;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-      })
-      .catch(err => alert(err.message));
+    setDetailFeedback(null);
+    downloadAttachment(ticketId, attachmentId, fileName)
+      .catch(err => setDetailFeedback({ type: 'danger', text: err.message }));
   };
 
-  // ลบไฟล์แบบ Soft-remove พร้อมระบุเหตุผล (Removal Reason)
+  // Soft-remove an attachment with a required removal reason
   const handleOpenRemoveModal = (attId: number, attName: string) => {
     setRemovingAttachment({ id: attId, name: attName });
     setRemovalReasonInput('Uploaded wrong file version');
+    setRemovalError('');
   };
 
   const handleConfirmRemove = async (ticketId: number) => {
     if (!removingAttachment) return;
-    const reason = removalReasonInput.trim() || 'Uploaded wrong file version';
+    const reason = removalReasonInput.trim();
+    if (!reason) {
+      setRemovalError('A removal reason is required.');
+      return;
+    }
     setIsSubmittingRemoval(true);
+    setRemovalError('');
     try {
-      const res = await fetch(`http://localhost:3000/api/tickets/${ticketId}/attachments/${removingAttachment.id}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Requester-Id': String(currentRequesterId)
-        },
-        body: JSON.stringify({ reason })
-      });
-      if (res.ok) {
-        setRemovingAttachment(null);
-        fetchTicketDetail(ticketId); // โหลดข้อมูลใหม่
-      } else {
-        const data = await res.json();
-        alert(data.error || 'Failed to remove attachment.');
-      }
+      await removeAttachment(ticketId, removingAttachment.id, reason);
+      setDetailFeedback({ type: 'success', text: `${removingAttachment.name} was removed.` });
+      setRemovingAttachment(null);
+      fetchTicketDetail(ticketId);
     } catch (err: any) {
-      alert(err.message);
+      setRemovalError(err.message || 'Failed to remove attachment.');
     } finally {
       setIsSubmittingRemoval(false);
     }
   };
 
-  // อัปโหลดไฟล์เพิ่มในหน้า Detail
+  // Upload more attachments from the detail page
   const handleAddMoreAttachments = async (ticketId: number) => {
     if (additionalFiles.length === 0) return;
     setIsUploadingMore(true);
-    try {
-      for (const file of additionalFiles) {
-        const formData = new FormData();
-        formData.append('file', file);
-        const res = await fetch(`http://localhost:3000/api/tickets/${ticketId}/attachments`, {
-          method: 'POST',
-          headers: { 'X-Requester-Id': String(currentRequesterId) },
-          body: formData
-        });
-        if (!res.ok) {
-          const data = await res.json();
-          alert(data.error || 'Failed to upload attachment.');
-        }
+    setDetailFeedback(null);
+    const failed: string[] = [];
+    for (const file of additionalFiles) {
+      try {
+        await uploadAttachment(ticketId, file);
+      } catch (err: any) {
+        failed.push(err.message);
       }
-      setAdditionalFiles([]);
+    }
+    setDetailFeedback(
+      failed.length > 0
+        ? { type: 'danger', text: failed.join(' ') }
+        : { type: 'success', text: 'Attachment uploaded.' }
+    );
+    setAdditionalFiles([]);
+    setIsUploadingMore(false);
+    fetchTicketDetail(ticketId);
+  };
+
+  // Requester indicates the problem appears resolved; IT Staff still formally resolve the ticket
+  const handleIndicateResolved = async (ticketId: number) => {
+    setIsIndicatingResolved(true);
+    setDetailFeedback(null);
+    try {
+      await indicateTicketResolved(ticketId);
+      setDetailFeedback({ type: 'success', text: 'Thanks! IT Staff have been told the problem appears resolved.' });
       fetchTicketDetail(ticketId);
     } catch (err: any) {
-      alert(err.message);
+      setDetailFeedback({ type: 'danger', text: err.message || 'Failed to indicate the problem is resolved.' });
     } finally {
-      setIsUploadingMore(false);
+      setIsIndicatingResolved(false);
     }
   };
 
 
-  // --- 1. หน้า Login ---
-  if (!isLoggedIn) {
+  // --- 1. Login ---
+  if (isRestoringSession && !isLoggedIn) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '80vh' }} role="status">
+        <div className="spinner-border text-success"></div>
+        <span className="ms-2 text-muted">Restoring your session...</span>
+      </div>
+    );
+  }
+
+  if (!isLoggedIn || !currentUser) {
     return (
       <Login
         onLoginSuccess={handleLoginSuccess}
+        notice={loginNotice}
       />
     );
   }
 
-  // --- 2. หน้า Main Portal หลังล็อกอิน ---
+  // --- 2. Mandatory first-login password change: no application screens until saved ---
+  if (currentUser.mustChangePassword) {
+    return (
+      <div style={{ backgroundColor: '#F5F7F6', minHeight: '100vh' }}>
+        <ChangePassword onPasswordChanged={handlePasswordChanged} userEmail={currentUser.email} />
+        <div className="position-fixed bottom-0 end-0 p-3" style={{ zIndex: 10000 }}>
+          <button className="btn btn-light btn-sm fw-semibold" onClick={handleLogout}>Sign out</button>
+        </div>
+      </div>
+    );
+  }
+
+  // --- 3. Main application after login ---
   return (
     <div style={{ backgroundColor: '#F5F7F6', minHeight: '100vh', paddingBottom: '40px' }}>
-      {currentUser?.mustChangePassword && (
+      {showChangePassword && (
         <ChangePassword
-          onPasswordChanged={() => {
-            setCurrentUser(prev => prev ? { ...prev, mustChangePassword: false } : null);
-          }}
+          onPasswordChanged={handlePasswordChanged}
+          onCancel={() => setShowChangePassword(false)}
           userEmail={currentUser.email}
         />
       )}
 
       {/* Zen Green Navigation Bar */}
-      <nav className="navbar navbar-expand-lg navbar-light shadow-sm">
-        <div className="container">
+      <nav className="navbar navbar-light shadow-sm">
+        <div className="container flex-wrap gap-2">
           <span className="navbar-brand fw-bold fs-4">TokTickIT</span>
-          <div className="d-flex align-items-center">
-            <div className="text-dark me-3 text-end d-none d-sm-block">
-              <div className="fw-semibold">
-                {currentUser?.name}
-                <span className="badge rounded-pill ms-2" style={{
-                  backgroundColor: (currentUser?.role || 'REQUESTER') === 'ADMINISTRATOR' ? '#F3E8FF' : (currentUser?.role || 'REQUESTER') === 'IT_STAFF' ? '#EAF6EF' : '#E6FFFA',
-                  color: (currentUser?.role || 'REQUESTER') === 'ADMINISTRATOR' ? '#6B21A8' : (currentUser?.role || 'REQUESTER') === 'IT_STAFF' ? '#006B3C' : '#047481',
-                  border: '1px solid currentColor',
-                  fontSize: '0.75rem'
-                }}>
-                  {currentUser?.role || 'REQUESTER'}
-                </span>
+          <div className="d-flex align-items-center flex-wrap gap-2 ms-auto">
+            <div className="text-dark text-end" style={{ minWidth: 0 }}>
+              <div className="fw-semibold d-flex align-items-center justify-content-end flex-wrap gap-1">
+                <span className="text-truncate" style={{ maxWidth: '45vw' }}>{currentUser.name}</span>
+                <RoleBadge role={currentUser.role} className="ms-1" data-testid="role-badge" />
               </div>
-              <small className="text-muted">{currentUser?.email}</small>
+              <small className="text-muted d-none d-sm-inline">{currentUser.email}</small>
             </div>
+            <button
+              className="btn btn-outline-secondary btn-sm fw-semibold"
+              onClick={() => { setProfileMessage(''); setShowChangePassword(true); }}
+            >
+              Change Password
+            </button>
             <button
               className="btn btn-outline-danger btn-sm fw-bold"
               onClick={handleLogout}
@@ -471,9 +507,16 @@ function App() {
       </nav>
 
       <div className="container mt-4">
-        {/* Navigation Tabs */}
-        <div className="d-flex border-bottom mb-4" style={{ borderColor: '#0B7A46' }}>
-          {currentUser?.role === 'ADMINISTRATOR' && (
+        {profileMessage && (
+          <div className="alert alert-success alert-dismissible py-2" role="status">
+            {profileMessage}
+            <button type="button" className="btn-close" aria-label="Close" onClick={() => setProfileMessage('')}></button>
+          </div>
+        )}
+
+        {/* Role-based navigation: only destinations the current role may use */}
+        <nav className="d-flex flex-wrap border-bottom mb-4" style={{ borderColor: '#0B7A46' }} aria-label="Main navigation">
+          {currentUser.role === 'ADMINISTRATOR' && (
             <button
               className={`btn btn-link text-decoration-none pb-2 px-3 fw-bold ${currentTab === 'user-management' && selectedTicketId === null ? 'border-bottom border-3' : 'text-secondary'}`}
               style={{ color: currentTab === 'user-management' && selectedTicketId === null ? '#006B3C' : '#6c757d', borderColor: '#006B3C', borderRadius: 0 }}
@@ -482,33 +525,37 @@ function App() {
               User Management
             </button>
           )}
-          {(currentUser?.role === 'IT_STAFF' || currentUser?.role === 'ADMINISTRATOR') && (
+          {isStaffOrAdmin && (
             <button
-              className={`btn btn-link text-decoration-none pb-2 px-3 fw-bold ${currentTab === 'staff-queue' && selectedTicketId === null ? 'border-bottom border-3' : 'text-secondary'}`}
-              style={{ color: currentTab === 'staff-queue' && selectedTicketId === null ? '#006B3C' : '#6c757d', borderColor: '#006B3C', borderRadius: 0 }}
+              className={`btn btn-link text-decoration-none pb-2 px-3 fw-bold ${currentTab === 'staff-queue' ? 'border-bottom border-3' : 'text-secondary'}`}
+              style={{ color: currentTab === 'staff-queue' ? '#006B3C' : '#6c757d', borderColor: '#006B3C', borderRadius: 0 }}
               onClick={() => { setCurrentTab('staff-queue'); setSelectedTicketId(null); }}
             >
               Ticket Queue
             </button>
           )}
-          <button
-            className={`btn btn-link text-decoration-none pb-2 px-3 fw-bold ${currentTab === 'create' && selectedTicketId === null ? 'border-bottom border-3' : 'text-secondary'}`}
-            style={{ color: currentTab === 'create' && selectedTicketId === null ? '#006B3C' : '#6c757d', borderColor: '#006B3C', borderRadius: 0 }}
-            onClick={() => { setCurrentTab('create'); setSelectedTicketId(null); }}
-          >
-            Create Ticket
-          </button>
-          <button
-            className={`btn btn-link text-decoration-none pb-2 px-3 fw-bold ${currentTab === 'my-tickets' || (selectedTicketId !== null && currentTab !== 'staff-queue' && currentTab !== 'user-management') ? 'border-bottom border-3' : 'text-secondary'}`}
-            style={{ color: currentTab === 'my-tickets' || (selectedTicketId !== null && currentTab !== 'staff-queue' && currentTab !== 'user-management') ? '#006B3C' : '#6c757d', borderColor: '#006B3C', borderRadius: 0 }}
-            onClick={() => { setCurrentTab('my-tickets'); setSelectedTicketId(null); }}
-          >
-            My Tickets {totalItems > 0 && <span className="badge rounded-pill ms-1" style={{ backgroundColor: '#0B7A46' }}>{totalItems}</span>}
-          </button>
-        </div>
+          {isRequester && (
+            <>
+              <button
+                className={`btn btn-link text-decoration-none pb-2 px-3 fw-bold ${currentTab === 'create' && selectedTicketId === null ? 'border-bottom border-3' : 'text-secondary'}`}
+                style={{ color: currentTab === 'create' && selectedTicketId === null ? '#006B3C' : '#6c757d', borderColor: '#006B3C', borderRadius: 0 }}
+                onClick={() => { setCurrentTab('create'); setSelectedTicketId(null); }}
+              >
+                Create Ticket
+              </button>
+              <button
+                className={`btn btn-link text-decoration-none pb-2 px-3 fw-bold ${currentTab === 'my-tickets' || selectedTicketId !== null ? 'border-bottom border-3' : 'text-secondary'}`}
+                style={{ color: currentTab === 'my-tickets' || selectedTicketId !== null ? '#006B3C' : '#6c757d', borderColor: '#006B3C', borderRadius: 0 }}
+                onClick={() => { setCurrentTab('my-tickets'); setSelectedTicketId(null); }}
+              >
+                My Tickets {totalItems > 0 && <span className="badge rounded-pill ms-1" style={{ backgroundColor: '#0B7A46' }}>{totalItems}</span>}
+              </button>
+            </>
+          )}
+        </nav>
 
-        {/* TAB 1: CREATE TICKET */}
-        {currentTab === 'create' && selectedTicketId === null && (
+        {/* TAB 1: CREATE TICKET (Requester) */}
+        {isRequester && currentTab === 'create' && selectedTicketId === null && (
           <div className="row justify-content-center">
             <div className="col-lg-8">
               <div className="card shadow-sm border-0">
@@ -678,8 +725,8 @@ function App() {
           </div>
         )}
 
-        {/* TAB 2: MY TICKETS LIST */}
-        {currentTab === 'my-tickets' && selectedTicketId === null && (
+        {/* TAB 2: MY TICKETS LIST (Requester) */}
+        {isRequester && currentTab === 'my-tickets' && selectedTicketId === null && (
           <div>
             {/* Search & Filter Bar */}
             <div className="card shadow-sm border-0 mb-4 p-3 bg-white">
@@ -710,11 +757,9 @@ function App() {
                     onChange={(e) => { setFilterStatus(e.target.value); setCurrentPage(1); }}
                   >
                     <option value="">All Statuses</option>
-                    <option value="New">New</option>
-                    <option value="Open">Open</option>
-                    <option value="Pending">Pending</option>
-                    <option value="Resolved">Resolved</option>
-                    <option value="Closed">Closed</option>
+                    {['New', 'Open', 'In Progress', 'Waiting for Requester', 'Resolved', 'Closed', 'Reopened', 'Cancelled'].map(s => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
                   </select>
                 </div>
                 <div className="col-md-3">
@@ -740,6 +785,11 @@ function App() {
               <div className="text-center py-5">
                 <div className="spinner-border text-success" role="status"></div>
                 <p className="text-muted mt-2">Loading tickets...</p>
+              </div>
+            ) : ticketsError ? (
+              <div className="alert alert-danger d-flex justify-content-between align-items-center flex-wrap gap-2" role="alert">
+                <span>{ticketsError}</span>
+                <button className="btn btn-sm btn-outline-danger" onClick={fetchTickets}>Try again</button>
               </div>
             ) : tickets.length === 0 ? (
               /* Empty State */
@@ -772,7 +822,7 @@ function App() {
                             <span className="badge text-white fw-bold px-2 py-1" style={{ backgroundColor: '#006B3C' }}>
                               {t.ticketNumber}
                             </span>
-                            <span className={`badge ${t.requestedPriority === 'HIGH' ? 'bg-danger' : t.requestedPriority === 'MEDIUM' ? 'bg-warning text-dark' : 'bg-secondary'}`}>
+                            <span className={`badge ${t.requestedPriority === 'HIGH' || t.requestedPriority === 'URGENT' ? 'bg-danger' : t.requestedPriority === 'MEDIUM' ? 'bg-warning text-dark' : 'bg-secondary'}`}>
                               {t.requestedPriority}
                             </span>
                             <span className="badge bg-light text-dark border">{t.category?.name}</span>
@@ -831,7 +881,7 @@ function App() {
         )}
 
         {/* TAB 3: STAFF TICKET QUEUE */}
-        {currentTab === 'staff-queue' && selectedTicketId === null && currentUser && (
+        {isStaffOrAdmin && currentTab === 'staff-queue' && selectedTicketId === null && (
           <StaffTicketQueue
             currentUser={currentUser}
             onSelectTicket={(ticketId) => {
@@ -847,7 +897,7 @@ function App() {
 
         {/* VIEW: TICKET DETAIL VIEW */}
         {selectedTicketId !== null && (
-          currentUser && (currentUser.role === 'IT_STAFF' || currentUser.role === 'ADMINISTRATOR') ? (
+          isStaffOrAdmin ? (
             <StaffTicketDetail
               ticketId={selectedTicketId}
               currentUser={currentUser}
@@ -879,12 +929,9 @@ function App() {
                 </div>
               ) : detailError ? (
                 <div className="card shadow-sm border-0 p-5 text-center bg-white my-3">
-                  <div className="fs-1 mb-3">🚫</div>
-                  <h4 className="fw-bold text-danger">403 Forbidden / Access Denied</h4>
-                  <p className="text-muted fs-6 mb-3">{detailError}</p>
-                  <div className="alert alert-danger d-inline-block px-4 py-2 small mb-4">
-                    Security Boundary Enforced: You are not authorized to view this ticket (Ticket belongs to another requester).
-                  </div>
+                  <div className="fs-1 mb-3">🔍</div>
+                  <h4 className="fw-bold text-danger">Ticket Unavailable</h4>
+                  <p className="text-muted fs-6 mb-4" role="alert">{detailError}</p>
                   <div>
                     <button
                       className="btn text-white fw-semibold px-4"
@@ -901,30 +948,27 @@ function App() {
                 </div>
               ) : ticketDetail ? (
                 <div className="card shadow-sm border-0">
-                  <div className="card-header py-3 d-flex justify-content-between align-items-center" style={{ backgroundColor: '#EAF6EF', borderLeft: '4px solid #006B3C' }}>
+                  <div className="card-header py-3 d-flex justify-content-between align-items-center flex-wrap gap-2" style={{ backgroundColor: '#EAF6EF', borderLeft: '4px solid #006B3C' }}>
                     <div className="d-flex align-items-center gap-2">
                       <span className="badge text-white fs-6" style={{ backgroundColor: '#006B3C' }}>
                         {ticketDetail.ticketNumber}
                       </span>
                       <h5 className="mb-0 fw-bold" style={{ color: '#006B3C' }}>Ticket Details</h5>
                     </div>
-                    <div className="d-flex align-items-center gap-2">
+                    <div className="d-flex align-items-center gap-2 flex-wrap">
                       {ticketDetail.indicatedResolvedAt ? (
-                        <span className="badge bg-info text-dark">✓ Indicated Resolved</span>
+                        <span className="badge bg-info text-dark">
+                          ✓ You indicated this appears resolved ({new Date(ticketDetail.indicatedResolvedAt).toLocaleDateString()})
+                        </span>
                       ) : (
-                        ticketDetail.status !== 'Resolved' && ticketDetail.status !== 'Closed' && (
+                        !['Resolved', 'Closed', 'Cancelled'].includes(ticketDetail.status) && (
                           <button
                             className="btn btn-sm btn-outline-success"
-                            onClick={async () => {
-                              try {
-                                await indicateTicketResolved(ticketDetail.id);
-                                fetchTicketDetail(ticketDetail.id);
-                              } catch (err: any) {
-                                alert(err.message || 'Failed to indicate resolved');
-                              }
-                            }}
+                            disabled={isIndicatingResolved}
+                            title="Let IT Staff know the problem seems fixed. IT Staff will formally resolve the ticket."
+                            onClick={() => handleIndicateResolved(ticketDetail.id)}
                           >
-                            Mark as Resolved
+                            {isIndicatingResolved ? 'Sending...' : 'My Problem Appears Resolved'}
                           </button>
                         )
                       )}
@@ -933,6 +977,15 @@ function App() {
                   </div>
 
                   <div className="card-body p-4">
+                    {detailFeedback && (
+                      <div
+                        className={`alert alert-${detailFeedback.type} alert-dismissible py-2`}
+                        role={detailFeedback.type === 'danger' ? 'alert' : 'status'}
+                      >
+                        {detailFeedback.text}
+                        <button type="button" className="btn-close" aria-label="Close" onClick={() => setDetailFeedback(null)}></button>
+                      </div>
+                    )}
                     {/* Meta Details Row */}
                     <div className="row bg-light p-3 rounded mb-4 g-3">
                       <div className="col-sm-3">
@@ -1045,6 +1098,12 @@ function App() {
                         </div>
                       )}
                     </div>
+
+                    {/* Public Comments shared with IT Staff (Internal Notes are never shown to Requesters) */}
+                    <PublicComments
+                      ticketId={ticketDetail.id}
+                      canPost={!['Closed', 'Cancelled'].includes(ticketDetail.status)}
+                    />
                   </div>
                 </div>
               ) : null}
@@ -1087,6 +1146,7 @@ function App() {
                   <div className="form-text text-muted small">
                     This reason will be recorded and displayed permanently in the audit trail.
                   </div>
+                  {removalError && <div className="text-danger small mt-2" role="alert">{removalError}</div>}
                 </div>
               </div>
               <div className="modal-footer bg-light py-2">

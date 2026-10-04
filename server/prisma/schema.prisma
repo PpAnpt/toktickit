@@ -53,6 +53,8 @@ model User {
   role               UserRole  @default(REQUESTER)
   isActive           Boolean   @default(true)
   mustChangePassword Boolean   @default(false)
+  // Incremented on logout, password change, and admin password reset to revoke issued tokens
+  tokenVersion       Int       @default(0)
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
@@ -100,6 +102,10 @@ model Ticket {
   attachments         Attachment[]
   comments            PublicComment[]
   internalNotes       InternalNote[]
+
+  @@index([requesterId])
+  @@index([ownerId])
+  @@index([status])
 }
 
 
@@ -115,6 +121,8 @@ model Attachment {
 
   ticketId Int
   ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId])
 }
 
 model PublicComment {
@@ -127,6 +135,8 @@ model PublicComment {
 
   authorId  Int
   author    User     @relation(fields: [authorId], references: [id])
+
+  @@index([ticketId])
 }
 
 model InternalNote {
@@ -139,5 +149,7 @@ model InternalNote {
 
   authorId  Int
   author    User     @relation(fields: [authorId], references: [id])
+
+  @@index([ticketId])
 }
 

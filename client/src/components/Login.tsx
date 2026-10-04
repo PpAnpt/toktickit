@@ -3,9 +3,11 @@ import { login, type UserProfile } from '../api';
 
 interface LoginProps {
   onLoginSuccess: (user: UserProfile) => void;
+  // Informational message, e.g. after logout or an expired session
+  notice?: string;
 }
 
-export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
+export const Login: React.FC<LoginProps> = ({ onLoginSuccess, notice }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -75,6 +77,20 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
         </div>
 
         {/* Error Alert */}
+        {notice && !error && (
+          <div role="status" style={{
+            backgroundColor: '#EAF6EF',
+            border: '1px solid #0B7A46',
+            borderRadius: '6px',
+            padding: '0.75rem',
+            marginBottom: '1rem',
+            color: '#006B3C',
+            fontSize: '0.85rem'
+          }}>
+            {notice}
+          </div>
+        )}
+
         {error && (
           <div role="alert" style={{
             backgroundColor: '#FEE2E2',

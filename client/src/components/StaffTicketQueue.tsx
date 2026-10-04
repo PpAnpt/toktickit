@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useIsCompactViewport } from '../useIsCompactViewport';
 import {
   fetchStaffTickets,
   fetchStaffMembers,
@@ -16,6 +17,7 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
   currentUser,
   onSelectTicket
 }) => {
+  const isCompact = useIsCompactViewport();
   const [tickets, setTickets] = useState<StaffTicket[]>([]);
   const [staffMembers, setStaffMembers] = useState<StaffMember[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -194,6 +196,7 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
                 <option value="Resolved">Resolved</option>
                 <option value="Closed">Closed</option>
                 <option value="Reopened">Reopened</option>
+                <option value="Cancelled">Cancelled</option>
               </select>
             </div>
 
@@ -320,18 +323,46 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
       ) : (
         /* Ticket Queue Table */
         <div className="card shadow-sm border-0 overflow-hidden">
+          {isCompact ? (
+            /* Phone layout: one card per ticket, nothing hidden off-screen */
+            <ul className="list-group list-group-flush" aria-label="Ticket queue">
+              {tickets.map((t) => (
+                <li key={t.id} className="list-group-item py-3">
+                  <div className="d-flex justify-content-between align-items-start gap-2 mb-1">
+                    <span className="fw-bold" style={{ color: '#006B3C' }}>{t.ticketNumber}</span>
+                    {getStatusBadge(t.status)}
+                  </div>
+                  <div className="fw-semibold text-dark mb-1" style={{ overflowWrap: 'anywhere' }}>{t.summary}</div>
+                  <div className="small text-muted mb-2">
+                    {t.requester.name}
+                    {t.category ? ` · ${t.category.name}` : ''}
+                  </div>
+                  <div className="d-flex flex-wrap align-items-center gap-2 mb-2">
+                    {getPriorityBadge(t.itPriority || t.requestedPriority)}
+                    <span className="small text-muted">Req: {t.requestedPriority}</span>
+                    <span className="small text-muted">· {t.owner ? `Owner: ${t.owner.name}` : 'Unassigned'}</span>
+                  </div>
+                  <button
+                    className="btn btn-sm btn-outline-success w-100"
+                    onClick={() => onSelectTicket && onSelectTicket(t.id)}
+                  >
+                    View {t.ticketNumber}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : (
           <div className="table-responsive">
             <table className="table table-hover align-middle mb-0">
               <thead style={{ backgroundColor: '#EAF6EF', color: '#006B3C' }}>
                 <tr>
-                  <th scope="col" className="py-3 px-3">Ticket #</th>
-                  <th scope="col" className="py-3">Summary</th>
-                  <th scope="col" className="py-3">Requester</th>
+                  <th scope="col" className="py-3 px-3 text-nowrap">Ticket #</th>
+                  <th scope="col" className="py-3">Summary / Requester</th>
                   <th scope="col" className="py-3">Status</th>
-                  <th scope="col" className="py-3">IT Priority</th>
-                  <th scope="col" className="py-3">Owner</th>
-                  <th scope="col" className="py-3">Created</th>
-                  <th scope="col" className="py-3 text-end px-3">Action</th>
+                  <th scope="col" className="py-3 text-nowrap">IT / Req. Priority</th>
+                  <th scope="col" className="py-3 d-none d-lg-table-cell">Owner</th>
+                  <th scope="col" className="py-3 d-none d-xxl-table-cell">Created</th>
+                  <th scope="col" className="py-3 text-end px-3"><span className="visually-hidden">Action</span></th>
                 </tr>
               </thead>
               <tbody>
@@ -341,26 +372,28 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
                     style={{ cursor: onSelectTicket ? 'pointer' : 'default' }}
                     onClick={() => onSelectTicket && onSelectTicket(t.id)}
                   >
-                    <td className="px-3 fw-bold" style={{ color: '#006B3C' }}>
+                    <td className="px-3 fw-bold text-nowrap" style={{ color: '#006B3C' }}>
                       {t.ticketNumber}
                     </td>
                     <td>
-                      <div className="fw-semibold text-dark text-truncate" style={{ maxWidth: '300px' }}>
+                      <div className="fw-semibold text-dark text-truncate" style={{ maxWidth: '280px' }} title={t.summary}>
                         {t.summary}
                       </div>
-                      {t.category && (
-                        <span className="badge bg-light text-secondary me-1">
-                          {t.category.name}
-                        </span>
-                      )}
-                    </td>
-                    <td>
-                      <div className="small fw-medium text-dark">{t.requester.name}</div>
-                      <div className="small text-muted">{t.requester.email}</div>
+                      <div className="small text-muted text-truncate" style={{ maxWidth: '280px' }} title={t.requester.email}>
+                        {t.requester.name}
+                        {t.category ? ` · ${t.category.name}` : ''}
+                      </div>
+                      {/* Owner shown under the summary when the Owner column is hidden */}
+                      <div className="d-lg-none small text-muted">
+                        {t.owner ? `Owner: ${t.owner.name}` : 'Unassigned'}
+                      </div>
                     </td>
                     <td>{getStatusBadge(t.status)}</td>
-                    <td>{getPriorityBadge(t.itPriority || t.requestedPriority)}</td>
-                    <td>
+                    <td className="text-nowrap">
+                      {getPriorityBadge(t.itPriority || t.requestedPriority)}
+                      <div className="small text-muted mt-1">Req: {t.requestedPriority}</div>
+                    </td>
+                    <td className="d-none d-lg-table-cell">
                       {t.owner ? (
                         <span className="badge rounded-pill bg-light text-dark border">
                           👤 {t.owner.name}
@@ -371,12 +404,10 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
                         </span>
                       )}
                     </td>
-                    <td className="small text-muted">
+                    <td className="small text-muted text-nowrap d-none d-xxl-table-cell">
                       {new Date(t.createdAt).toLocaleDateString(undefined, {
                         month: 'short',
                         day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
                       })}
                     </td>
                     <td className="text-end px-3">
@@ -395,6 +426,7 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
               </tbody>
             </table>
           </div>
+          )}
 
           {/* Pagination Footer */}
           {totalPages > 1 && (

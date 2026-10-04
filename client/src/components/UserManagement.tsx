@@ -7,12 +7,16 @@ import {
   type AdminUser,
   type UserProfile,
 } from '../api';
+import { passwordPolicyError, isValidEmail, PASSWORD_PLACEHOLDER } from '../validation';
+import { useIsCompactViewport } from '../useIsCompactViewport';
+import { RoleBadge } from './RoleBadge';
 
 interface UserManagementProps {
   currentUser: UserProfile;
 }
 
 export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) => {
+  const isCompact = useIsCompactViewport();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -79,8 +83,14 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
       return;
     }
 
-    if (createForm.initialPassword.length < 6) {
-      setCreateError('Initial password must be at least 6 characters.');
+    if (!isValidEmail(createForm.email)) {
+      setCreateError('Please enter a valid email address.');
+      return;
+    }
+
+    const passwordError = passwordPolicyError(createForm.initialPassword, 'Initial password');
+    if (passwordError) {
+      setCreateError(passwordError);
       return;
     }
 
@@ -126,6 +136,11 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
       return;
     }
 
+    if (!isValidEmail(editForm.email)) {
+      setEditError('Please enter a valid email address.');
+      return;
+    }
+
     setIsEditing(true);
     try {
       await updateAdminUser(editingUser.id, editForm);
@@ -152,8 +167,9 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
     if (!resettingUser) return;
     setResetError('');
 
-    if (resetPasswordInput.length < 6) {
-      setResetError('New initial password must be at least 6 characters.');
+    const passwordError = passwordPolicyError(resetPasswordInput, 'New initial password');
+    if (passwordError) {
+      setResetError(passwordError);
       return;
     }
 
@@ -170,17 +186,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
     }
   };
 
-  const getRoleBadge = (role: string) => {
-    switch (role) {
-      case 'ADMINISTRATOR':
-        return <span className="badge bg-danger">ADMINISTRATOR</span>;
-      case 'IT_STAFF':
-        return <span className="badge bg-primary">IT_STAFF</span>;
-      case 'REQUESTER':
-      default:
-        return <span className="badge bg-secondary">REQUESTER</span>;
-    }
-  };
+  const getRoleBadge = (role: string) => <RoleBadge role={role} />;
 
   return (
     <div className="container py-4">
@@ -279,6 +285,40 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
               <p className="fs-5 mb-1">No users found</p>
               <small>Try adjusting your search query or role filter.</small>
             </div>
+          ) : isCompact ? (
+            /* Phone layout: one card per user with Name, Email, Role, Status, and actions */
+            <ul className="list-group list-group-flush" aria-label="User accounts">
+              {users.map((u) => {
+                const isSelf = u.id === currentUser.id;
+                return (
+                  <li key={u.id} className="list-group-item py-3">
+                    <div className="d-flex justify-content-between align-items-start gap-2">
+                      <div className="fw-semibold text-dark">
+                        {u.name} {isSelf && <span className="badge bg-success-subtle text-success border ms-1">You</span>}
+                      </div>
+                      {u.isActive ? (
+                        <span className="badge rounded-pill" style={{ backgroundColor: '#006B3C' }}>Active</span>
+                      ) : (
+                        <span className="badge rounded-pill bg-secondary">Inactive</span>
+                      )}
+                    </div>
+                    <div className="small text-muted mb-2" style={{ overflowWrap: 'anywhere' }}>{u.email}</div>
+                    <div className="d-flex flex-wrap align-items-center gap-2 mb-2">
+                      {getRoleBadge(u.role)}
+                      {u.mustChangePassword && <span className="badge bg-warning text-dark">Password change required</span>}
+                    </div>
+                    <div className="d-flex gap-2">
+                      <button className="btn btn-sm btn-outline-secondary flex-fill" onClick={() => openEditModal(u)}>
+                        Edit
+                      </button>
+                      <button className="btn btn-sm btn-outline-warning text-dark flex-fill" onClick={() => openResetModal(u)}>
+                        Reset Pass
+                      </button>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
           ) : (
             <div className="table-responsive">
               <table className="table table-hover align-middle mb-0">
@@ -406,7 +446,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
                     <input
                       type="password"
                       className="form-control"
-                      placeholder="At least 6 characters"
+                      placeholder={PASSWORD_PLACEHOLDER}
                       value={createForm.initialPassword}
                       onChange={(e) => setCreateForm({ ...createForm, initialPassword: e.target.value })}
                       required
@@ -562,7 +602,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
                     <input
                       type="password"
                       className="form-control"
-                      placeholder="At least 6 characters"
+                      placeholder={PASSWORD_PLACEHOLDER}
                       value={resetPasswordInput}
                       onChange={(e) => setResetPasswordInput(e.target.value)}
                       required
