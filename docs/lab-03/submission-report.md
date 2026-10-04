@@ -21,11 +21,14 @@ main
         ├── feature/lab3-4-staff-operation          (PR #21 - Merged)
         ├── feature/lab3-5-admin-user-management    (PR #22 - Merged)
         ├── feature/lab3-6-e2e-regression-release   (PR #23 - Merged)
-        └── feature/lab3-7-security-hardening       (PR #[เลข PR] - [สถานะ])
+        ├── feature/lab3-7-security-hardening       (PR #24 - Merged)
+        └── feature/lab3-8-release-docs             (PR #25 - [สถานะ])
 ```
 
-**หลักฐาน Git Commit History (`git log --oneline`):**
+**หลักฐาน Git Commit History (`git log --oneline lab3-staging`):**
 ```text
+ae201be Merge pull request #24 from PpAnpt/feature/lab3-7-security-hardening
+7fdc9cb docs(lab-03): update submission report, reviewer log, and UI spec for hardening work
 542cf4c docs(lab-03): specification v1.1, API/UI specs, traceability, and README
 6be2b0e test(e2e): rewrite requester regression, harden flows, add screenshot capture
 f324e09 feat(client): authenticated requester flow, public comments, and responsive fixes
@@ -40,7 +43,7 @@ b4d20f9 Merge pull request #22 from PpAnpt/feature/lab3-5-admin-user-management
 83d7a92 Merge pull request #19 from PpAnpt/feature/lab3-2-auth-foundation
 2d35451 Merge pull request #18 from PpAnpt/feature/1-specs-contract
 ```
-> ⚠️ หลัง merge PR ของ branch ที่ 7 และ `lab3-staging` → `main` แล้ว ให้รัน `git log --oneline --graph -20` บน `main` แล้ววางผลจริงแทนบล็อกด้านบน
+> ⚠️ หลัง merge `lab3-staging` → `main` แล้ว ให้รัน `git log --oneline --graph -20 main` แล้วแคปหน้าจอใส่รูปที่ 1.1 เพื่อแสดงว่างานขึ้น `main` แล้ว
 
 ---
 
@@ -51,21 +54,25 @@ b4d20f9 Merge pull request #22 from PpAnpt/feature/lab3-5-admin-user-management
 ---
 
 ### 1.2 กระดานติดตามงาน GitHub Projects (Kanban Board)
-ทุก Issue ถูกติดตามสถานะผ่าน GitHub Projects Kanban Board โดยมีสถานะครบถ้วนจาก Backlog, In Progress สู่ **Done**:
-- **Issue #1**: Sprint 3 Engineering Contract & Specifications (`Done`)
-- **Issue #2**: Authentication Foundation, Bcrypt Hashing & MustChangePassword (`Done`)
-- **Issue #3**: IT Staff Ticket Queue API & Responsive UI (`Done`)
-- **Issue #4**: Staff Operations, State Machine Transitions & Two-Tier Notes (`Done`)
-- **Issue #5**: Minimalist Administrator User Management & Safety Guards (`Done`)
-- **Issue #6**: E2E Test Automation, Zero Regression & Release Packaging (`Done`)
-- **Issue #[เลข]**: Security Hardening, Lab 3 Migration & Requester Public Comments (`Done`)
+**ลิงก์ Kanban Board**: [TokTickIT Individual Sprints](https://github.com/users/PpAnpt/projects/3) (สถานะ: Backlog → Specified → Started → PR Review → Fixing → **Done**)
 
-> ⚠️ ตรวจเลข Issue ให้ตรงกับบน GitHub ก่อนส่ง: บน GitHub เลข #1–#23 เป็น Pull Request ทั้งหมด หาก Kanban ใช้ draft item ให้กด "Convert to issue" ก่อน แล้วแก้เลขในรายการด้านบนให้ตรง
+Issue ของ Lab 3 อยู่ใน repository [`PpAnpt/Lab1-TokTickIT`](https://github.com/PpAnpt/Lab1-TokTickIT/issues) แต่ละ Issue เขียนเกณฑ์การยอมรับเป็น `AC 1`, `AC 2`, … และเชื่อมกับ Pull Request ใน `PpAnpt/toktickit`:
+
+| Issue | งาน | Pull Request | สถานะ |
+|---|---|---|---|
+| [#11](https://github.com/PpAnpt/Lab1-TokTickIT/issues/11) | [Lab 3] Sprint Specification & Test Plan | toktickit #18 | Done |
+| [#12](https://github.com/PpAnpt/Lab1-TokTickIT/issues/12) | [Lab 3] Authentication Foundation & Mandatory Password Change | toktickit #19 | Done |
+| [#13](https://github.com/PpAnpt/Lab1-TokTickIT/issues/13) | [Lab 3] IT Staff Ticket Queue | toktickit #20 | Done |
+| [#14](https://github.com/PpAnpt/Lab1-TokTickIT/issues/14) | [Lab 3] IT Staff Ticket Operations & Discussion Threads | toktickit #21 | Done |
+| [#15](https://github.com/PpAnpt/Lab1-TokTickIT/issues/15) | [Lab 3] Administrator User Management & Safety Rules | toktickit #22 | Done |
+| [#16](https://github.com/PpAnpt/Lab1-TokTickIT/issues/16) | [Lab 3] E2E Regression, Visual Inspection & Final Release | toktickit #23 | Done |
+| [#17](https://github.com/PpAnpt/Lab1-TokTickIT/issues/17) | [Lab 3] Security Hardening, Lab 3 Migration & Requester Public Comments | toktickit #24 | Done |
+| [#18](https://github.com/PpAnpt/Lab1-TokTickIT/issues/18) | [Lab 3] Release Documentation & Integration to main | toktickit #25 และ release PR | [Done หลัง merge ขึ้น `main`] |
 
 ---
 
 > 📷 **[แทรกรูปภาพที่ 1.2: ภาพหน้าจอ GitHub Projects Kanban Board]**  
-> * **สิ่งที่ต้องแคป/ใส่รูป**: หน้าจอ GitHub Projects แสดงคอลัมน์ Done ที่มี Issue ทั้ง 7 รายการอยู่ครบทั้งหมด  
+> * **สิ่งที่ต้องแคป/ใส่รูป**: หน้าจอ GitHub Projects แสดงคอลัมน์ Done ที่มี Issue ของ Lab 3 ทั้ง 8 รายการ (#11–#18) อยู่ครบทั้งหมด  
 > * **คำบรรยายภาพ**: กระดานติดตามงาน GitHub Project แสดง Issue ทั้งหมดอยู่ในสถานะ Done สำเร็จครบ 100%  
 
 ---
@@ -73,7 +80,7 @@ b4d20f9 Merge pull request #22 from PpAnpt/feature/lab3-5-admin-user-management
 ### 1.3 หลักฐานการตรวจทานโค้ด (Peer Review Sign-Off: `docs/lab-03/reviewer.md`)
 - **ผู้ตรวจทาน (Reviewer)**: ศิวรักษ์ ฉัตรวิชัย (Siwarak Chatvichai) &nbsp;|&nbsp; **GitHub**: @BBINGOAL
 - **รหัสนักศึกษา**: 67070501086
-- **สถานะการอนุมัติ**: [x] Approved by Reviewer (@BBINGOAL) ครบถ้วนทุก PR
+- **สถานะการอนุมัติ**: PR #18–#24 Approved by Reviewer (@BBINGOAL) — [อัปเดตเมื่อ PR release docs และ release PR ขึ้น `main` ได้รับ Approve]
 
 | Pull Request / บริบท | ความเห็นผู้ตรวจทาน (Reviewer Comment: @BBINGOAL) | คำตอบและการชี้แจง (Author Response: @PpAnpt) | การดำเนินการ (Action Taken) |
 |---|---|---|---|
@@ -83,7 +90,9 @@ b4d20f9 Merge pull request #22 from PpAnpt/feature/lab3-5-admin-user-management
 | **PR #21** (`Feature/lab3 4 staff operation`) | Status transition matrix และ RBAC comments/notes ทำงานถูกต้องตาม spec ครับ | ขอบคุณครับ ควบคุม State Machine ห้ามข้ามขั้นตอน และแยก Internal Notes อย่างปลอดภัย | Merge เข้าสู่ `lab3-staging` |
 | **PR #22** (`Feature/lab3 5 admin user management`) | ถูกต้องครบถ้วน เทสผ่านหมดครับ | ขอบคุณครับ มีระบบ Self-deactivation guard และ Sole Admin guard ครบถ้วน | Merge เข้าสู่ `lab3-staging` |
 | **PR #23** (`Feature/lab3 6 e2e regression release`) | ครบถ้วนเรียบร้อยดีครับ | ขอบคุณครับ 110 automated tests + 7 E2E tests ผ่าน 100% Zero Regression | Merge เข้าสู่ `lab3-staging` |
-| **PR #[เลข PR]** (`Lab 3 hardening: authenticated identity, real logout, migration, requester comments`) | [คัดลอกความเห็นจริงของ reviewer จาก PR] | [คัดลอกคำตอบจริงของคุณจาก PR] | [Merge เข้าสู่ `lab3-staging`] |
+| **PR #24** (`Feature/lab3 7 security hardening`) | เรียบร้อยครับ (Approved) | ขอบคุณครับ | Approved และ Merge เข้าสู่ `lab3-staging` โดย @BBINGOAL |
+| **PR #25** (`Feature/lab3 8 release docs`) | [คัดลอกความเห็นจริงของ reviewer] | [คัดลอกคำตอบจริง] | Merge เข้าสู่ `lab3-staging` |
+| **PR #[เลข PR]** (`lab3-staging` → `main`) | [คัดลอกความเห็นจริงของ reviewer] | [คัดลอกคำตอบจริง] | Merge เข้าสู่ `main` |
 
 
 ### 1.4 โครงสร้างโปรเจกต์และสุขอนามัยของ Repository
@@ -176,7 +185,8 @@ b4d20f9 Merge pull request #22 from PpAnpt/feature/lab3-5-admin-user-management
 
 ### 3.2 ผลลัพธ์การรันชุดทดสอบอัตโนมัติ (API 121 + UI 40 + E2E 7 = 168 Tests Passed)
 
-> ⚠️ ผลด้านล่างรันบน branch `feature/lab3-7-security-hardening` เมื่อ 2026-10-01 — ให้รันใหม่บน `main` หลัง merge แล้ววางผลจริงแทน (Part 3 ต้องใช้ผลจาก main)
+> ผลด้านล่างรันเมื่อ 2026-10-04 บน `lab3-staging` commit `ae201be` (หลัง merge PR #24) ซึ่งเป็นโค้ดชุดเดียวกับที่ปล่อยขึ้น `main`  
+> ⚠️ หลัง merge ขึ้น `main` ให้รันคำสั่งเดียวกันบน `main` แล้วแคปหน้าจอ Terminal แนบเพิ่ม (Part 3 ต้องการผลจาก main)
 
 #### 1. ฝั่งเซิร์ฟเวอร์: API, Security & Regression Tests (12 Test Files, 121 Passed)
 ```text
