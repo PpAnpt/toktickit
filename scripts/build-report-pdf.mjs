@@ -24,8 +24,8 @@ const BOARD_URL = 'https://github.com/users/PpAnpt/projects/3';
 
 // ---- Report details (edit, then run `npm run report` again) -------------------------
 const META = {
-  student: 'นายอนภัทร พึ่งเทียน (Anapat Phungtian)',
-  studentId: '',            // e.g. '6707050xxxx'
+  student: 'Anapat Banjerdsilp',
+  studentId: '67070501049',
   section: '',              // e.g. '1', '2', 'HS', '31', '32'
   github: '@PpAnpt',
   reviewer: 'ศิวรักษ์ ฉัตรวิชัย (Siwarak Chatvichai) — @BBINGOAL — 67070501086',
@@ -49,7 +49,8 @@ const PRS = [
   { n: 23, branch: 'feature/lab3-6-e2e-regression-release', title: 'Feature/lab3 6 e2e regression release', issue: 16, created: '2026-09-19', merged: '2026-09-19', review: 'ครบถ้วนเรียบร้อยดีครับ' },
   { n: 24, branch: 'feature/lab3-7-security-hardening', title: 'Feature/lab3 7 security hardening', issue: 17, created: '2026-10-04', merged: '2026-10-04', review: 'เรียบร้อยครับ' },
   { n: 25, branch: 'feature/lab3-8-release-docs', title: 'Feature/lab3 8 release docs', issue: 18, created: '2026-10-04', merged: '2026-10-04', review: 'เรียบร้อยดีครับ' },
-  { n: 26, branch: 'feature/lab3-9-release-prep', title: 'Feature/lab3 9 release prep', issue: 18, created: '2026-10-04', merged: '', review: '' },
+  { n: 26, branch: 'feature/lab3-9-release-prep', title: 'Feature/lab3 9 release prep', issue: 18, created: '2026-10-04', merged: '2026-10-04', review: '', note: 'Merged โดย @PpAnpt (ไม่มี review)' },
+  { n: 27, branch: 'lab3-staging → main (release)', title: 'Release: Lab 3 lab3-staging → main', issue: 18, created: '2026-10-04', merged: '2026-10-04', review: '', note: 'Merged โดย @PpAnpt (ไม่มี review)' },
 ];
 
 // ---- Helpers ---------------------------------------------------------------------------
@@ -152,7 +153,8 @@ const KANBAN = [
   [15, '[Lab 3] Administrator User Management & Safety Rules', 22, 'Done'],
   [16, '[Lab 3] E2E Regression, Visual Inspection & Final Release', 23, 'Done'],
   [17, '[Lab 3] Security Hardening, Lab 3 Migration & Requester Public Comments', 24, 'Done'],
-  [18, '[Lab 3] Release Documentation & Integration to main', 27, 'Done หลัง merge ขึ้น main'],
+  [18, '[Lab 3] Release Documentation & Integration to main', 27, 'Done'],
+  [19, '[Lab 3] Final Submission Evidence & Documentation Sync', 29, 'Done'],
 ];
 
 const API_EVIDENCE = `# Ticket TKT-2026-000001 (id=1) belongs to David Lee (Requester)
@@ -217,8 +219,10 @@ ${pre(`main
       ├── feature/lab3-6-e2e-regression-release  PR #23  (Issue #16)  Merged 2026-09-19
       ├── feature/lab3-7-security-hardening      PR #24  (Issue #17)  Merged 2026-10-04
       ├── feature/lab3-8-release-docs            PR #25  (Issue #18)  Merged 2026-10-04
-      └── feature/lab3-9-release-prep            PR #26  (Issue #18)
- lab3-staging → main                             PR #${META.releasePr || '___'}`, 'tree')}
+      └── feature/lab3-9-release-prep            PR #26  (Issue #18)  Merged 2026-10-04
+ lab3-staging → main                             PR #${META.releasePr || '___'}  (Issue #18)  Merged 2026-10-04
+      └── feature/lab3-10-submission-evidence    PR #28  (Issue #19)
+ lab3-staging → main                             PR #29  (Issue #19)`, 'tree')}
 
 <h3>Git graph ของ <code>lab3-staging</code> (feature branches ที่ merge ผ่าน Pull Request)</h3>
 ${pre(stagingGraph, 'graph')}
@@ -235,12 +239,12 @@ Issue ของ Lab 3 อยู่ใน repository <a href="${ISSUES_REPO}/issu
   ${KANBAN.map(([n, t, pr, s]) => `<tr><td><a href="${ISSUES_REPO}/issues/${n}">#${n}</a></td><td>${esc(t)}</td><td><a href="${REPO}/pull/${pr}">#${pr}</a></td><td>${s}</td></tr>`).join('')}
 </table>
 ${slot('kanban', 'GitHub Project (Kanban) board ที่ Issue ของ Lab 3 ทั้งหมดอยู่ในคอลัมน์ Done',
-  `เปิด <a href="${BOARD_URL}">${BOARD_URL}</a> หลังย้าย Issue #18 ไป Done แล้วแคปหน้าจอให้เห็นคอลัมน์ Done ที่มี Issue #11–#18`, 90)}
+  `เปิด <a href="${BOARD_URL}">${BOARD_URL}</a> แล้วแคปหน้าจอให้เห็นคอลัมน์ Done ที่มี Issue #11–#19`, 90)}
 
 <h2>1.3 Peer Review (reviewer.md)</h2>
 <table>
-  <tr><th>PR</th><th>Branch → lab3-staging</th><th>สร้าง</th><th>Merge</th><th>ความเห็น Reviewer (@BBINGOAL)</th></tr>
-  ${PRS.map((p) => `<tr><td><a href="${REPO}/pull/${p.n}">#${p.n}</a></td><td><code>${esc(p.branch)}</code></td><td>${p.created}</td><td>${p.merged || 'รอ merge'}</td><td>${p.review ? esc(p.review) + ' <b>(Approved)</b>' : '—'}</td></tr>`).join('')}
+  <tr><th>PR</th><th>Branch → base</th><th>สร้าง</th><th>Merge</th><th>ความเห็น Reviewer (@BBINGOAL)</th></tr>
+  ${PRS.map((p) => `<tr><td><a href="${REPO}/pull/${p.n}">#${p.n}</a></td><td><code>${esc(p.branch)}</code></td><td>${p.created}</td><td>${p.merged || 'รอ merge'}</td><td>${p.review ? esc(p.review) + ' <b>(Approved)</b>' : esc(p.note || '—')}</td></tr>`).join('')}
 </table>
 ${renderDoc('docs/lab-03/reviewer.md')}
 
