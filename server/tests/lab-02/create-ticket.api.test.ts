@@ -1,8 +1,17 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import request from 'supertest';
 import app from '../../src/index';
+import { ACCOUNTS, loginAs, bearer } from '../helpers';
 
 describe('POST /api/tickets (Create Ticket API)', () => {
+  let token: string;
+  let davidId: number;
+
+  beforeAll(async () => {
+    const session = await loginAs(ACCOUNTS.david);
+    token = session.token;
+    davidId = session.user.id;
+  });
 
   it('API-01: should create a valid ticket and return 201 with ticketNumber', async () => {
     const payload = {
@@ -15,26 +24,23 @@ describe('POST /api/tickets (Create Ticket API)', () => {
 
     const res = await request(app)
       .post('/api/tickets')
-      .set('X-Requester-Id', '1') // จำลองว่าเป็น Requester คนที่ 1
+      .set(bearer(token))
       .send(payload);
 
     expect(res.status).toBe(201);
     expect(res.body).toHaveProperty('id');
-    expect(res.body).toHaveProperty('ticketNumber');
-    expect(res.body.ticketNumber).toMatch(/^TKT-\d{4}-\d{6}$/); // เช็ค Format เช่น TKT-2026-000001
+    expect(res.body.ticketNumber).toMatch(/^TKT-\d{4}-\d{6}$/); // e.g. TKT-2026-000001
     expect(res.body.summary).toBe(payload.summary);
+    expect(res.body.requesterId).toBe(davidId);
+    // BR-11: IT Priority initially copies Requested Priority
+    expect(res.body.itPriority).toBe('MEDIUM');
   });
 
   it('should return 400 if required fields are missing', async () => {
-    const payload = {
-      description: 'Missing summary and categories'
-      // จงใจไม่ใส่ summary, categoryId, relatedSystemId
-    };
-
     const res = await request(app)
       .post('/api/tickets')
-      .set('X-Requester-Id', '1')
-      .send(payload);
+      .set(bearer(token))
+      .send({ description: 'Missing summary and categories' });
 
     expect(res.status).toBe(400);
     expect(res.body.error).toBe('Validation failed');
@@ -42,17 +48,21 @@ describe('POST /api/tickets (Create Ticket API)', () => {
     expect(res.body.details).toHaveProperty('categoryId');
   });
 
-  it('should return 401 if X-Requester-Id header is missing', async () => {
+  it('should return 400 for an invalid requested priority', async () => {
     const res = await request(app)
       .post('/api/tickets')
-      .send({ 
-        summary: 'test', 
-        description: 'test', 
-        categoryId: 1, 
-        relatedSystemId: 1 
-      });
+      .set(bearer(token))
+      .send({ summary: 'x', description: 'y', categoryId: 1, relatedSystemId: 1, requestedPriority: 'CRITICAL' });
+
+    expect(res.status).toBe(400);
+    expect(res.body.details).toHaveProperty('requestedPriority');
+  });
+
+  it('should return 401 when no authentication token is provided', async () => {
+    const res = await request(app)
+      .post('/api/tickets')
+      .send({ summary: 'test', description: 'test', categoryId: 1, relatedSystemId: 1 });
 
     expect(res.status).toBe(401);
-    expect(res.body.error).toContain('Missing or invalid');
   });
 });

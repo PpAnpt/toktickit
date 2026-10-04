@@ -1,0 +1,30 @@
+{
+  "name": "toktickit",
+  "version": "1.0.0",
+  "description": "TokTickIT IT Service Desk (CPE 334 labs): React + Express + PostgreSQL/Prisma with authentication, role-based IT Staff ticketing, and administrator user management.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test:e2e": "playwright test",
+    "screenshots": "playwright test --config scripts/screenshots.config.ts",
+    "report": "node scripts/build-report-pdf.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PpAnpt/toktickit.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/PpAnpt/toktickit/issues"
+  },
+  "homepage": "https://github.com/PpAnpt/toktickit#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "marked": "^14.1.4"
+  }
+}

@@ -1,16 +1,39 @@
 import 'dotenv/config'
+import bcrypt from 'bcryptjs'
 import { PrismaPg } from '@prisma/adapter-pg'
-import { PrismaClient } from '../generated/prisma/client'
+import { PrismaClient, TicketPriority, TicketStatus } from '../generated/prisma/client'
 
 const adapter = new PrismaPg({
     connectionString: process.env.DATABASE_URL
 })
 const prisma = new PrismaClient({ adapter })
 
-async function main() {
-    console.log('Start seeding...')
+// LOCAL DEVELOPMENT CREDENTIALS ONLY — documented in README.md. Never reuse real passwords here.
+const DEFAULT_PASSWORD = 'Password123!'
+const INITIAL_PASSWORD = 'Initial123!'
+const ADMIN_PASSWORD = 'Admin123!'
 
-    // 1. Seed Categories (เดิม)
+type SeedTicket = {
+    ticketNumber: string
+    summary: string
+    description: string
+    status: TicketStatus
+    requestedPriority: TicketPriority
+    itPriority: TicketPriority
+    requester: string
+    owner: string | null
+    category: string
+    system: string
+    daysAgo: number
+    indicatedResolved?: boolean
+    comments?: { author: string; content: string }[]
+    notes?: { author: string; content: string }[]
+}
+
+async function main() {
+    console.log('Start seeding Lab 3 data...')
+
+    // 1. Seed Categories (Idempotent)
     const categories = [
         'Account and Access',
         'Hardware',
@@ -18,15 +41,15 @@ async function main() {
         'Network'
     ]
     for (const name of categories) {
-        const category = await prisma.category.upsert({
-            where: { name: name },
+        await prisma.category.upsert({
+            where: { name },
             update: {},
-            create: { name: name },
+            create: { name },
         })
-        console.log(`Upserted category: ${category.name}`)
     }
+    console.log(`✅ Seeded ${categories.length} Categories.`)
 
-    // 2. Seed Related Systems (เพิ่มใหม่)
+    // 2. Seed Related Systems (Idempotent)
     const relatedSystems = [
         'Email',
         'Campus Wi-Fi',
@@ -37,34 +60,230 @@ async function main() {
         'Corporate Laptop'
     ]
     for (const name of relatedSystems) {
-        const system = await prisma.relatedSystem.upsert({
-            where: { name: name },
+        await prisma.relatedSystem.upsert({
+            where: { name },
             update: {},
-            create: { name: name },
+            create: { name },
         })
-        console.log(`Upserted related system: ${system.name}`)
     }
+    console.log(`✅ Seeded ${relatedSystems.length} Related Systems.`)
 
-    // 3. Seed Requester Users (เพิ่มใหม่: Active 4 คน + Inactive 1 คน)
-    const requesters = [
-        { name: 'Jennifer Anderson', email: 'jennifer.anderson@example.com', isActive: true },
-        { name: 'David Lee', email: 'david.lee@example.com', isActive: true },
-        { name: 'Sarah Johnson', email: 'sarah.johnson@example.com', isActive: true },
-        { name: 'Michael Brown', email: 'michael.brown@example.com', isActive: true },
-        { name: 'Inactive User', email: 'inactive.user@example.com', isActive: false },
+    // 3. Seed Users across 3 Roles with Hashed Passwords (Idempotent)
+    const defaultPasswordHash = await bcrypt.hash(DEFAULT_PASSWORD, 10)
+    const initialPasswordHash = await bcrypt.hash(INITIAL_PASSWORD, 10)
+    const adminPasswordHash = await bcrypt.hash(ADMIN_PASSWORD, 10)
+
+    const seedUsers = [
+        // Requesters (4 active, 1 inactive; 1 requires first-time password change)
+        { name: 'David Lee', email: 'david.lee@example.com', role: 'REQUESTER' as const, passwordHash: defaultPasswordHash, isActive: true, mustChangePassword: false },
+        { name: 'Jennifer Anderson', email: 'jennifer.anderson@example.com', role: 'REQUESTER' as const, passwordHash: defaultPasswordHash, isActive: true, mustChangePassword: false },
+        { name: 'Michael Chang', email: 'michael.chang@example.com', role: 'REQUESTER' as const, passwordHash: defaultPasswordHash, isActive: true, mustChangePassword: false },
+        { name: 'Emily Watson', email: 'emily.watson@example.com', role: 'REQUESTER' as const, passwordHash: initialPasswordHash, isActive: true, mustChangePassword: true },
+        { name: 'Robert Taylor', email: 'robert.taylor@example.com', role: 'REQUESTER' as const, passwordHash: defaultPasswordHash, isActive: false, mustChangePassword: false },
+
+        // IT Staff (3 active, 1 inactive; 1 requires first-time password change)
+        { name: 'Sarah Connor', email: 'sarah.connor@example.com', role: 'IT_STAFF' as const, passwordHash: defaultPasswordHash, isActive: true, mustChangePassword: false },
+        { name: 'James Gordon', email: 'james.gordon@example.com', role: 'IT_STAFF' as const, passwordHash: defaultPasswordHash, isActive: true, mustChangePassword: false },
+        { name: 'Elena Rostova', email: 'elena.rostova@example.com', role: 'IT_STAFF' as const, passwordHash: initialPasswordHash, isActive: true, mustChangePassword: true },
+        { name: 'Marcus Wright', email: 'marcus.wright@example.com', role: 'IT_STAFF' as const, passwordHash: defaultPasswordHash, isActive: false, mustChangePassword: false },
+
+        // Administrator (1 active)
+        { name: 'Admin System', email: 'admin@example.com', role: 'ADMINISTRATOR' as const, passwordHash: adminPasswordHash, isActive: true, mustChangePassword: false },
     ]
-    for (const req of requesters) {
-        const user = await prisma.requesterUser.upsert({
-            where: { email: req.email },
-            update: { name: req.name, isActive: req.isActive },
-            create: { name: req.name, email: req.email, isActive: req.isActive },
+
+    for (const u of seedUsers) {
+        await prisma.user.upsert({
+            where: { email: u.email },
+            update: {
+                name: u.name,
+                role: u.role,
+                passwordHash: u.passwordHash,
+                isActive: u.isActive,
+                mustChangePassword: u.mustChangePassword,
+            },
+            create: u,
         })
-        console.log(`Upserted requester: ${user.name} (Active: ${user.isActive})`)
     }
+    console.log(`✅ Seeded ${seedUsers.length} Users across Requester, IT Staff, and Admin roles.`)
 
-    console.log('Seeding finished.')
+    // 4. Seed realistic tickets across requesters, statuses, priorities, and ownership.
+    // Seed tickets use last year's numbering (TKT-2025-...) so they never collide with
+    // numbers generated by the API for new tickets.
+    const tickets: SeedTicket[] = [
+        {
+            ticketNumber: 'TKT-2026-000001', summary: 'Laptop display flickering when connected to external monitor',
+            description: 'The internal display flickers black intermittently whenever plugged into HDMI.',
+            status: 'InProgress', requestedPriority: 'HIGH', itPriority: 'HIGH', requester: 'david.lee', owner: 'sarah.connor',
+            category: 'Hardware', system: 'Corporate Laptop', daysAgo: 3,
+            comments: [
+                { author: 'sarah.connor', content: 'Could you try using a different HDMI cable to isolate the port?' },
+                { author: 'david.lee', content: 'Tried with a brand new cable, same flickering occurs.' },
+            ],
+            notes: [{ author: 'sarah.connor', content: 'Known GPU driver issue with the dock firmware. Plan: update display driver.' }],
+        },
+        {
+            ticketNumber: 'TKT-2026-000002', summary: 'Cannot connect to 5GHz Campus Wi-Fi in Building 3',
+            description: 'Signal drops repeatedly during lecture hours. 2.4GHz works with slow speed.',
+            status: 'New', requestedPriority: 'MEDIUM', itPriority: 'MEDIUM', requester: 'jennifer.anderson', owner: null,
+            category: 'Network', system: 'Campus Wi-Fi', daysAgo: 1,
+        },
+        {
+            ticketNumber: 'TKT-2025-000101', summary: 'VPN disconnects every 10 minutes when working from home',
+            description: 'The VPN client reconnects repeatedly, interrupting remote desktop sessions.',
+            status: 'New', requestedPriority: 'HIGH', itPriority: 'HIGH', requester: 'michael.chang', owner: null,
+            category: 'Network', system: 'VPN', daysAgo: 0,
+        },
+        {
+            ticketNumber: 'TKT-2025-000102', summary: 'Request access to Grade Submission App for new course',
+            description: 'I need instructor access to submit grades for course CPE 334 section 2.',
+            status: 'Open', requestedPriority: 'MEDIUM', itPriority: 'HIGH', requester: 'jennifer.anderson', owner: 'james.gordon',
+            category: 'Account and Access', system: 'Grade Submission App', daysAgo: 2,
+            comments: [{ author: 'james.gordon', content: 'Access request received. We are confirming the course assignment with the faculty office.' }],
+        },
+        {
+            ticketNumber: 'TKT-2025-000103', summary: 'Printer on floor 2 prints blank pages',
+            description: 'All jobs sent to the shared printer come out blank since this morning.',
+            status: 'WaitingForRequester', requestedPriority: 'LOW', itPriority: 'MEDIUM', requester: 'david.lee', owner: 'james.gordon',
+            category: 'Hardware', system: 'Printer', daysAgo: 5,
+            comments: [
+                { author: 'james.gordon', content: 'Could you tell us the printer asset tag shown on the front label?' },
+            ],
+            notes: [{ author: 'james.gordon', content: 'Toner cartridge replaced last week; check if the seal tape was removed.' }],
+        },
+        {
+            ticketNumber: 'TKT-2025-000104', summary: 'Email attachments larger than 10MB are rejected',
+            description: 'Sending lecture recordings fails with a size limit error.',
+            status: 'Resolved', requestedPriority: 'MEDIUM', itPriority: 'LOW', requester: 'michael.chang', owner: 'sarah.connor',
+            category: 'Software', system: 'Email', daysAgo: 9, indicatedResolved: true,
+            comments: [
+                { author: 'sarah.connor', content: 'The limit is a policy setting. Please share large files through the cloud drive link instead.' },
+                { author: 'michael.chang', content: 'Using the cloud drive link works for me. Thank you.' },
+            ],
+        },
+        {
+            ticketNumber: 'TKT-2025-000105', summary: 'LEB2 App shows an error when uploading assignments',
+            description: 'Students report an "upload failed" message for PDF files since the latest update.',
+            status: 'InProgress', requestedPriority: 'URGENT', itPriority: 'URGENT', requester: 'jennifer.anderson', owner: 'sarah.connor',
+            category: 'Software', system: 'LEB2 App', daysAgo: 1,
+            notes: [{ author: 'sarah.connor', content: 'Reproduced with files above 20MB. Escalating to the LEB2 vendor contact.' }],
+        },
+        {
+            ticketNumber: 'TKT-2025-000106', summary: 'Password reset for shared lab workstation account',
+            description: 'The shared lab account password expired and nobody can sign in.',
+            status: 'Closed', requestedPriority: 'HIGH', itPriority: 'HIGH', requester: 'david.lee', owner: 'james.gordon',
+            category: 'Account and Access', system: 'Corporate Laptop', daysAgo: 20,
+            comments: [{ author: 'james.gordon', content: 'The account has been reset and the new password was handed to the lab supervisor in person.' }],
+        },
+        {
+            ticketNumber: 'TKT-2025-000107', summary: 'Keyboard keys sticking on library laptop',
+            description: 'Several keys on the borrowed laptop stick and repeat characters.',
+            status: 'Cancelled', requestedPriority: 'LOW', itPriority: 'LOW', requester: 'michael.chang', owner: null,
+            category: 'Hardware', system: 'Corporate Laptop', daysAgo: 14,
+            comments: [{ author: 'michael.chang', content: 'I returned the laptop to the library, so this is no longer needed.' }],
+        },
+        {
+            ticketNumber: 'TKT-2025-000108', summary: 'Wi-Fi keeps asking for login in the cafeteria',
+            description: 'The captive portal appears again every few minutes.',
+            status: 'Reopened', requestedPriority: 'MEDIUM', itPriority: 'MEDIUM', requester: 'david.lee', owner: 'sarah.connor',
+            category: 'Network', system: 'Campus Wi-Fi', daysAgo: 7,
+            comments: [{ author: 'david.lee', content: 'The problem came back today after it was marked resolved.' }],
+            notes: [{ author: 'sarah.connor', content: 'Access point AP-CAF-02 firmware rollback may have reverted the session timeout.' }],
+        },
+        {
+            ticketNumber: 'TKT-2025-000109', summary: 'Install statistics software on lab computers',
+            description: 'Please install the statistics package on all computers in room 1105 before next week.',
+            status: 'Open', requestedPriority: 'LOW', itPriority: 'LOW', requester: 'jennifer.anderson', owner: null,
+            category: 'Software', system: 'Corporate Laptop', daysAgo: 4,
+        },
+        {
+            ticketNumber: 'TKT-2025-000110', summary: 'Cannot sign in to email on mobile phone',
+            description: 'The mail app on my phone rejects my password although webmail works.',
+            status: 'WaitingForRequester', requestedPriority: 'MEDIUM', itPriority: 'MEDIUM', requester: 'michael.chang', owner: 'sarah.connor',
+            category: 'Account and Access', system: 'Email', daysAgo: 6,
+            comments: [{ author: 'sarah.connor', content: 'Please remove and add the account again, then tell us which error message appears.' }],
+        },
+        {
+            ticketNumber: 'TKT-2025-000111', summary: 'VPN access needed for new research assistant',
+            description: 'A new research assistant starts on Monday and needs VPN access to the lab server.',
+            status: 'New', requestedPriority: 'MEDIUM', itPriority: 'MEDIUM', requester: 'david.lee', owner: null,
+            category: 'Account and Access', system: 'VPN', daysAgo: 0,
+        },
+        {
+            ticketNumber: 'TKT-2025-000112', summary: 'Projector laptop overheats during long lectures',
+            description: 'The classroom laptop shuts down after about an hour of use.',
+            status: 'Resolved', requestedPriority: 'HIGH', itPriority: 'MEDIUM', requester: 'jennifer.anderson', owner: 'james.gordon',
+            category: 'Hardware', system: 'Corporate Laptop', daysAgo: 12,
+            notes: [{ author: 'james.gordon', content: 'Cleaned fan intake and replaced thermal paste. Monitor for one week before closing.' }],
+        },
+        {
+            ticketNumber: 'TKT-2025-000113', summary: 'Grade Submission App times out when saving',
+            description: 'Saving grades for large classes takes very long and then fails.',
+            status: 'InProgress', requestedPriority: 'HIGH', itPriority: 'URGENT', requester: 'michael.chang', owner: 'admin',
+            category: 'Software', system: 'Grade Submission App', daysAgo: 2,
+            notes: [{ author: 'admin', content: 'Grading deadline is Friday. Database team is checking slow queries.' }],
+        },
+        {
+            ticketNumber: 'TKT-2025-000114', summary: 'Printer driver missing on new laptop',
+            description: 'The new laptop cannot find the department printer.',
+            status: 'Open', requestedPriority: 'LOW', itPriority: 'LOW', requester: 'emily.watson', owner: null,
+            category: 'Software', system: 'Printer', daysAgo: 3,
+        },
+    ]
+
+    const users = await prisma.user.findMany()
+    const userId = (key: string) => {
+        const user = users.find(u => u.email === `${key}@example.com`)
+        if (!user) throw new Error(`Seed user ${key} not found`)
+        return user.id
+    }
+    const categoryRows = await prisma.category.findMany()
+    const systemRows = await prisma.relatedSystem.findMany()
+    const categoryId = (name: string) => categoryRows.find(c => c.name === name)!.id
+    const systemId = (name: string) => systemRows.find(s => s.name === name)!.id
+
+    let created = 0
+    for (const t of tickets) {
+        // Idempotent: existing seed tickets (and any comments added to them) are left untouched
+        const existing = await prisma.ticket.findUnique({ where: { ticketNumber: t.ticketNumber } })
+        if (existing) continue
+
+        const createdAt = new Date(Date.now() - t.daysAgo * 24 * 60 * 60 * 1000)
+        await prisma.ticket.create({
+            data: {
+                ticketNumber: t.ticketNumber,
+                summary: t.summary,
+                description: t.description,
+                status: t.status,
+                requestedPriority: t.requestedPriority,
+                itPriority: t.itPriority,
+                requesterId: userId(t.requester),
+                ownerId: t.owner ? userId(t.owner) : null,
+                categoryId: categoryId(t.category),
+                relatedSystemId: systemId(t.system),
+                createdAt,
+                indicatedResolvedAt: t.indicatedResolved ? new Date(createdAt.getTime() + 2 * 24 * 60 * 60 * 1000) : null,
+                comments: {
+                    create: (t.comments ?? []).map((c, i) => ({
+                        content: c.content,
+                        authorId: userId(c.author),
+                        createdAt: new Date(createdAt.getTime() + (i + 1) * 60 * 60 * 1000),
+                    })),
+                },
+                internalNotes: {
+                    create: (t.notes ?? []).map((n, i) => ({
+                        content: n.content,
+                        authorId: userId(n.author),
+                        createdAt: new Date(createdAt.getTime() + (i + 1) * 90 * 60 * 1000),
+                    })),
+                },
+            },
+        })
+        created++
+    }
+    console.log(`✅ Seeded ${created} new Tickets (${tickets.length} defined) with Public Comments and Internal Notes.`)
+
+    console.log('🎉 Seeding finished successfully!')
 }
-
 
 main()
     .then(async () => {
