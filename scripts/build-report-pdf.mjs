@@ -26,7 +26,7 @@ const BOARD_URL = 'https://github.com/users/PpAnpt/projects/3';
 const META = {
   student: 'Anapat Banjerdsilp',
   studentId: '67070501049',
-  section: '',              // e.g. '1', '2', 'HS', '31', '32'
+  section: '1',              // e.g. '1', '2', 'HS', '31', '32'
   github: '@PpAnpt',
   reviewer: 'ศิวรักษ์ ฉัตรวิชัย (Siwarak Chatvichai) — @BBINGOAL — 67070501086',
   releasePr: '27',          // lab3-staging → main
@@ -51,6 +51,8 @@ const PRS = [
   { n: 25, branch: 'feature/lab3-8-release-docs', title: 'Feature/lab3 8 release docs', issue: 18, created: '2026-10-04', merged: '2026-10-04', review: 'เรียบร้อยดีครับ' },
   { n: 26, branch: 'feature/lab3-9-release-prep', title: 'Feature/lab3 9 release prep', issue: 18, created: '2026-10-04', merged: '2026-10-04', review: '', note: 'Merged โดย @PpAnpt (ไม่มี review)' },
   { n: 27, branch: 'lab3-staging → main (release)', title: 'Release: Lab 3 lab3-staging → main', issue: 18, created: '2026-10-04', merged: '2026-10-04', review: '', note: 'Merged โดย @PpAnpt (ไม่มี review)' },
+  { n: 28, branch: 'feature/lab3-10-submission-evidence', title: 'Feature/lab3 10 submission evidence', issue: 19, created: '2026-10-04', merged: '2026-10-04', review: '', note: 'Merged โดย @PpAnpt (ไม่มี review)' },
+  { n: 29, branch: 'lab3-staging → main', title: 'Release: Lab 3 submission evidence → main', issue: 19, created: '2026-10-04', merged: '2026-10-04', review: '', note: 'Merged โดย @PpAnpt (ไม่มี review)' },
 ];
 
 // ---- Helpers ---------------------------------------------------------------------------
@@ -241,7 +243,7 @@ Issue ของ Lab 3 อยู่ใน repository <a href="${ISSUES_REPO}/issu
 ${slot('kanban', 'GitHub Project (Kanban) board ที่ Issue ของ Lab 3 ทั้งหมดอยู่ในคอลัมน์ Done',
   `เปิด <a href="${BOARD_URL}">${BOARD_URL}</a> แล้วแคปหน้าจอให้เห็นคอลัมน์ Done ที่มี Issue #11–#19`, 90)}
 
-<h2>1.3 Peer Review (reviewer.md)</h2>
+<h2 style="break-before: page">1.3 Peer Review (reviewer.md)</h2>
 <table>
   <tr><th>PR</th><th>Branch → base</th><th>สร้าง</th><th>Merge</th><th>ความเห็น Reviewer (@BBINGOAL)</th></tr>
   ${PRS.map((p) => `<tr><td><a href="${REPO}/pull/${p.n}">#${p.n}</a></td><td><code>${esc(p.branch)}</code></td><td>${p.created}</td><td>${p.merged || 'รอ merge'}</td><td>${p.review ? esc(p.review) + ' <b>(Approved)</b>' : esc(p.note || '—')}</td></tr>`).join('')}
