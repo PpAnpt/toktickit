@@ -191,7 +191,7 @@ Full shapes and status codes are in `docs/lab-04/api-spec.md`. Status codes: 200
 - **AC-17**: Given seeded data, when the Requester dashboard is retrieved, then Open, Waiting for You, Recently Updated, and Recently Resolved equal the counts from an independent database query (BR-23, BR-24).
 - **AC-18**: Given seeded data, when the staff dashboard is retrieved, then Unassigned, My Active, Urgent, Reopened, Resolved-awaiting-closure, the status and priority breakdowns, and My Recent Actions equal independent database queries; only the Administrator response contains `userCounts`.
 - **AC-19**: Given a user with no matching records, then every metric is `0`, every list is empty, and the UI shows an explicit empty message.
-- **AC-20**: Given a dashboard card with a count N, when the user follows its drill-down link, then the target list opens pre-filtered and shows N matching Tickets (using `status=Active` where defined).
+- **AC-20**: Given a dashboard card that defines a filter (every staff card, plus the Requester cards Open Tickets and Waiting for You), when the user follows its drill-down link, then the target list opens pre-filtered and shows the same N Tickets (using `status=Active` where defined). The Requester cards Recently Updated and Recently Resolved link to a sorted list without a date filter, as documented in `api-spec.md`.
 - **AC-21**: Given Tickets updated just inside and just outside the 7-day Asia/Bangkok boundary, then only the inside Tickets are counted as recent.
 - **AC-22**: Given any dashboard response, then it contains counts and at most 5 items per list and no data of other Requesters.
 
