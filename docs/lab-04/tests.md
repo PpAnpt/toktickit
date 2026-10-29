@@ -1,6 +1,6 @@
 # Lab 4 Test Plan and Traceability
 
-This plan is written before implementation (Test DD) and is used for TDD: each test is written first (red), then the feature is built until it passes (green). IDs AC-01..AC-30 refer to `docs/lab-04/specification.md`. The **Final** column is `Planned` until the owning Pull Request is merged, then `Pass` with evidence; the last update happens in the release issue (#35) using output from `main`.
+This plan is written before implementation (Test DD) and is used for TDD: each test is written first (red), then the feature is built until it passes (green). IDs AC-01..AC-39 refer to `docs/lab-04/specification.md`. The **Final** column is `Planned` until the owning Pull Request is merged, then `Pass` with evidence; the last update happens in the release issue (#35) using output from `main`.
 
 ## 1. Test Types and Locations
 | Prefix | Type | Tooling | Location |
@@ -37,9 +37,9 @@ Run commands: `npm --prefix server test`, `npm --prefix client test`, `npm run t
 | API-03 | API | AC-01 | Create a valid Action Taken | `201`; saved under the correct Ticket with the authenticated user as performer | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
 | API-04 | API | AC-01 | Create with a client `performedById` | Ignored; performer is the token user | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
 | API-05 | API | AC-05 | Non-owner staff creates an action | Saved with that staff as performer; Ticket owner unchanged | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
-| API-06 | API | AC-04 | Missing description/result, over-length text | `400` with `details` naming each field; nothing saved | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
+| API-06 | API | AC-04 | Missing description, missing result on a `Completed`/`Cancelled` action, over-length text | `400` with `details` naming each field; nothing saved | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
 | API-07 | API | AC-04 | Follow-up required without a note | `400` naming `followUpNote` | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
-| API-08 | API | AC-04 | `actionAt` in the future or before Ticket creation | `400` naming `actionAt` | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
+| API-08 | API | AC-04 | `actionAt` before Ticket creation, or in the future for a non-`Planned` action | `400` naming `actionAt`; a future `Planned` action is accepted | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
 | API-09 | API | AC-06 | Edit with current `expectedUpdatedAt` | `200`; fields changed; performer and `createdAt` unchanged; `updatedBy` set | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
 | API-10 | API | AC-06 | Edit with a stale `expectedUpdatedAt` | `409 STALE_UPDATE`; row unchanged | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
 | API-11 | API | AC-06 | Edit without `expectedUpdatedAt` | `400` | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
@@ -48,6 +48,14 @@ Run commands: `npm --prefix server test`, `npm --prefix client test`, `npm run t
 | API-14 | API | AC-08 | Same `clientRequestId` sent twice | Second response `200 replayed`; exactly one row | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
 | API-15 | API | AC-08, AC-27 | Two parallel creates with the same `clientRequestId` | Exactly one row exists | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
 | API-16 | API | AC-01 | Create updates the Ticket `updatedAt` (BR-11) | Ticket `updatedAt` increases | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
+| API-17 | API | AC-01, AC-31 | Create without `assigneeId` | Assignee defaults to the creator; stored separately from the performer | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
+| API-18 | API | AC-31 | Create and reassign with an inactive user, a Requester, or an unknown id | `400` naming `assigneeId`; nothing changes | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
+| API-19 | API | AC-31 | An existing assignee becomes inactive, then an unrelated field is edited | Edit succeeds; starting or completing it before reassigning is rejected | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
+| API-20 | API | AC-32 | Valid action transitions (Planned to In Progress/Completed/Cancelled; In Progress to Completed/Cancelled) | `200`; new status stored | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
+| API-21 | API | AC-32 | Invalid action transitions (from `Completed`/`Cancelled`, create as `Cancelled`) | `400 INVALID_ACTION_TRANSITION`; unchanged | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
+| API-22 | API | AC-32 | Complete or cancel without a Result | `400` naming `result` | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
+| API-23 | API | AC-33 | Cancel a Ticket that has `Planned`, `In Progress`, and `Completed` actions | Open actions become `Cancelled` with `AUTO_CANCELLED` revisions in the same transaction; the completed action is untouched | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
+| API-24 | API | AC-38 | Actions list with 45 actions, `page`/`limit`, `limit=500`, `page=0` | Correct slices, `total`, clamping (max 50), stable order, no overlap or gap across pages | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
 | AUTHZ-01 | Authorization | AC-03 | Requester lists actions of own Ticket | `200`, all fields visible | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
 | AUTHZ-02 | Authorization | AC-03 | Requester creates or edits an action | `403`; nothing saved | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
 | AUTHZ-03 | Authorization | AC-03 | Requester lists another Requester's Ticket actions | `404`, same as missing Ticket | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
@@ -60,8 +68,8 @@ Run commands: `npm --prefix server test`, `npm --prefix client test`, `npm run t
 | WF-01 | Workflow | AC-10 | Every permitted transition as IT Staff and Administrator | `200` with the new status | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
 | WF-02 | Workflow | AC-10 | Every non-permitted transition (including from `Closed` and `Cancelled`) | `400 Invalid status transition` | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
 | WF-03 | Authorization | AC-10 | Requester changes status | `403` | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
-| WF-04 | Workflow | AC-11 | Resolve a Ticket with no Actions Taken | `400 RESOLUTION_REQUIRES_ACTION`; status unchanged | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
-| WF-05 | Workflow | AC-11 | Resolve after recording an action | `200`; `resolvedAt` set | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
+| WF-04 | Workflow | AC-11 | Resolve a Ticket with no `Completed` action, and one that still has a `Planned`/`In Progress` action | `400 RESOLUTION_GATE_FAILED` with `reasons` `NO_COMPLETED_ACTION` / `OPEN_ACTIONS`; status unchanged | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
+| WF-05 | Workflow | AC-11 | Resolve after completing an action and completing or cancelling all open ones | `200`; `resolvedAt` set | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
 | WF-06 | Workflow | AC-12 | Requester indicates resolved | Status unchanged; `indicatedResolvedAt` set | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
 | WF-07 | Workflow | AC-12 | Reopen a Resolved Ticket | `resolvedAt` and `indicatedResolvedAt` cleared; Requester may indicate again | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
 | WF-08 | Workflow | AC-13 | Stale `expectedUpdatedAt` on status, owner, and priority | `409 STALE_UPDATE`; Ticket unchanged | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
@@ -69,6 +77,9 @@ Run commands: `npm --prefix server test`, `npm --prefix client test`, `npm run t
 | WF-10 | Workflow | AC-14 | Assign an inactive user, a Requester, or an unknown user as owner | `400`; owner unchanged | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
 | WF-11 | Workflow | AC-20 | `status=Active` on the staff queue and My Tickets | Returns exactly the 5 active statuses; invalid values still `400` | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
 | WF-12 | Regression | AC-25 | Status, owner, priority without `expectedUpdatedAt` | Lab 3 behavior preserved | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
+| WF-13 | Workflow | AC-13 | 10 parallel Action Taken edits (and 10 parallel status changes) carrying the same `expectedUpdatedAt` | Exactly one `200`, nine `409`; exactly one revision/event added; final row equals the winner's data | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
+| WF-14 | Workflow | AC-13 | A write that fails the stale check inside the transaction | Rolled back: no change and no history row (atomic check and write) | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
+| WF-15 | Workflow | AC-20 | `GET /api/tickets?recent=` with `updated`, `resolved`, and an invalid value | Valid values filter; invalid value `400`; Lab 3 query validation unchanged | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
 
 ### 2.4 Requester Dashboard
 | Test ID | Type | Requirement / AC | What It Tests | Expected Result | Automated Test File | Final |
@@ -81,6 +92,8 @@ Run commands: `npm --prefix server test`, `npm --prefix client test`, `npm run t
 | DASH-06 | API | AC-21 | Tickets just inside and just outside the 7-day Asia/Bangkok window | Only inside Tickets counted | `server/tests/lab-04/requester-dashboard.api.test.ts` | Planned |
 | DASH-07 | API | AC-22 | Response shape and size with more than 5 matching Tickets | At most 5 items per list; no full collection | `server/tests/lab-04/requester-dashboard.api.test.ts` | Planned |
 | DASH-08 | API | AC-17 | `recentlyResolved` uses `resolvedAt` (not `updatedAt`) | Later edits do not move a Ticket into or out of the window | `server/tests/lab-04/requester-dashboard.api.test.ts` | Planned |
+| DASH-09 | API | AC-20 | Drill-down parity for `recentlyUpdated`: `GET /api/tickets?recent=updated` | List `total` and ids equal the card count and the Tickets counted | `server/tests/lab-04/requester-dashboard.api.test.ts` | Planned |
+| DASH-10 | API | AC-20 | Drill-down parity for `recentlyResolved` with a Ticket resolved then closed inside the window, one `Resolved` before the window, and one reopened | `recent=resolved` lists the closed-in-window Ticket and excludes the old and reopened ones; count equals the card | `server/tests/lab-04/requester-dashboard.api.test.ts` | Planned |
 
 ### 2.5 IT Staff Dashboard
 | Test ID | Type | Requirement / AC | What It Tests | Expected Result | Automated Test File | Final |
@@ -88,23 +101,23 @@ Run commands: `npm --prefix server test`, `npm --prefix client test`, `npm run t
 | SDASH-01 | Authorization | AC-16 | Requester calls the staff dashboard | `403`, no data | `server/tests/lab-04/staff-dashboard.api.test.ts` | Planned |
 | SDASH-02 | API | AC-18 | Unassigned, My Active, Urgent, Reopened, Resolved-awaiting-closure vs independent queries | Counts match | `server/tests/lab-04/staff-dashboard.api.test.ts` | Planned |
 | SDASH-03 | API | AC-18 | `byStatus` (8 keys) and `byPriority` (4 keys) | All keys present; counts match; Closed/Cancelled excluded from `byPriority` | `server/tests/lab-04/staff-dashboard.api.test.ts` | Planned |
-| SDASH-04 | API | AC-18 | `myRecentActions` | Only the current user's actions, newest first, max 5, description truncated | `server/tests/lab-04/staff-dashboard.api.test.ts` | Planned |
+| SDASH-04 | API | AC-18 | `myRecentActions` | Only actions the current user performed or is assigned to, with status and assignee, newest first, max 5, description truncated | `server/tests/lab-04/staff-dashboard.api.test.ts` | Planned |
 | SDASH-05 | API | AC-18 | `userCounts` | Present for Administrator only | `server/tests/lab-04/staff-dashboard.api.test.ts` | Planned |
 | SDASH-06 | API | AC-19 | Empty database state | Every metric `0`; lists `[]`; no error | `server/tests/lab-04/staff-dashboard.api.test.ts` | Planned |
 | SDASH-07 | API | AC-22 | Shape and size | At most 5 items per list | `server/tests/lab-04/staff-dashboard.api.test.ts` | Planned |
 | SDASH-08 | API | AC-20 | Drill-down parity: queue with each card's filter | Queue `total` equals the metric | `server/tests/lab-04/staff-dashboard.api.test.ts` | Planned |
 | ERR-01 | API | AC-26 | Forced database failure on dashboard, actions, and status endpoints | `500` with a generic message; no stack, SQL, or ids | `server/tests/lab-04/safe-errors.api.test.ts` | Planned |
-| PERF-01 | Performance | AC-30 | Both dashboards with the seeded database | Respond in under 1 second | `server/tests/lab-04/performance-smoke.api.test.ts` | Planned |
-| PERF-02 | Performance | AC-30 | Actions Taken list for a Ticket with many actions | Responds in under 1 second | `server/tests/lab-04/performance-smoke.api.test.ts` | Planned |
+| PERF-01 | Performance | AC-30 | Requester and staff dashboards against the performance fixture (section 6) | p95 of 30 timed requests under 1 second | `server/tests/lab-04/performance-smoke.api.test.ts` | Planned |
+| PERF-02 | Performance | AC-30 | Actions Taken list (first page, `limit=20`) for the Ticket with 2,000 actions in the performance fixture | p95 of 30 timed requests under 1 second | `server/tests/lab-04/performance-smoke.api.test.ts` | Planned |
 
 ### 2.6 Migration and Seed
 | Test ID | Type | Requirement / AC | What It Tests | Expected Result | Automated Test File | Final |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| MIG-01 | Migration | AC-23 | Apply Labs 1 to 3 migrations, insert Lab 3 data, apply the Lab 4 migration | All Users, Tickets, Attachments, Comments, Notes preserved; `prisma migrate diff` is empty | `server/tests/lab-04/migration.test.ts` | Planned |
-| MIG-02 | Migration | AC-23 | Rehearse the documented rollback | Table and column removed; Lab 3 data intact | `server/tests/lab-04/migration.test.ts` | Planned |
+| MIG-01 | Migration | AC-23 | Apply Labs 1 to 3 migrations, insert Lab 3 data, apply the Lab 4 migration | All Users, Tickets, Attachments, Comments, Notes preserved; the new tables, enums, and immutability trigger exist; `prisma migrate diff` is empty | `server/tests/lab-04/migration.test.ts` | Planned |
+| MIG-02 | Migration | AC-23 | Rehearse the documented rollback | Trigger, three tables, new enums, and `resolvedAt` removed; Lab 3 data intact | `server/tests/lab-04/migration.test.ts` | Planned |
 | MIG-03 | Migration | AC-23 | Backfill of `resolvedAt`; legacy Tickets list zero actions | `resolvedAt = updatedAt` for Resolved/Closed; others `NULL` | `server/tests/lab-04/migration.test.ts` | Planned |
 | SEED-01 | Seed | AC-24 | Run the seed twice | No duplicate users, Tickets, or actions | `server/tests/lab-04/seed.test.ts` | Planned |
-| SEED-02 | Seed | AC-24 | Seed coverage | All statuses and priorities, owned and unowned Tickets, Tickets with 0/1/many actions, non-zero and zero dashboard metrics | `server/tests/lab-04/seed.test.ts` | Planned |
+| SEED-02 | Seed | AC-24, AC-39 | Seed coverage | All Ticket statuses and priorities, owned and unowned Tickets, Tickets with 0/1/many actions, one Ticket whose actions have different assignees and all four action statuses, an action assigned to the inactive staff member, edited actions with revisions, Ticket events, non-zero and zero dashboard metrics | `server/tests/lab-04/seed.test.ts` | Planned |
 
 ### 2.7 UI Component
 | Test ID | Type | Requirement / AC | What It Tests | Expected Result | Automated Test File | Final |
@@ -119,7 +132,7 @@ Run commands: `npm --prefix server test`, `npm --prefix client test`, `npm run t
 | UI-08 | UI | AC-26 | Network/500 error on create | Alert shown; entered text kept | `client/src/tests/lab-04/ActionsTaken.test.tsx` | Planned |
 | UI-09 | UI | AC-07 | `Closed`/`Cancelled` Ticket | Add and Edit hidden with an explanation | `client/src/tests/lab-04/ActionsTaken.test.tsx` | Planned |
 | UI-10 | UI | AC-15 | Status buttons for each status | Only permitted "Move to ..." buttons; none for terminal statuses | `client/src/tests/lab-04/TicketWorkflow.test.tsx` | Planned |
-| UI-11 | UI | AC-15 | `RESOLUTION_REQUIRES_ACTION` | Gate message with "Add an action" link; status unchanged | `client/src/tests/lab-04/TicketWorkflow.test.tsx` | Planned |
+| UI-11 | UI | AC-15 | `RESOLUTION_GATE_FAILED` | Gate message names the reasons with a link to Actions Taken; status unchanged | `client/src/tests/lab-04/TicketWorkflow.test.tsx` | Planned |
 | UI-12 | UI | AC-15 | Successful transition | Summary status badge refreshes; status message announced | `client/src/tests/lab-04/TicketWorkflow.test.tsx` | Planned |
 | UI-13 | UI | AC-27 | Transition in flight | All status buttons disabled; one request | `client/src/tests/lab-04/TicketWorkflow.test.tsx` | Planned |
 | UI-14 | UI | AC-26 | `409` on a transition | Conflict message with Reload; no status change shown | `client/src/tests/lab-04/TicketWorkflow.test.tsx` | Planned |
@@ -158,7 +171,7 @@ Run commands: `npm --prefix server test`, `npm --prefix client test`, `npm run t
 | E2E-06 | E2E | AC-11, AC-15 | Resolve a Ticket without an action, then add one and resolve | Blocked with gate message, then succeeds; summary updates | `e2e/lab-04/ticket-resolution.spec.ts` | Planned |
 | E2E-07 | E2E | AC-12 | Requester indicates resolved; staff reviews, resolves, closes | Status changes only by staff; indication is advisory | `e2e/lab-04/ticket-resolution.spec.ts` | Planned |
 | E2E-08 | E2E | AC-12, AC-13 | Staff reopens a Resolved Ticket; concurrent stale change | Reopen clears indication; stale change shows conflict | `e2e/lab-04/ticket-resolution.spec.ts` | Planned |
-| E2E-09 | E2E | AC-17, AC-20 | Requester dashboard values, drill-down to My Tickets | Values match seed; list counts match for filtered cards | `e2e/lab-04/dashboards.spec.ts` | Planned |
+| E2E-09 | E2E | AC-17, AC-20 | Requester dashboard values, drill-down to My Tickets for every card (including Recently Resolved with a resolved-then-closed Ticket) | Values match seed; every list total equals its card | `e2e/lab-04/dashboards.spec.ts` | Planned |
 | E2E-10 | E2E | AC-18, AC-20 | Staff dashboard values and drill-down to the queue | Values match seed; queue totals match | `e2e/lab-04/dashboards.spec.ts` | Planned |
 | E2E-11 | E2E | AC-18 | Administrator dashboard | Accounts strip shown; staff user does not see it | `e2e/lab-04/dashboards.spec.ts` | Planned |
 | E2E-12 | E2E | AC-16, AC-29 | Role navigation, landing page, and direct URL to the other role's dashboard | Correct entries and landing; forbidden message without data | `e2e/lab-04/dashboards.spec.ts` | Planned |
@@ -170,10 +183,38 @@ Run commands: `npm --prefix server test`, `npm --prefix client test`, `npm run t
 | REG-02 | Regression | AC-25 | All existing client component suites | All pass | `client/src/tests`, `client/src/tests/lab-03` | Planned |
 | REG-03 | Regression | AC-25 | Existing Playwright suites (authentication, staff ticket flow, user administration, Requester flows) | All pass | `e2e/lab-02`, `e2e/lab-03` | Planned |
 
+### 2.11 Append-only History (server)
+| Test ID | Type | Requirement / AC | What It Tests | Expected Result | Automated Test File | Final |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| UNIT-07 | Unit | AC-13 | Next concurrency token helper | `GREATEST(now, previous + 1 ms)`: two writes in the same millisecond still get different tokens | `server/tests/lab-04/concurrency-token.unit.test.ts` | Planned |
+| HIST-01 | API | AC-34 | Create an action | One revision `CREATED`, `revisionNo` 1, `before` null, full `after` snapshot, correct actor | `server/tests/lab-04/history.api.test.ts` | Planned |
+| HIST-02 | API | AC-34 | Staff A edits `result`, staff B edits it again, then the action is completed | Revisions 2, 3, 4 with actor, time, `changedFields`, before/after; the original and A's values can be reconstructed from the history | `server/tests/lab-04/history.api.test.ts` | Planned |
+| HIST-03 | API | AC-34 | PATCH that changes nothing | `200`, no new revision, `updatedAt` unchanged | `server/tests/lab-04/history.api.test.ts` | Planned |
+| HIST-04 | API | AC-36 | Status, owner, priority changes and a reopen | One Ticket event each with from, to, actor, and time | `server/tests/lab-04/history.api.test.ts` | Planned |
+| HIST-05 | API | AC-36 | Events and revisions created in the same millisecond | Stable ascending order (time, then id / revisionNo), identical on repeated reads | `server/tests/lab-04/history.api.test.ts` | Planned |
+| HIST-06 | Authorization | AC-35 | `PATCH`/`DELETE`/`POST` on the revisions and events routes | `404`/`405`; history unchanged | `server/tests/lab-04/history.api.test.ts` | Planned |
+| HIST-07 | Migration | AC-35 | Direct SQL `UPDATE` and `DELETE` on `ActionTakenRevision` and `TicketEvent` | Database raises an error; rows unchanged | `server/tests/lab-04/history.api.test.ts` | Planned |
+| HIST-08 | Authorization | AC-37 | Requester, IT Staff, Administrator, and no token call the history endpoints | Requester `403` with no data, staff/admin `200`, no token `401` | `server/tests/lab-04/history.api.test.ts` | Planned |
+| HIST-09 | API | AC-34 | A stale or failing action write | No revision is left behind (change and history are in one transaction) | `server/tests/lab-04/history.api.test.ts` | Planned |
+| HIST-10 | API | AC-38 | History lists with more than one page | `total`, `page`, `limit`, clamping, no overlap or gap across pages | `server/tests/lab-04/history.api.test.ts` | Planned |
+
+### 2.12 Assignment, Lifecycle, and History in the UI and E2E
+| Test ID | Type | Requirement / AC | What It Tests | Expected Result | Automated Test File | Final |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| UI-26 | UI | AC-31 | Assignee select | Lists active IT Staff and Administrators only; an inactive current assignee is labelled "(inactive)" and not selectable; server rejection shows under the field | `client/src/tests/lab-04/ActionsTaken.test.tsx` | Planned |
+| UI-27 | UI | AC-32 | Lifecycle buttons and confirm panels | Buttons match the action status; Complete and Cancel require a Result; terminal actions show none | `client/src/tests/lab-04/ActionsTaken.test.tsx` | Planned |
+| UI-28 | UI | AC-37 | History views | Staff see per-action history and Ticket history (read-only, Before/After labels, no edit/delete controls); Requester sees none | `client/src/tests/lab-04/ActionsTaken.test.tsx` | Planned |
+| UI-29 | UI | AC-38 | Pagination controls on the actions list and history | Previous/Next and "Showing x-y of N" work; state is announced | `client/src/tests/lab-04/ActionsTaken.test.tsx` | Planned |
+| UI-30 | UI | AC-33 | Cancelling a Ticket | Confirm panel warns that open actions will be cancelled | `client/src/tests/lab-04/TicketWorkflow.test.tsx` | Planned |
+| E2E-13 | E2E | AC-31, AC-32, AC-39 | Two staff members on one Ticket: plan an action for the other, start, complete, and cancel different actions | Different assignees and statuses all visible on one Ticket | `e2e/lab-04/actions-taken-flow.spec.ts` | Planned |
+| E2E-14 | E2E | AC-34, AC-37 | Edit an action twice as two users, then open History as staff and as the Requester | Staff see ordered Before/After revisions; Requester sees no history | `e2e/lab-04/actions-taken-flow.spec.ts` | Planned |
+| E2E-15 | E2E | AC-31 | Try to assign an action to the inactive staff member (via the UI and a direct API call) | Not selectable in the UI; API returns `400`; message shown | `e2e/lab-04/actions-taken-flow.spec.ts` | Planned |
+| E2E-16 | E2E | AC-33 | Cancel a Ticket that has open actions | Open actions show as `Cancelled` with the automatic reason; completed ones unchanged | `e2e/lab-04/ticket-resolution.spec.ts` | Planned |
+
 ## 3. Acceptance Criterion Traceability
 | AC | Tests |
 | :--- | :--- |
-| AC-01 | API-03, API-04, API-16, AUTHZ-05, E2E-01 |
+| AC-01 | API-03, API-04, API-16, API-17, AUTHZ-05, E2E-01 |
 | AC-02 | DASH-04 |
 | AC-03 | AUTHZ-01, AUTHZ-02, AUTHZ-03, AUTHZ-04, UI-01, UI-03, E2E-01 |
 | AC-04 | UNIT-01, UNIT-02, UNIT-03, API-06, API-07, API-08, UI-04, UI-05, E2E-03 |
@@ -185,14 +226,14 @@ Run commands: `npm --prefix server test`, `npm --prefix client test`, `npm run t
 | AC-10 | UNIT-04, WF-01, WF-02, WF-03 |
 | AC-11 | WF-04, WF-05, E2E-06 |
 | AC-12 | WF-06, WF-07, E2E-07, E2E-08 |
-| AC-13 | WF-08, WF-09, E2E-08 |
+| AC-13 | UNIT-07, WF-08, WF-09, WF-13, WF-14, E2E-08 |
 | AC-14 | WF-10 |
 | AC-15 | UI-10, UI-11, UI-12, E2E-06 |
 | AC-16 | DASH-01, DASH-02, SDASH-01, E2E-12 |
 | AC-17 | DASH-03, DASH-08, UI-21, E2E-09 |
 | AC-18 | UNIT-06, SDASH-02, SDASH-03, SDASH-04, SDASH-05, UI-15, UI-20, E2E-10, E2E-11 |
 | AC-19 | DASH-05, SDASH-06, UI-02, UI-18, UI-22 |
-| AC-20 | WF-11, SDASH-08, UI-16, UI-23, E2E-09, E2E-10 |
+| AC-20 | WF-11, WF-15, DASH-09, DASH-10, SDASH-08, UI-16, UI-23, E2E-09, E2E-10 |
 | AC-21 | UNIT-05, DASH-06 |
 | AC-22 | DASH-04, DASH-07, SDASH-07 |
 | AC-23 | MIG-01, MIG-02, MIG-03 |
@@ -203,17 +244,36 @@ Run commands: `npm --prefix server test`, `npm --prefix client test`, `npm run t
 | AC-28 | UI-17, STY-01, STY-02, STY-03, RSP-01, RSP-02, RSP-03, A11Y-01, A11Y-02 |
 | AC-29 | UI-25, E2E-12 |
 | AC-30 | PERF-01, PERF-02 |
+| AC-31 | API-17, API-18, API-19, UI-26, E2E-13, E2E-15 |
+| AC-32 | API-20, API-21, API-22, UI-27, E2E-13 |
+| AC-33 | API-23, UI-30, E2E-16 |
+| AC-34 | HIST-01, HIST-02, HIST-03, HIST-09, E2E-14 |
+| AC-35 | HIST-06, HIST-07 |
+| AC-36 | HIST-04, HIST-05 |
+| AC-37 | HIST-08, UI-28, E2E-14 |
+| AC-38 | API-24, HIST-10, UI-29 |
+| AC-39 | SEED-02, E2E-13 |
 
-Every AC-01..AC-30 maps to at least one planned test. AC-28 is also verified by the visual and accessibility checklist in `ui-spec.md` and the screenshots in `artifacts/lab-04/screenshots/`.
+Every AC-01..AC-39 maps to at least one planned test. AC-28 is also verified by the visual and accessibility checklist in `ui-spec.md` and the screenshots in `artifacts/lab-04/screenshots/`.
 
 ## 4. Issue Ownership
 | Issue | Tests it must turn green |
 | :--- | :--- |
-| #31 Actions Taken | UNIT-01..03, API-01..16, AUTHZ-01..05, MIG-01..03, SEED-01..02, UI-01..09, E2E-01..05 |
-| #32 Ticket workflow | UNIT-04, WF-01..12, UI-10..14, E2E-06..08 |
-| #33 Role dashboards | UNIT-05..06, DASH-01..08, SDASH-01..08, UI-15..25, E2E-09..12 |
+| #31 Actions Taken | UNIT-01..03, UNIT-07, API-01..24, AUTHZ-01..05, HIST-01..03, HIST-06..10, MIG-01..03, SEED-01..02, UI-01..09, UI-26..29, E2E-01..05, E2E-13..15 |
+| #32 Ticket workflow | UNIT-04, WF-01..14, HIST-04..05, UI-10..14, UI-30, E2E-06..08, E2E-16 |
+| #33 Role dashboards | UNIT-05..06, WF-15, DASH-01..10, SDASH-01..08, UI-15..25, E2E-09..12 |
 | #34 Final hardening | ERR-01, PERF-01..02, STY-01..03, RSP-01..03, A11Y-01..02, REG-01..03 |
 | #35 Release | Final column updated with output from `main` |
 
 ## 5. Final Status Evidence
 Completed in issue #35: this table's **Final** column is changed to `Pass` using the complete passing output of `npm --prefix server test`, `npm --prefix client test`, and `npm run test:e2e` run on `main`.
+
+## 6. Performance Smoke Protocol (PERF-01, PERF-02, AC-30)
+The measurement is defined so that anyone can repeat it and get comparable numbers.
+
+- **Environment**: local machine with the project's `docker-compose.yml` PostgreSQL, the server started in test mode, nothing else heavy running. The test prints a header with OS, CPU model, RAM, Node version, and PostgreSQL version and saves it with the results.
+- **Fixture**: generated by `server/tests/lab-04/helpers/perf-fixture.ts` into a separate database (`toktickit_perf`, never the development database) with a fixed random seed (`4242`) so every run has the same shape: 100 users (80 Requesters, 18 IT Staff, 2 Administrators); 5,000 Tickets across all statuses and priorities; 20,000 Actions Taken in all four statuses (one Ticket has 2,000); about 20,000 revisions and 10,000 Ticket events; the Requester used for measurement owns 60 Tickets.
+- **Procedure**: log in once per role; for each measured endpoint send 3 warm-up requests, then 30 sequential timed requests (in-process Supertest, wall-clock with `performance.now()`); no caching layer is added.
+- **Measured endpoints**: `GET /api/dashboard/requester`, `GET /api/dashboard/staff` (as IT Staff and as Administrator), `GET /api/tickets/:id/actions?limit=20` for the 2,000-action Ticket, and page 1 of the events and revisions history.
+- **Summary and pass rule**: min, median, p95, and max are printed and written to `artifacts/lab-04/performance/summary.json`. A measurement passes when **p95 is under 1,000 ms**; the median is reported for context. A failure prints the fixture sizes and the slowest request so it can be diagnosed.
+- **Re-run**: `npm --prefix server exec vitest run tests/lab-04/performance-smoke.api.test.ts` (the fixture is generated on demand and cleaned up afterwards).
