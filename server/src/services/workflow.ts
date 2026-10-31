@@ -85,7 +85,7 @@ async function checkResolutionGate(tx: Tx, ticketId: number) {
             400,
             'Complete or cancel all open actions, and record at least one completed action, before resolving this Ticket',
             'RESOLUTION_GATE_FAILED',
-            { reasons },
+            { reasons, openActions: open },
         );
     }
 }
