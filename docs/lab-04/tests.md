@@ -265,11 +265,13 @@ Every AC-01..AC-40 maps to at least one planned test. AC-28 is also verified by 
 ## 4. Issue Ownership
 | Issue | Tests it must turn green |
 | :--- | :--- |
-| #31 Actions Taken | UNIT-01..03, UNIT-07, API-01..26, AUTHZ-01..05, HIST-01..03, HIST-06..10, MIG-01..04, SEED-01..02, UI-01..09, UI-26..29, UI-31, E2E-01..05, E2E-13..15 |
-| #32 Ticket workflow | UNIT-04, WF-01..14, WF-16, HIST-04..05, UI-10..14, UI-30, E2E-06..08, E2E-16 |
+| #31 Actions Taken | UNIT-01..03, UNIT-07, API-01..22, API-24..26, AUTHZ-01..05, HIST-01..03, HIST-06..10, MIG-01..04, SEED-01..02, UI-01..09, UI-26..29, UI-31, E2E-01..05, E2E-13..15 |
+| #32 Ticket workflow | UNIT-04, API-23, WF-01..14, WF-16, HIST-04..05, UI-10..14, UI-30, E2E-06..08, E2E-16 |
 | #33 Role dashboards | UNIT-05..06, WF-15, DASH-01..10, SDASH-01..08, UI-15..25, E2E-09..12 |
 | #34 Final hardening | ERR-01, PERF-01..02, STY-01..03, RSP-01..03, A11Y-01..02, REG-01..03 |
 | #35 Release | Final column updated with output from `main` |
+
+API-23 (cancelling a Ticket cancels its open Actions Taken, BR-32, AC-33) is owned by #32: the behaviour is part of the Ticket status endpoint, so it is implemented and tested together with the other status transitions. The Actions Taken API in #31 already provides the `AUTO_CANCELLED` revision type and the `Cancelled` status it relies on.
 
 ## 5. Final Status Evidence
 Completed in issue #35: this table's **Final** column is changed to `Pass` using the complete passing output of `npm --prefix server test`, `npm --prefix client test`, and `npm run test:e2e` run on `main`.
