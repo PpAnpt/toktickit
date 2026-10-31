@@ -260,7 +260,7 @@ Run commands: `npm --prefix server test`, `npm --prefix client test`, `npm run t
 | AC-39 | SEED-02, E2E-13 |
 | AC-40 | API-25, UI-31, WF-04 |
 
-Every AC-01..AC-39 maps to at least one planned test. AC-28 is also verified by the visual and accessibility checklist in `ui-spec.md` and the screenshots in `artifacts/lab-04/screenshots/`.
+Every AC-01..AC-40 maps to at least one planned test. AC-28 is also verified by the visual and accessibility checklist in `ui-spec.md` and the screenshots in `artifacts/lab-04/screenshots/`.
 
 ## 4. Issue Ownership
 | Issue | Tests it must turn green |

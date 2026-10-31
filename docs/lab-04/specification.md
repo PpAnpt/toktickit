@@ -212,7 +212,6 @@ Full shapes and status codes are in `docs/lab-04/api-spec.md`. Status codes: 200
 
 ### Actions Taken
 - **AC-01**: Given a permitted IT Staff user and valid data, when an Action Taken is created, then it is saved under the correct Ticket with the authenticated user as *Performed by* and the chosen active assignee (default: the creator), and a client-sent `performedById` is ignored.
-- **AC-02**: Given an authenticated Requester, when dashboard data is retrieved, then only metrics and recent Tickets owned by that Requester are returned.
 - **AC-03**: Given a Requester, when they list Actions Taken of their own Ticket, then all actions are returned read-only; when they try to create or edit, then 403; for another Requester's Ticket, then 404.
 - **AC-04**: Given invalid input (missing description, missing result on a `Completed` or `Cancelled` action, follow-up required without a note, over-length text, pre-creation `actionAt`, or a future `actionAt` on a non-`Planned` action), when creating or editing, then 400 names the invalid field and nothing is saved.
 - **AC-05**: Given a Ticket owned by staff member A, when staff member B creates an action, then it is saved with B as performer and the owner stays A.
@@ -230,6 +229,7 @@ Full shapes and status codes are in `docs/lab-04/api-spec.md`. Status codes: 200
 - **AC-15**: Given the Ticket Detail screen, then only permitted transitions are offered, a blocked resolution shows the gate message, and the summary status refreshes after a successful change.
 
 ### Dashboards
+- **AC-02**: Given an authenticated Requester, when dashboard data is retrieved, then only metrics and recent Tickets owned by that Requester are returned.
 - **AC-16**: Given a Requester, when requesting the staff dashboard, or given staff, when requesting the Requester dashboard, then 403.
 - **AC-17**: Given seeded data, when the Requester dashboard is retrieved, then Open, Waiting for You, Recently Updated, and Recently Resolved equal the counts from an independent database query (BR-23, BR-24).
 - **AC-18**: Given seeded data, when the staff dashboard is retrieved, then Unassigned, My Active, Urgent, Reopened, Resolved-awaiting-closure, the status and priority breakdowns, and My Recent Actions equal independent database queries; only the Administrator response contains `userCounts`.
@@ -284,3 +284,4 @@ Full shapes and status codes are in `docs/lab-04/api-spec.md`. Status codes: 200
 ## 12. Revision History
 - **v1.0** (Issue #30): Initial Sprint 4 contract, written before the implementation Pull Requests.
 - **v1.1** (PR #37 review by @BBINGOAL): Added Action Taken assignee and lifecycle (FR-17/18, BR-29..32, AC-31..33, AC-39); append-only revision and Ticket event history with database immutability (FR-19, BR-33..37, AC-34..37); pagination (BR-38, AC-38); `recent` filters so Recently Updated/Resolved drill-down matches the metric (BR-39, AC-20); atomic compare-and-set (BR-20, AC-13); reproducible performance fixture (AC-30); gate changed to `RESOLUTION_GATE_FAILED` (BR-16, AC-11).
+- **v1.2** (PR #37 second review by @BBINGOAL and a self-audit against Lab4_Labsheet.md): Recovery after a successful migration is now a restore of a pre-upgrade `pg_dump` instead of `migrate resolve --rolled-back` (section 7.4, AC-23, MIG-02); all new foreign keys use `onDelete: Restrict` (BR-40, AC-35, MIG-04); a `Resolved` Ticket cannot receive `Planned`/`In Progress` actions (BR-41, AC-40, API-25, UI-31); reuse of a `clientRequestId` with different content is `409 IDEMPOTENCY_KEY_REUSED` (BR-13, AC-08, API-26); `expectedUpdatedAt` is required on Ticket status, owner, and priority (BR-19, AC-13, WF-12, WF-16); AC-02 moved to the Dashboards group. Totals: 19 FR, 41 BR, 40 AC.
