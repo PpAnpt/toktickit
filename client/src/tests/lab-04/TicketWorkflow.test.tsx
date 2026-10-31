@@ -36,13 +36,13 @@ function makeTicket(overrides: Partial<api.StaffTicketDetail> = {}): api.StaffTi
 
 function setup(ticket = makeTicket(), eventsPage: api.TicketEventsPage = { events: [], total: 0, page: 1, limit: 50 }) {
   vi.spyOn(api, 'fetchStaffMembers').mockResolvedValue(members);
-  vi.spyOn(api, 'fetchActionsTaken').mockResolvedValue({ actions: [], total: 0, page: 1, limit: 20 });
+  const fetchActions = vi.spyOn(api, 'fetchActionsTaken').mockResolvedValue({ actions: [], total: 0, page: 1, limit: 20 });
   vi.spyOn(api, 'fetchPublicComments').mockResolvedValue([]);
   vi.spyOn(api, 'fetchInternalNotes').mockResolvedValue([]);
   const fetchEvents = vi.spyOn(api, 'fetchTicketEvents').mockResolvedValue(eventsPage);
   const fetchDetail = vi.spyOn(api, 'fetchStaffTicketDetail').mockResolvedValue(ticket);
   const view = render(<StaffTicketDetail ticketId={1} currentUser={currentUser} onBack={vi.fn()} />);
-  return { fetchDetail, fetchEvents, ...view };
+  return { fetchDetail, fetchEvents, fetchActions, ...view };
 }
 
 const moveButtons = () => screen.queryAllByRole('button', { name: /^→ Move to/ }).map(b => b.textContent?.replace('→ Move to ', '').trim());
@@ -187,7 +187,7 @@ describe('Lab 4: Ticket workflow controls (Issue #32)', () => {
 
   it('UI-30: Move to Cancelled opens a confirm panel that warns about open actions; Keep leaves everything, Confirm cancels', async () => {
     const update = vi.spyOn(api, 'updateTicketStatus').mockResolvedValue(makeTicket({ status: 'Cancelled', updatedAt: '2026-10-30T08:05:00.000Z' }));
-    setup();
+    const { fetchActions } = setup();
     fireEvent.click(await screen.findByRole('button', { name: /Move to Cancelled/ }));
 
     const panel = screen.getByRole('alertdialog', { name: 'Cancel this Ticket?' });
@@ -203,6 +203,8 @@ describe('Lab 4: Ticket workflow controls (Issue #32)', () => {
     expect(await screen.findByText('Status changed to Cancelled.')).toBeInTheDocument();
     expect(update).toHaveBeenCalledWith(1, 'Cancelled', TOKEN);
     expect(moveButtons()).toEqual([]);
+    // the open actions were cancelled with the Ticket, so the list is read again
+    await waitFor(() => expect(fetchActions.mock.calls.length).toBeGreaterThanOrEqual(2));
   });
 
   it('shows the Requester indication as an informational notice that does not change the controls', async () => {

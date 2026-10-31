@@ -201,7 +201,7 @@ Run commands: `npm --prefix server test`, `npm --prefix client test`, `npm run t
 | HIST-07 | Migration | AC-35 | Direct SQL `UPDATE` and `DELETE` on `ActionTakenRevision` and `TicketEvent` | Database raises an error; rows unchanged | `server/tests/lab-04/history.api.test.ts` | Planned |
 | HIST-08 | Authorization | AC-37 | Requester, IT Staff, Administrator, and no token call the history endpoints | Requester `403` with no data, staff/admin `200`, no token `401` | `server/tests/lab-04/history.api.test.ts` | Planned |
 | HIST-09 | API | AC-34 | A stale or failing action write | No revision is left behind (change and history are in one transaction) | `server/tests/lab-04/history.api.test.ts` | Planned |
-| HIST-10 | API | AC-38 | History lists with more than one page | `total`, `page`, `limit`, clamping, no overlap or gap across pages | `server/tests/lab-04/history.api.test.ts` | Planned |
+| HIST-10 | API | AC-38 | History lists (revisions and the Ticket events list) with more than one page | `total`, `page`, `limit`, clamping, no overlap or gap across pages | `server/tests/lab-04/history.api.test.ts` | Planned |
 
 ### 2.12 Assignment, Lifecycle, and History in the UI and E2E
 | Test ID | Type | Requirement / AC | What It Tests | Expected Result | Automated Test File | Final |

@@ -432,6 +432,14 @@ export const ActionsTaken: React.FC<ActionsTakenProps> = ({ ticketId, ticketStat
 
   useEffect(() => { load(page); }, [load, page]);
 
+  // A status change of the Ticket can change its actions (cancelling a Ticket cancels the open ones, BR-32)
+  const lastStatus = useRef(ticketStatus);
+  useEffect(() => {
+    if (lastStatus.current === ticketStatus) return;
+    lastStatus.current = ticketStatus;
+    load(page);
+  }, [ticketStatus, load, page]);
+
   // Closing the editor, opening another one, or leaving the page must not silently throw away typed text (ui-spec 4.3)
   useEffect(() => {
     if (!editor) return;
