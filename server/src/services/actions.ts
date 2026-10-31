@@ -87,7 +87,7 @@ export function serializeAction(a: ActionRow) {
 }
 
 // Full snapshot stored in each revision (BR-34) so any earlier state can be reconstructed
-function snapshot(a: {
+export function snapshot(a: {
     id: number; ticketId: number; actionAt: Date; description: string; result: string | null;
     assigneeId: number; status: ActionStatus; followUpRequired: boolean; followUpNote: string | null;
     attachmentNotes: string | null; performedById: number; updatedById: number | null;
