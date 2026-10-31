@@ -7,6 +7,7 @@ import staffRoutes from "./routes/staff";
 import ticketRoutes from "./routes/tickets";
 import ticketInteractionsRoutes from "./routes/ticket-interactions";
 import adminRoutes from "./routes/admin";
+import { readRouter as actionReadRoutes, staffRouter as actionStaffRoutes } from "./routes/actions";
 
 // The Express app is exported separately from app.listen() (see index.ts) so
 // Supertest can import `app` without opening a port. Do not merge these files.
@@ -47,7 +48,9 @@ app.get("/api/related-systems", async (_req: Request, res: Response) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/staff", actionStaffRoutes);
 app.use("/api/staff", staffRoutes);
+app.use("/api/tickets", actionReadRoutes);
 app.use("/api/tickets", ticketInteractionsRoutes);
 app.use("/api/tickets", ticketRoutes);
 app.use("/api/admin", adminRoutes);
