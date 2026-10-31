@@ -17,6 +17,7 @@ import {
   type UserProfile
 } from '../api';
 import { RoleBadge, ROLE_LABELS } from './RoleBadge';
+import { ActionsTaken } from './ActionsTaken';
 
 interface StaffTicketDetailProps {
   ticketId: number;
@@ -388,6 +389,18 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
               )}
             </div>
           </div>
+
+          {/* Actions Taken (Lab 4): shared work records with history for staff */}
+          <ActionsTaken
+            ticketId={ticket.id}
+            ticketStatus={ticket.status}
+            canEdit
+            staffMembers={staffMembers}
+            onChanged={() => {
+              fetchStaffTicketDetail(ticketId).then(setTicket).catch(() => { /* the saved action is authoritative; keep the current view */ });
+              if (onTicketUpdated) onTicketUpdated();
+            }}
+          />
 
           {/* TWO-TIER DISCUSSION THREADS */}
           <div className="card shadow-sm border-0">
