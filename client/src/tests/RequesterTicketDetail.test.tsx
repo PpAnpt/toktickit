@@ -19,6 +19,10 @@ global.fetch = vi.fn(async (url) => {
     if (urlStr.includes('/api/related-systems')) {
         return { json: async () => [{ id: 1, name: 'Laptop' }] };
     }
+    if (urlStr.match(/\/api\/tickets\/\d+\/actions/)) {
+        // Lab 4: the detail screen also lists Actions Taken (none for this Ticket)
+        return { ok: true, json: async () => ({ actions: [], total: 0, page: 1, limit: 20 }) };
+    }
     if (urlStr.match(/\/api\/tickets\/\d+\/comments/)) {
         return {
             ok: true,

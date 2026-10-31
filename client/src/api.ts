@@ -565,5 +565,129 @@ export async function resetAdminUserPassword(id: number, initialPassword: string
   return res.json();
 }
 
+// ─── Lab 4: Actions Taken ────────────────────────────────────
 
+export type ActionStatus = 'Planned' | 'In Progress' | 'Completed' | 'Cancelled';
 
+export interface ActionPerson {
+  id: number;
+  name: string;
+  role: string;
+}
+
+export interface ActionTakenItem {
+  id: number;
+  ticketId: number;
+  actionAt: string;
+  description: string;
+  result: string | null;
+  performedBy: ActionPerson;
+  assignee: ActionPerson;
+  status: ActionStatus;
+  followUpRequired: boolean;
+  followUpNote: string | null;
+  attachmentNotes: string | null;
+  createdAt: string;
+  updatedAt: string;
+  updatedBy: { id: number; name: string } | null;
+}
+
+export interface ActionsPage {
+  actions: ActionTakenItem[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface ActionRevisionItem {
+  revisionNo: number;
+  type: 'CREATED' | 'EDITED' | 'STATUS_CHANGED' | 'ASSIGNEE_CHANGED' | 'AUTO_CANCELLED';
+  actor: { id: number; name: string };
+  createdAt: string;
+  changedFields: string[];
+  before: Record<string, unknown> | null;
+  after: Record<string, unknown>;
+}
+
+export interface ActionInput {
+  actionAt?: string;
+  description?: string;
+  result?: string | null;
+  assigneeId?: number;
+  status?: ActionStatus;
+  followUpRequired?: boolean;
+  followUpNote?: string | null;
+  attachmentNotes?: string | null;
+  clientRequestId?: string;
+  expectedUpdatedAt?: string;
+}
+
+/** Error from the Actions Taken API; keeps the field messages so forms can show them under each field. */
+export class ActionApiError extends Error {
+  status: number;
+  code?: string;
+  details: Record<string, string>;
+  currentUpdatedAt?: string;
+  constructor(status: number, message: string, code?: string, details: Record<string, string> = {}, currentUpdatedAt?: string) {
+    super(message);
+    this.status = status;
+    this.code = code;
+    this.details = details;
+    this.currentUpdatedAt = currentUpdatedAt;
+  }
+}
+
+// Messages for failures the server does not describe in words we want to show (no raw server text, FR-16)
+const ACTION_ERROR_MESSAGES: Record<number, string> = {
+  401: 'Your session has expired. Please sign in again.',
+  403: 'You do not have permission to change Actions Taken.',
+  404: 'This Ticket or action is no longer available.',
+};
+
+async function actionRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T & { _status: number }> {
+  let res: Response;
+  try {
+    res = await authFetch(endpoint, options);
+  } catch {
+    throw new ActionApiError(0, 'Could not reach the server. Check your connection and try again.');
+  }
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const message = res.status >= 500
+      ? 'Something went wrong on the server. Please try again.'
+      : res.status === 400 || res.status === 409
+        ? (data.error || 'The request could not be completed.')
+        : (ACTION_ERROR_MESSAGES[res.status] || data.error || 'The request could not be completed.');
+    throw new ActionApiError(res.status, message, data.code, data.details ?? {}, data.currentUpdatedAt);
+  }
+  return { ...data, _status: res.status };
+}
+
+const jsonRequest = (method: string, body: unknown): RequestInit => ({
+  method,
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(body),
+});
+
+export async function fetchActionsTaken(ticketId: number, page = 1, limit = 20): Promise<ActionsPage> {
+  const data = await actionRequest<Partial<ActionsPage>>(`/api/tickets/${ticketId}/actions?page=${page}&limit=${limit}`);
+  // A malformed body is treated as an empty list instead of breaking the Ticket Detail screen
+  const actions = Array.isArray(data.actions) ? data.actions : [];
+  return { actions, total: data.total ?? actions.length, page: data.page ?? page, limit: data.limit ?? limit };
+}
+
+export async function createActionTaken(ticketId: number, input: ActionInput): Promise<{ action: ActionTakenItem; replayed: boolean }> {
+  const data = await actionRequest<{ action: ActionTakenItem; replayed?: boolean }>(
+    `/api/staff/tickets/${ticketId}/actions`, jsonRequest('POST', input));
+  return { action: data.action, replayed: Boolean(data.replayed) };
+}
+
+export async function updateActionTaken(ticketId: number, actionId: number, input: ActionInput): Promise<ActionTakenItem> {
+  const data = await actionRequest<{ action: ActionTakenItem }>(
+    `/api/staff/tickets/${ticketId}/actions/${actionId}`, jsonRequest('PATCH', input));
+  return data.action;
+}
+
+export async function fetchActionRevisions(ticketId: number, actionId: number, page = 1, limit = 50): Promise<{ revisions: ActionRevisionItem[]; total: number; page: number; limit: number }> {
+  return actionRequest(`/api/staff/tickets/${ticketId}/actions/${actionId}/revisions?page=${page}&limit=${limit}`);
+}
