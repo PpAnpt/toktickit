@@ -138,4 +138,75 @@ describe('Lab 4: Action Taken history is append-only (Issue #31, BR-33..BR-37)',
         const clamped = await revisions(ticket.id, made.body.action.id, sarah, '?page=0&limit=9999');
         expect(clamped.body).toMatchObject({ page: 1, limit: 100 });
     });
+
+    describe('Ticket events (Issue #32, BR-35, BR-36)', () => {
+        const events = (ticketId: number, session: Session, query = '') =>
+            request(app).get(`/api/staff/tickets/${ticketId}/events${query}`).set(bearer(session.token));
+        const tokenOf = async (id: number) => (await getPrisma().ticket.findUniqueOrThrow({ where: { id } })).updatedAt.toISOString();
+        const send = (ticketId: number, session: Session, path: string, body: Record<string, unknown>) =>
+            request(app).patch(`/api/staff/tickets/${ticketId}/${path}`).set(bearer(session.token)).send(body);
+
+        it('HIST-04: status, owner and priority changes and a reopen each add one event with from, to, actor and time', async () => {
+            const ticket = await createTicket({ status: 'New' });
+            await send(ticket.id, sarah, 'owner', { ownerId: sarah.user.id, expectedUpdatedAt: await tokenOf(ticket.id) }); // claim: owner + New -> Open
+            await send(ticket.id, james, 'priority', { itPriority: 'URGENT', expectedUpdatedAt: await tokenOf(ticket.id) });
+            await send(ticket.id, james, 'status', { status: 'In Progress', expectedUpdatedAt: await tokenOf(ticket.id) });
+            await create(ticket.id, sarah);
+            await send(ticket.id, sarah, 'status', { status: 'Resolved', expectedUpdatedAt: await tokenOf(ticket.id) });
+            await send(ticket.id, admin, 'status', { status: 'Reopened', expectedUpdatedAt: await tokenOf(ticket.id) });
+
+            const res = await events(ticket.id, sarah);
+            expect(res.status).toBe(200);
+            expect(res.body.total).toBe(6);
+            const summary = res.body.events.map((e: { type: string; from: string | null; to: string | null; actor: { id: number } }) => [e.type, e.from, e.to, e.actor.id]);
+            expect(summary).toEqual([
+                ['OWNER_CHANGED', null, 'Sarah Connor', sarah.user.id],
+                ['STATUS_CHANGED', 'New', 'Open', sarah.user.id],
+                ['PRIORITY_CHANGED', expect.any(String), 'URGENT', james.user.id],
+                ['STATUS_CHANGED', 'Open', 'In Progress', james.user.id],
+                ['STATUS_CHANGED', 'In Progress', 'Resolved', sarah.user.id],
+                ['STATUS_CHANGED', 'Resolved', 'Reopened', admin.user.id],
+            ]);
+            for (const e of res.body.events) expect(Number.isNaN(new Date(e.createdAt).getTime())).toBe(false);
+        });
+
+        it('HIST-04: only IT Staff and Administrators read events (Requester 403), a missing Ticket is 404, a Ticket without events is empty', async () => {
+            const ticket = await createTicket();
+            expect((await events(ticket.id, david)).status).toBe(403);
+            expect((await events(999999, sarah)).status).toBe(404);
+            expect((await request(app).get(`/api/staff/tickets/${ticket.id}/events`)).status).toBe(401);
+            const empty = await events(ticket.id, admin);
+            expect(empty.status).toBe(200);
+            expect(empty.body).toMatchObject({ events: [], total: 0, page: 1, limit: 50 });
+        });
+
+        it('HIST-05: events written in the same millisecond keep a stable order (time, then id) on repeated reads', async () => {
+            const ticket = await createTicket();
+            const at = new Date('2026-11-01T03:00:00.000Z');
+            for (const to of ['Open', 'In Progress', 'Waiting for Requester', 'Resolved']) {
+                await getPrisma().ticketEvent.create({ data: { ticketId: ticket.id, type: 'STATUS_CHANGED', fromValue: null, toValue: to, actorId: sarah.user.id, createdAt: at } });
+            }
+            const first = await events(ticket.id, sarah);
+            const second = await events(ticket.id, sarah);
+            expect(first.body.events.map((e: { to: string }) => e.to)).toEqual(['Open', 'In Progress', 'Waiting for Requester', 'Resolved']);
+            expect(second.body.events).toEqual(first.body.events);
+            const ids = first.body.events.map((e: { id: number }) => e.id);
+            expect(ids).toEqual([...ids].sort((a: number, b: number) => a - b));
+        });
+
+        it('HIST-10: the events list is paginated and clamped like the other history lists', async () => {
+            const ticket = await createTicket();
+            await getPrisma().ticketEvent.createMany({
+                data: Array.from({ length: 120 }, (_, i) => ({ ticketId: ticket.id, type: 'PRIORITY_CHANGED' as const, toValue: 'P' + i, actorId: sarah.user.id, createdAt: new Date(Date.UTC(2026, 10, 1, 0, 0, i)) })),
+            });
+            const page = await events(ticket.id, sarah);
+            expect(page.body).toMatchObject({ total: 120, page: 1, limit: 50 });
+            expect(page.body.events).toHaveLength(50);
+            const clamped = await events(ticket.id, sarah, '?limit=500&page=3');
+            expect(clamped.body.limit).toBe(100);
+            expect(clamped.body.events).toHaveLength(0);
+            const last = await events(ticket.id, sarah, '?limit=50&page=3');
+            expect(last.body.events.map((e: { to: string }) => e.to)).toEqual(Array.from({ length: 20 }, (_, i) => 'P' + (100 + i)));
+        });
+    });
 });

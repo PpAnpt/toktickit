@@ -1,8 +1,10 @@
 import { Router, Response } from 'express';
 import { requireAppAccess, requireRole, AuthenticatedRequest } from '../middlewares/auth';
 import {
-    ApiError, createAction, findVisibleTicket, listActions, listRevisions, parsePage, updateAction,
+    createAction, findVisibleTicket, listActions, listRevisions, parsePage, updateAction,
 } from '../services/actions';
+import { listEvents } from '../services/workflow';
+import { sendApiError } from './send-error';
 
 /**
  * Actions Taken API (docs/lab-04/api-spec.md section 2).
@@ -17,15 +19,7 @@ const ticketIdOf = (req: AuthenticatedRequest) => Number(req.params.id);
 const actionIdOf = (req: AuthenticatedRequest) => Number(req.params.actionId);
 const positive = (n: number) => Number.isInteger(n) && n > 0;
 
-function sendError(res: Response, error: unknown, fallback: string) {
-    if (error instanceof ApiError) {
-        res.status(error.status).json({ error: error.message, ...(error.code ? { code: error.code } : {}), ...error.extra });
-        return;
-    }
-    // Never expose stack traces, SQL, or internal detail (L3-BR safe errors)
-    console.error(fallback, error);
-    res.status(500).json({ error: fallback });
-}
+const sendError = sendApiError;
 
 function bodyObject(req: AuthenticatedRequest): Record<string, unknown> {
     return req.body && typeof req.body === 'object' && !Array.isArray(req.body) ? (req.body as Record<string, unknown>) : {};
@@ -79,3 +73,14 @@ staffRouter.get('/tickets/:id/actions/:actionId/revisions', staffOnly, async (re
 });
 
 // History is insert-only: no route updates or deletes revisions or the action itself (BR-08, BR-33)
+
+// GET /api/staff/tickets/:id/events
+staffRouter.get('/tickets/:id/events', staffOnly, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        if (!positive(ticketIdOf(req))) return res.status(404).json({ error: 'Ticket not found' });
+        const { page, limit } = parsePage(req.query.page, req.query.limit, 50, 100);
+        res.status(200).json(await listEvents(ticketIdOf(req), page, limit));
+    } catch (error) {
+        sendError(res, error, 'Failed to fetch Ticket history');
+    }
+});

@@ -129,6 +129,37 @@ describe('Lab 4: Actions Taken API (Issue #31)', () => {
             expect(await getPrisma().actionTakenRevision.count({ where: { action: { ticketId: ticket.id } } })).toBe(1);
         });
 
+        it('API-23: cancelling the Ticket cancels its Planned and In Progress actions with AUTO_CANCELLED revisions and leaves Completed ones alone', async () => {
+            const ticket = await createTicket({ status: 'InProgress' });
+            const planned = (await create(ticket.id, sarah, actionBody({ status: 'Planned', result: null, description: 'Planned work' }))).body.action;
+            const running = (await create(ticket.id, james, actionBody({ status: 'In Progress', result: null, description: 'Running work' }))).body.action;
+            const done = (await create(ticket.id, sarah, actionBody({ description: 'Finished work' }))).body.action;
+            const token = (await getPrisma().ticket.findUniqueOrThrow({ where: { id: ticket.id } })).updatedAt.toISOString();
+
+            const res = await request(app).patch(`/api/staff/tickets/${ticket.id}/status`).set(bearer(james.token)).send({ status: 'Cancelled', expectedUpdatedAt: token });
+            expect(res.status).toBe(200);
+            expect(res.body.status).toBe('Cancelled');
+
+            const rows = await getPrisma().actionTaken.findMany({ where: { ticketId: ticket.id }, orderBy: { id: 'asc' } });
+            expect(rows.map(r => r.status)).toEqual(['Cancelled', 'Cancelled', 'Completed']);
+            expect(rows[0].result).toBe('Cancelled because the Ticket was cancelled.');
+            expect(rows[1].result).toBe('Cancelled because the Ticket was cancelled.');
+            expect(rows[2].result).toBe(done.result);
+            expect(rows[0].updatedById).toBe(james.user.id);
+            expect(rows[0].updatedAt.getTime()).toBeGreaterThan(new Date(planned.updatedAt).getTime());
+
+            for (const action of [planned, running]) {
+                const revisions = await getPrisma().actionTakenRevision.findMany({ where: { actionId: action.id }, orderBy: { revisionNo: 'asc' } });
+                expect(revisions.map(r => r.type)).toEqual(['CREATED', 'AUTO_CANCELLED']);
+                expect(revisions[1].actorId).toBe(james.user.id);
+                expect([...revisions[1].changedFields].sort()).toEqual(['result', 'status']);
+                expect(revisions[1].before).toMatchObject({ status: action === planned ? 'Planned' : 'In Progress' });
+                expect(revisions[1].after).toMatchObject({ status: 'Cancelled' });
+            }
+            expect(await getPrisma().actionTakenRevision.count({ where: { actionId: done.id } })).toBe(1);
+            expect(await getPrisma().ticketEvent.count({ where: { ticketId: ticket.id, type: 'STATUS_CHANGED' } })).toBe(1);
+        });
+
         it('API-04: a client-sent performedById is ignored', async () => {
             const ticket = await createTicket();
             const res = await create(ticket.id, sarah, actionBody({ performedById: james.user.id, createdAt: '2001-01-01T00:00:00Z' }));

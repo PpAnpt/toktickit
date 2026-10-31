@@ -5,6 +5,7 @@ import fs from 'fs';
 import { getPrisma } from '../prisma';
 import { requireAppAccess, requireRole, AuthenticatedRequest } from '../middlewares/auth';
 import { TicketStatus, TicketPriority } from '../../generated/prisma/client';
+import { statusDisplay, statusFilter } from '../services/ticket-status';
 
 const router = Router();
 
@@ -50,26 +51,8 @@ const PRIORITIES: TicketPriority[] = ['LOW', 'MEDIUM', 'HIGH', 'URGENT'];
 const SORTABLE_FIELDS = ['createdAt', 'updatedAt', 'ticketNumber', 'summary', 'status', 'requestedPriority'];
 const NOT_FOUND = { error: 'Ticket not found.' };
 
-const statusQueryMap: Record<string, TicketStatus> = {
-  'New': TicketStatus.New,
-  'Open': TicketStatus.Open,
-  'In Progress': TicketStatus.InProgress,
-  'InProgress': TicketStatus.InProgress,
-  'Waiting for Requester': TicketStatus.WaitingForRequester,
-  'WaitingForRequester': TicketStatus.WaitingForRequester,
-  'Resolved': TicketStatus.Resolved,
-  'Closed': TicketStatus.Closed,
-  'Reopened': TicketStatus.Reopened,
-  'Cancelled': TicketStatus.Cancelled,
-};
-
-const statusDisplayMap: Record<string, string> = {
-  InProgress: 'In Progress',
-  WaitingForRequester: 'Waiting for Requester',
-};
-
 function withDisplayStatus<T extends { status: string }>(ticket: T): T {
-  return { ...ticket, status: statusDisplayMap[ticket.status] || ticket.status };
+  return { ...ticket, status: statusDisplay(ticket.status as TicketStatus) };
 }
 
 function parseId(value: string | string[] | undefined): number | null {
@@ -261,12 +244,12 @@ router.get('/', requesterOnly, async (req: AuthenticatedRequest, res: Response) 
       whereCondition.categoryId = categoryId;
     }
 
-    if (statusParam && statusParam !== 'All') {
-      const mapped = statusQueryMap[statusParam];
-      if (!mapped) {
-        return res.status(400).json({ error: 'Invalid status filter' });
-      }
-      whereCondition.status = mapped;
+    const statusWhere = statusFilter(statusParam);
+    if (statusWhere.invalid) {
+      return res.status(400).json({ error: 'Invalid status filter' });
+    }
+    if (statusWhere.where) {
+      whereCondition.status = statusWhere.where;
     }
 
     if (search) {
