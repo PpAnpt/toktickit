@@ -95,6 +95,9 @@ const ActionForm: React.FC<ActionFormProps> = ({ ticketId, panel, staffMembers, 
   const action = panel.kind === 'create' ? undefined : panel.action;
   const kind = panel.kind;
   const [values, setValues] = useState<FormValues>(() => initialValues(action, resolvedTicket));
+  // The time field has minute precision. It is only sent when the user changed it: a new action then uses the
+  // server's clock, and an edit keeps the stored time (a rounded-down time could fall just before the Ticket's creation)
+  const initialActionAt = useRef(values.actionAt);
   const [token, setToken] = useState(action?.updatedAt ?? '');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState('');
@@ -140,7 +143,9 @@ const ActionForm: React.FC<ActionFormProps> = ({ ticketId, panel, staffMembers, 
 
   const buildInput = (): ActionInput => {
     const input: ActionInput = {};
-    if (showFields.actionAt) input.actionAt = new Date(values.actionAt).toISOString();
+    if (showFields.actionAt && values.actionAt !== initialActionAt.current) {
+      input.actionAt = new Date(values.actionAt).toISOString();
+    }
     if (showFields.description) input.description = values.description.trim();
     if (kind === 'create') input.status = values.status;
     if (showFields.assignee && values.assigneeId) input.assigneeId = Number(values.assigneeId);

@@ -147,6 +147,38 @@ describe('Lab 4: ActionsTaken component (Issue #31)', () => {
     expect(await screen.findByText('Action saved.')).toBeInTheDocument();
   });
 
+  it('UI-06: the default action time is left to the server, but a time the user changed is sent', async () => {
+    vi.spyOn(api, 'fetchActionsTaken').mockResolvedValue(page([]));
+    const create = vi.spyOn(api, 'createActionTaken').mockResolvedValue({ action: makeAction(), replayed: false });
+    renderStaff();
+    fireEvent.click(await screen.findByRole('button', { name: '+ Add Action' }));
+    fireEvent.change(screen.getByLabelText('Action description'), { target: { value: 'Fixed it' } });
+    fireEvent.change(screen.getByLabelText(/^Result/), { target: { value: 'Works' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save action' }));
+    await waitFor(() => expect(create).toHaveBeenCalledTimes(1));
+    expect(create.mock.calls[0][1]).not.toHaveProperty('actionAt');
+
+    fireEvent.click(await screen.findByRole('button', { name: '+ Add Action' }));
+    fireEvent.change(screen.getByLabelText('Action description'), { target: { value: 'Second' } });
+    fireEvent.change(screen.getByLabelText(/^Result/), { target: { value: 'Works' } });
+    fireEvent.change(screen.getByLabelText('Action date and time'), { target: { value: '2026-10-29T08:30' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save action' }));
+    await waitFor(() => expect(create).toHaveBeenCalledTimes(2));
+    expect(create.mock.calls[1][1].actionAt).toBe(new Date('2026-10-29T08:30').toISOString());
+  });
+
+  it('UI-06: an edit that leaves the time alone does not resend it', async () => {
+    vi.spyOn(api, 'fetchActionsTaken').mockResolvedValue(page([makeAction()]));
+    const update = vi.spyOn(api, 'updateActionTaken').mockResolvedValue(makeAction());
+    renderStaff();
+    fireEvent.click(await screen.findByRole('button', { name: 'Edit' }));
+    fireEvent.change(screen.getByLabelText('Action description'), { target: { value: 'Reworded' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+    await waitFor(() => expect(update).toHaveBeenCalledTimes(1));
+    expect(update.mock.calls[0][2]).not.toHaveProperty('actionAt');
+    expect(update.mock.calls[0][2]).toMatchObject({ description: 'Reworded', expectedUpdatedAt: '2026-10-29T03:20:00.000Z' });
+  });
+
   it('UI-07: a stale update shows the banner with Reload, keeps the text, and retries with the latest token', async () => {
     const original = makeAction();
     const latest = makeAction({ updatedAt: '2026-10-29T04:00:00.000Z', description: 'Changed by James' });
