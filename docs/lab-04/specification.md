@@ -181,7 +181,11 @@ A migration trigger on both tables raises an error for any `UPDATE` or `DELETE` 
 - **Backfill**: `UPDATE "Ticket" SET "resolvedAt" = "updatedAt" WHERE status IN ('Resolved','Closed')`. Tickets in other statuses keep `resolvedAt = NULL`.
 - **Legacy Tickets** have no Actions Taken: the list is empty, dashboards count them normally, and a legacy Ticket in an active status needs one new action before it can be resolved (BR-16).
 - **Verification**: apply Labs 1 to 3 migrations to an empty database, insert Lab 3 data, apply the Lab 4 migration, confirm row counts and ownership are unchanged and `prisma migrate diff` against `schema.prisma` is empty (test MIG-01).
-- **Rollback / recovery**: the migration is additive, so recovery is dropping the trigger, `DROP TABLE "ActionTakenRevision", "TicketEvent", "ActionTaken"`, dropping the new enums, `ALTER TABLE "Ticket" DROP COLUMN "resolvedAt"`, and `prisma migrate resolve --rolled-back <name>`; take a `pg_dump` before applying. The rollback script is rehearsed in MIG-02.
+- **Recovery (successful and failed migrations are handled differently)**:
+  1. *Migration applied successfully but the release must be abandoned.* Prisma 7 does not undo a successful migration: `prisma migrate resolve --rolled-back` is only valid for a migration recorded as **failed**, and dropping objects by hand leaves the migration recorded as applied in `_prisma_migrations`. Recovery is therefore a **restore**, not a down migration. Before applying, take a custom-format dump of the pre-upgrade database: `pg_dump -Fc -d <db> -f pre-lab4.dump`. To recover, create a clean recovery database, run `pg_restore --exit-on-error -d <recovery_db> pre-lab4.dump`, and point `DATABASE_URL` at it. The dump carries both the Lab 3 data and the Lab 3 `_prisma_migrations` history, so the recovered database has exactly the baseline schema, data, and migration history, and the Lab 3 build runs against it unchanged. Data written after the dump is not in the restored database; that loss is the known cost of this option and the reason the dump is taken immediately before the upgrade.
+  2. *Migration fails part-way.* The failed migration is recorded as failed; recover the database as in (1), or fix the cause on a copy, and only then mark the original with `prisma migrate resolve --rolled-back <name>` (valid because the migration failed) before re-running `prisma migrate deploy`.
+  3. *Forward fix after release.* If only a defect in the new objects must be corrected, add a new compensating migration; never edit or delete an applied migration.
+  The restore path (1) is rehearsed against a scratch database in MIG-02, which also verifies the migration history (section 9, AC-23).
 
 ### 7.5 Seed
 Idempotent (`npx prisma db seed`, safe to re-run): users upserted by email (Lab 3 accounts unchanged), tickets created only if the ticket number is missing, actions created only if a seed `clientRequestId` is missing. It covers every status and priority, owned and unowned Tickets, Tickets with 0, 1, and several Actions Taken (by different staff members, in all four action statuses, with different assignees, one assigned to the inactive staff member Marcus Wright to demonstrate rejection when reassigning), edited actions with revisions, Ticket events for status/owner/priority changes, a Ticket with a follow-up action, a `Reopened` and a recently `Resolved` Ticket, and enough variety for both non-zero and zero dashboard metrics (for example the Requester Emily Watson and the Administrator keep zero in some cards).
@@ -230,7 +234,7 @@ Full shapes and status codes are in `docs/lab-04/api-spec.md`. Status codes: 200
 - **AC-22**: Given any dashboard response, then it contains counts and at most 5 items per list and no data of other Requesters.
 
 ### Data, Hardening, UI
-- **AC-23**: Given a Lab 3 database, when the Lab 4 migration runs, then all Users, Tickets, Attachments, Comments, and Notes are preserved, `resolvedAt` is backfilled, legacy Tickets show an empty action list, and the schema matches `schema.prisma`; the rollback procedure also works.
+- **AC-23**: Given a Lab 3 database, when the Lab 4 migration runs, then all Users, Tickets, Attachments, Comments, and Notes are preserved, `resolvedAt` is backfilled, legacy Tickets show an empty action list, and the schema matches `schema.prisma`; the documented recovery (a `pg_dump` taken before the upgrade restored into a clean recovery database) also works and the recovered database has the Lab 3 schema, data, and `_prisma_migrations` history.
 - **AC-24**: Given the seed is run twice, then no duplicate rows are created and all required demonstration states exist.
 - **AC-25**: Given Lab 1 to Lab 3 behavior, when the full Lab 1 to Lab 3 test suites run, then they all pass (regression).
 - **AC-26**: Given a server failure, a conflict, a forbidden access, or a missing record, then the UI shows a consistent message without stack traces, and form input is kept after a recoverable failure.
@@ -253,7 +257,7 @@ Full shapes and status codes are in `docs/lab-04/api-spec.md`. Status codes: 200
 ## 10. Definition of Done
 - All FR-01..19 and BR-01..39 are implemented; every AC-01..39 maps to at least one test in `tests.md`.
 - Server (API/integration), client (component), and Playwright E2E suites for Labs 1 to 4 pass on `main`; AC-28 is also verified by the documented visual and accessibility checklist and screenshots.
-- Migration preserves Lab 3 data and its rollback is rehearsed; the seed is idempotent and demonstrates non-zero and zero dashboard metrics.
+- Migration preserves Lab 3 data and its restore-based recovery is rehearsed; the seed is idempotent and demonstrates non-zero and zero dashboard metrics.
 - Every write is authorized on the server; no client-supplied identity is accepted; no secrets are committed.
 - No console errors, broken links, placeholder text, or unfinished controls remain; README (setup, seed, migration, test, demo) is current.
 - Screenshots for the Staff Dashboard, Requester Dashboard, and Actions Taken at Desktop, Tablet, and Mobile are in `artifacts/lab-04/screenshots/`.

@@ -8,7 +8,7 @@ This plan is written before implementation (Test DD) and is used for TDD: each t
 | UNIT | Unit (pure functions) | Vitest (server) | `server/tests/lab-04/*.unit.test.ts` |
 | API / WF / DASH / SDASH / AUTHZ / ERR | API / integration, workflow, authorization | Vitest + Supertest, real PostgreSQL | `server/tests/lab-04/*.api.test.ts` |
 | PERF | Performance smoke | Vitest + Supertest | `server/tests/lab-04/performance-smoke.api.test.ts` |
-| MIG / SEED | Migration, rollback, seed | Vitest + Prisma against a scratch database | `server/tests/lab-04/migration.test.ts`, `seed.test.ts` |
+| MIG / SEED | Migration, restore-based recovery, seed | Vitest + Prisma against a scratch database | `server/tests/lab-04/migration.test.ts`, `seed.test.ts` |
 | UI | UI component | Vitest + React Testing Library | `client/src/tests/lab-04/*.test.tsx` |
 | STY | UI style | Vitest + React Testing Library | `client/src/tests/lab-04/ZenGreenStyle.test.tsx` |
 | RSP / A11Y | Responsive and accessibility | Playwright (1280px, 768px, 375px) | `e2e/lab-04/responsive-accessibility.spec.ts` |
@@ -114,7 +114,7 @@ Run commands: `npm --prefix server test`, `npm --prefix client test`, `npm run t
 | Test ID | Type | Requirement / AC | What It Tests | Expected Result | Automated Test File | Final |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | MIG-01 | Migration | AC-23 | Apply Labs 1 to 3 migrations, insert Lab 3 data, apply the Lab 4 migration | All Users, Tickets, Attachments, Comments, Notes preserved; the new tables, enums, and immutability trigger exist; `prisma migrate diff` is empty | `server/tests/lab-04/migration.test.ts` | Planned |
-| MIG-02 | Migration | AC-23 | Rehearse the documented rollback | Trigger, three tables, new enums, and `resolvedAt` removed; Lab 3 data intact | `server/tests/lab-04/migration.test.ts` | Planned |
+| MIG-02 | Migration | AC-23 | Rehearse the documented recovery: on a scratch database apply Labs 1 to 3 migrations and insert Lab 3 data, take `pg_dump -Fc`, apply the Lab 4 migration, then `pg_restore --exit-on-error` the dump into a separate clean recovery database | Recovery database has the Lab 3 data (row counts and ownership equal the pre-upgrade snapshot), none of the Lab 4 tables, enums, trigger, or `resolvedAt`, a `_prisma_migrations` history equal to the Lab 3 baseline, and `prisma migrate deploy` applies the Lab 4 migration to it cleanly again | `server/tests/lab-04/migration.test.ts` | Planned |
 | MIG-03 | Migration | AC-23 | Backfill of `resolvedAt`; legacy Tickets list zero actions | `resolvedAt = updatedAt` for Resolved/Closed; others `NULL` | `server/tests/lab-04/migration.test.ts` | Planned |
 | SEED-01 | Seed | AC-24 | Run the seed twice | No duplicate users, Tickets, or actions | `server/tests/lab-04/seed.test.ts` | Planned |
 | SEED-02 | Seed | AC-24, AC-39 | Seed coverage | All Ticket statuses and priorities, owned and unowned Tickets, Tickets with 0/1/many actions, one Ticket whose actions have different assignees and all four action statuses, an action assigned to the inactive staff member, edited actions with revisions, Ticket events, non-zero and zero dashboard metrics | `server/tests/lab-04/seed.test.ts` | Planned |
