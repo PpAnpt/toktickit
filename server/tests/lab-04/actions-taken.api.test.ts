@@ -116,6 +116,19 @@ describe('Lab 4: Actions Taken API (Issue #31)', () => {
             expect(row.ticketId).toBe(ticket.id);
         });
 
+        it.each(['constructor', '__proto__', 'toString'])('API-27: status "%s" is a 400 validation error on POST and PATCH and writes nothing', async (name) => {
+            const ticket = await createTicket();
+            const res = await create(ticket.id, sarah, actionBody({ status: name }));
+            expect(res.status).toBe(400);
+            expect(res.body.details).toHaveProperty('status');
+            const made = await create(ticket.id, sarah);
+            const edited = await patch(ticket.id, made.body.action.id, sarah, { status: name, expectedUpdatedAt: made.body.action.updatedAt });
+            expect(edited.status).toBe(400);
+            expect(edited.body.details).toHaveProperty('status');
+            expect(await getPrisma().actionTaken.count({ where: { ticketId: ticket.id } })).toBe(1);
+            expect(await getPrisma().actionTakenRevision.count({ where: { action: { ticketId: ticket.id } } })).toBe(1);
+        });
+
         it('API-04: a client-sent performedById is ignored', async () => {
             const ticket = await createTicket();
             const res = await create(ticket.id, sarah, actionBody({ performedById: james.user.id, createdAt: '2001-01-01T00:00:00Z' }));

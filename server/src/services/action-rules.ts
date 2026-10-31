@@ -62,7 +62,8 @@ export function readDate(body: Record<string, unknown>, key: string, details: Re
 
 export function readStatus(body: Record<string, unknown>, details: Record<string, string>): ActionStatus | undefined {
     if (body.status === undefined) return undefined;
-    const status = typeof body.status === 'string' ? statusByLabel[body.status] : undefined;
+    // Own keys only: 'constructor', '__proto__' and 'toString' must not resolve to inherited values
+    const status = typeof body.status === 'string' && Object.hasOwn(statusByLabel, body.status) ? statusByLabel[body.status] : undefined;
     if (!status) {
         details.status = 'Choose a valid status.';
         return undefined;

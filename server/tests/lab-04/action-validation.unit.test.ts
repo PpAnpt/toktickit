@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { LIMITS, checkActionAt, checkMerged, readCommon, readText } from '../../src/services/action-rules';
+import { LIMITS, checkActionAt, checkMerged, readCommon, readStatus, readText } from '../../src/services/action-rules';
 
 describe('Lab 4: Action Taken validation rules (UNIT-01..03)', () => {
     describe('UNIT-01: required fields, trimming and maximum lengths', () => {
@@ -24,6 +24,20 @@ describe('Lab 4: Action Taken validation rules (UNIT-01..03)', () => {
                 followUpRequired: 'yes',
             }, details);
             expect(Object.keys(details).sort()).toEqual(['assigneeId', 'attachmentNotes', 'description', 'followUpNote', 'followUpRequired', 'result', 'status']);
+        });
+
+        it.each(['constructor', '__proto__', 'toString', 'hasOwnProperty', 'valueOf'])('rejects the inherited property name %s as a status', (name) => {
+            const details: Record<string, string> = {};
+            expect(readStatus({ status: name }, details)).toBeUndefined();
+            expect(details.status).toBe('Choose a valid status.');
+        });
+
+        it('still accepts every real status label', () => {
+            for (const [label, value] of [['Planned', 'Planned'], ['In Progress', 'InProgress'], ['Completed', 'Completed'], ['Cancelled', 'Cancelled']]) {
+                const details: Record<string, string> = {};
+                expect(readStatus({ status: label }, details)).toBe(value);
+                expect(details).toEqual({});
+            }
         });
 
         it('accepts text exactly at the maximum length and rejects non-text values', () => {
