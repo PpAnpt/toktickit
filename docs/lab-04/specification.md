@@ -26,8 +26,8 @@ The service desk can receive Tickets and communicate with Requesters, but cannot
 - Deleting an Action Taken, file upload on Actions Taken (only free-text Attachment Notes), and any feature not listed above.
 
 ## 4. Functional Requirements
-- **FR-01**: IT Staff and Administrators can create an Action Taken on any non-terminal Ticket.
-- **FR-02**: IT Staff and Administrators can edit an existing Action Taken on a non-terminal Ticket.
+- **FR-01**: IT Staff and Administrators can create an Action Taken on any Ticket that is not `Closed` or `Cancelled`; on a `Resolved` Ticket only as a `Completed` record (BR-41).
+- **FR-02**: IT Staff and Administrators can edit an existing Action Taken on a Ticket that is not `Closed` or `Cancelled`.
 - **FR-03**: Each Action Taken records Action Date/Time, Action Description, Result, Performed by (set by the system), Assignee, Status, Follow-Up Required?, Follow-up Note, and Attachment Notes.
 - **FR-04**: Requesters can view all Actions Taken of their own Tickets, read-only. They cannot create or edit them.
 - **FR-05**: The Ticket Detail screen for IT Staff shows an Actions Taken area with a list, a create mode, and a view/edit mode.
@@ -96,6 +96,7 @@ Lab 3 rules (authentication, ownership, password, non-disclosure 404, queue vali
 - **BR-38** (pagination): List endpoints are paginated with `page` and `limit` and return `total`. Actions list: default 20, maximum 50. History lists: default 50, maximum 100. Values outside the range are clamped like the Lab 3 queue.
 - **BR-39** (recent filters): The Requester cards "Recently Updated" and "Recently Resolved" link to My Tickets with `recent=updated` and `recent=resolved`. These filters use the same shared predicate and window function as the metrics (BR-23), so the list contains exactly the Tickets the card counted for the same snapshot, including a Ticket that was resolved and then closed inside the window, and excluding a Ticket resolved before the window.
 - **BR-40** (restrict, not cascade; test cleanup): Foreign keys from `ActionTaken`, `ActionTakenRevision`, and `TicketEvent` use `onDelete: Restrict`, so deleting a Ticket, Action Taken, or User that is referenced by them fails in the database instead of cascading into the immutable history (BR-37). Automated tests, which must clean up their fixtures, run only against the dedicated test database (name ending `_test`, checked before cleanup) and remove Lab 4 rows with `TRUNCATE "ActionTakenRevision", "TicketEvent", "ActionTaken"` (the row-level trigger of BR-37 does not fire for `TRUNCATE`) before deleting Tickets and Users with the Lab 3 helper. This cleanup is a test-only helper and is never exposed by the API.
+- **BR-41** (no open work on a Resolved Ticket): The resolution gate (BR-16) is checked when a Ticket becomes `Resolved`, so the server also keeps it true afterwards: a `Resolved` Ticket never has a `Planned` or `In Progress` action. Creating an action with status `Planned` or `In Progress` on a `Resolved` Ticket returns `409 TICKET_RESOLVED` and saves nothing; the Ticket must be reopened first (BR-17). Recording a `Completed` action on a `Resolved` Ticket (a late record of finished work) and correcting existing actions stay allowed, because neither can leave open work behind (`Completed` and `Cancelled` are terminal for status, BR-30).
 
 ### Role Authorization Matrix (new and changed operations)
 | Operation | Requester | IT Staff | Administrator | Notes |
@@ -256,9 +257,10 @@ Full shapes and status codes are in `docs/lab-04/api-spec.md`. Status codes: 200
 - **AC-37**: Given history endpoints, then IT Staff and Administrators receive 200 and a Requester receives 403 with no data; the Staff Ticket Detail shows the history and the Requester view does not.
 - **AC-38**: Given more actions or history rows than the page size, then the endpoints return the requested page with `total`, `page`, and `limit`, clamp out-of-range values, and keep the order stable across pages.
 - **AC-39**: Given the seeded database, then one Ticket shows several actions with different assignees and statuses (planned, in progress, completed, cancelled), supporting the Part 6 demonstration.
+- **AC-40**: Given a `Resolved` Ticket, when staff create an action with status `Planned` or `In Progress`, then `409 TICKET_RESOLVED` and nothing is saved; when they create a `Completed` action, then it is saved and the Ticket stays `Resolved`; after the Ticket is reopened, a `Planned` action is accepted; and a Ticket can never be `Resolved` while it has a `Planned` or `In Progress` action (BR-41, BR-16).
 
 ## 10. Definition of Done
-- All FR-01..19 and BR-01..39 are implemented; every AC-01..39 maps to at least one test in `tests.md`.
+- All FR-01..19 and BR-01..41 are implemented; every AC-01..40 maps to at least one test in `tests.md`.
 - Server (API/integration), client (component), and Playwright E2E suites for Labs 1 to 4 pass on `main`; AC-28 is also verified by the documented visual and accessibility checklist and screenshots.
 - Migration preserves Lab 3 data and its restore-based recovery is rehearsed; the seed is idempotent and demonstrates non-zero and zero dashboard metrics.
 - Every write is authorized on the server; no client-supplied identity is accepted; no secrets are committed.

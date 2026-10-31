@@ -56,6 +56,7 @@ Run commands: `npm --prefix server test`, `npm --prefix client test`, `npm run t
 | API-22 | API | AC-32 | Complete or cancel without a Result | `400` naming `result` | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
 | API-23 | API | AC-33 | Cancel a Ticket that has `Planned`, `In Progress`, and `Completed` actions | Open actions become `Cancelled` with `AUTO_CANCELLED` revisions in the same transaction; the completed action is untouched | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
 | API-24 | API | AC-38 | Actions list with 45 actions, `page`/`limit`, `limit=500`, `page=0` | Correct slices, `total`, clamping (max 50), stable order, no overlap or gap across pages | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
+| API-25 | API | AC-40 | On a `Resolved` Ticket create `Planned`, `In Progress`, and `Completed` actions; then reopen the Ticket and create `Planned`; then try to resolve a Ticket that has an open action | `Planned`/`In Progress` on `Resolved` return `409 TICKET_RESOLVED` and save nothing; `Completed` is saved and the Ticket stays `Resolved`; `Planned` after reopen is accepted; the gate still blocks resolving with an open action | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
 | AUTHZ-01 | Authorization | AC-03 | Requester lists actions of own Ticket | `200`, all fields visible | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
 | AUTHZ-02 | Authorization | AC-03 | Requester creates or edits an action | `403`; nothing saved | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
 | AUTHZ-03 | Authorization | AC-03 | Requester lists another Requester's Ticket actions | `404`, same as missing Ticket | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
@@ -207,6 +208,7 @@ Run commands: `npm --prefix server test`, `npm --prefix client test`, `npm run t
 | UI-28 | UI | AC-37 | History views | Staff see per-action history and Ticket history (read-only, Before/After labels, no edit/delete controls); Requester sees none | `client/src/tests/lab-04/ActionsTaken.test.tsx` | Planned |
 | UI-29 | UI | AC-38 | Pagination controls on the actions list and history | Previous/Next and "Showing x-y of N" work; state is announced | `client/src/tests/lab-04/ActionsTaken.test.tsx` | Planned |
 | UI-30 | UI | AC-33 | Cancelling a Ticket | Confirm panel warns that open actions will be cancelled | `client/src/tests/lab-04/TicketWorkflow.test.tsx` | Planned |
+| UI-31 | UI | AC-40 | Add Action on a `Resolved` Ticket | Status select offers Completed only with the hint "Reopen the Ticket to plan new work."; a server `409 TICKET_RESOLVED` is shown as a clear alert and the entered text is kept | `client/src/tests/lab-04/ActionsTaken.test.tsx` | Planned |
 | E2E-13 | E2E | AC-31, AC-32, AC-39 | Two staff members on one Ticket: plan an action for the other, start, complete, and cancel different actions | Different assignees and statuses all visible on one Ticket | `e2e/lab-04/actions-taken-flow.spec.ts` | Planned |
 | E2E-14 | E2E | AC-34, AC-37 | Edit an action twice as two users, then open History as staff and as the Requester | Staff see ordered Before/After revisions; Requester sees no history | `e2e/lab-04/actions-taken-flow.spec.ts` | Planned |
 | E2E-15 | E2E | AC-31 | Try to assign an action to the inactive staff member (via the UI and a direct API call) | Not selectable in the UI; API returns `400`; message shown | `e2e/lab-04/actions-taken-flow.spec.ts` | Planned |
@@ -254,13 +256,14 @@ Run commands: `npm --prefix server test`, `npm --prefix client test`, `npm run t
 | AC-37 | HIST-08, UI-28, E2E-14 |
 | AC-38 | API-24, HIST-10, UI-29 |
 | AC-39 | SEED-02, E2E-13 |
+| AC-40 | API-25, UI-31, WF-04 |
 
 Every AC-01..AC-39 maps to at least one planned test. AC-28 is also verified by the visual and accessibility checklist in `ui-spec.md` and the screenshots in `artifacts/lab-04/screenshots/`.
 
 ## 4. Issue Ownership
 | Issue | Tests it must turn green |
 | :--- | :--- |
-| #31 Actions Taken | UNIT-01..03, UNIT-07, API-01..24, AUTHZ-01..05, HIST-01..03, HIST-06..10, MIG-01..04, SEED-01..02, UI-01..09, UI-26..29, E2E-01..05, E2E-13..15 |
+| #31 Actions Taken | UNIT-01..03, UNIT-07, API-01..25, AUTHZ-01..05, HIST-01..03, HIST-06..10, MIG-01..04, SEED-01..02, UI-01..09, UI-26..29, UI-31, E2E-01..05, E2E-13..15 |
 | #32 Ticket workflow | UNIT-04, WF-01..14, HIST-04..05, UI-10..14, UI-30, E2E-06..08, E2E-16 |
 | #33 Role dashboards | UNIT-05..06, WF-15, DASH-01..10, SDASH-01..08, UI-15..25, E2E-09..12 |
 | #34 Final hardening | ERR-01, PERF-01..02, STY-01..03, RSP-01..03, A11Y-01..02, REG-01..03 |

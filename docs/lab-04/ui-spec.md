@@ -68,7 +68,7 @@ Placed on the **Staff Ticket Detail** as a section titled "Actions Taken ({count
   - Footer: "Recorded {created time}"; if changed, "Edited by {name} on {time}".
   - IT Staff/Administrator only: **Edit**, lifecycle buttons that match the status (`Planned`: Start, Complete, Cancel; `In Progress`: Complete, Cancel; terminal statuses: none), a **Reassign** control, and a **History** disclosure. Controls are hidden on `Closed`/`Cancelled` Tickets, where a short note explains why.
 - **Empty state**: "No actions have been recorded yet." For staff it adds the hint "Complete at least one action before resolving this Ticket."
-- **Create mode** (IT Staff/Administrator, non-terminal Ticket): an "Add Action" button opens an inline panel (a dialog on Mobile) with the fields below. Assignee defaults to the current user; the status select offers Planned, In Progress, and Completed.
+- **Create mode** (IT Staff/Administrator, non-terminal Ticket): an "Add Action" button opens an inline panel (a dialog on Mobile) with the fields below. Assignee defaults to the current user; the status select offers Planned, In Progress, and Completed. On a `Resolved` Ticket it offers Completed only, with the hint "Reopen the Ticket to plan new work." (BR-41).
 - **View/Edit mode**: the card is read-only text by default (tinted read-only style from Lab 3); **Edit** switches that card to the same form, prefilled, with Save and Cancel. Only one card is editable at a time. Unsaved edits are protected by a confirm prompt when leaving the editor. Start / Complete / Cancel on a card open a small confirm panel; Complete and Cancel ask for the required Result (the cancellation reason).
 - **Assignee control**: a select listing active IT Staff and Administrators only (from the existing staff members list). An inactive current assignee is shown as "{name} (inactive)" and cannot be re-selected; if the server still rejects an assignee, the message appears under the field.
 - **History (staff only)**: the per-action **History** disclosure lists revisions oldest first with type, actor, time, changed fields, and Before/After text. A **Ticket history** section lists status, owner, and priority events oldest first. Both are paginated, read-only (no edit or delete controls), and show "No history recorded before Lab 4." for older Tickets. Requesters never see history.
@@ -77,7 +77,7 @@ Placed on the **Staff Ticket Detail** as a section titled "Actions Taken ({count
 | :--- | :--- | :---: | :--- |
 | Action Date/Time | `datetime-local`, default now | Yes | "Action time cannot be in the future." (not for Planned) / "Action time cannot be before the Ticket was created." |
 | Action Description | Textarea, 2,000-char counter | Yes | "Describe what was done." |
-| Status | Select: Planned, In Progress, Completed (Cancelled only through the Cancel button) | Yes | "Choose a valid status." |
+| Status | Select: Planned, In Progress, Completed (Cancelled only through the Cancel button; Completed only on a Resolved Ticket) | Yes | "Choose a valid status." |
 | Result | Textarea, 1,000-char counter | Conditional (required for Completed and Cancelled) | "Enter the result of this action." / "Enter the reason for cancelling." |
 | Assignee | Select of active IT Staff and Administrators | Yes (default current user) | "Choose an active IT Staff or Administrator." |
 | Performed by | Read-only text (current user; not editable) | Auto | n/a |
