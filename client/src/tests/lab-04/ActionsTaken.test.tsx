@@ -370,4 +370,123 @@ describe('Lab 4: ActionsTaken component (Issue #31)', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Reopen the Ticket before planning new work');
     expect(screen.getByLabelText('Action description')).toHaveValue('Late record');
   });
+
+  describe('unsaved edits and paging (UI-33..35)', () => {
+    const openEdit = async (name = 'Edit') => fireEvent.click((await screen.findAllByRole('button', { name }))[0]);
+
+    it('UI-33: Close and switching editor ask before dropping typed text; cancelling keeps it, confirming closes', async () => {
+      vi.spyOn(api, 'fetchActionsTaken').mockResolvedValue(page([makeAction({ id: 2, description: 'Second' }), makeAction({ id: 1, description: 'First' })]));
+      const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+      renderStaff();
+      await openEdit();
+      fireEvent.change(screen.getByLabelText('Action description'), { target: { value: 'My unsaved edit' } });
+
+      // Close, declined: the text stays
+      fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+      expect(confirm).toHaveBeenCalledTimes(1);
+      expect(screen.getByLabelText('Action description')).toHaveValue('My unsaved edit');
+
+      // Editing the other action, declined: still the same editor and text
+      fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+      expect(confirm).toHaveBeenCalledTimes(2);
+      expect(screen.getAllByRole('form')).toHaveLength(1);
+      expect(screen.getByLabelText('Action description')).toHaveValue('My unsaved edit');
+
+      // Switching, confirmed: the other action opens with its own saved text
+      confirm.mockReturnValue(true);
+      fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+      expect(screen.getByLabelText('Action description')).toHaveValue('First');
+
+      // Close, confirmed: closes
+      fireEvent.change(screen.getByLabelText('Action description'), { target: { value: 'Changed again' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+      expect(screen.queryByRole('form')).not.toBeInTheDocument();
+    });
+
+    it('UI-33: no prompt when nothing was typed, and Add Action is guarded too', async () => {
+      vi.spyOn(api, 'fetchActionsTaken').mockResolvedValue(page([makeAction()]));
+      const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+      renderStaff();
+      await openEdit();
+      fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+      expect(confirm).not.toHaveBeenCalled();
+      expect(screen.queryByRole('form')).not.toBeInTheDocument();
+
+      await openEdit();
+      fireEvent.change(screen.getByLabelText('Action description'), { target: { value: 'Edited' } });
+      fireEvent.click(screen.getByRole('button', { name: '+ Add Action' }));
+      expect(confirm).toHaveBeenCalledTimes(1);
+      expect(screen.getByLabelText('Action description')).toHaveValue('Edited');
+    });
+
+    // 21 actions: ids 21..2 on page 1 and id 1 on page 2, until action 21 moves to page 2
+    const pagedServer = (state: { moved: boolean; latest: api.ActionTakenItem }) => vi.spyOn(api, 'fetchActionsTaken').mockImplementation(async (_t, p) => {
+      const original = makeAction({ id: 21, description: 'Action 21' });
+      const rows = Array.from({ length: 20 }, (_, i) => makeAction({ id: 20 - i, description: 'Action ' + (20 - i) }));
+      const all = state.moved ? [...rows, state.latest] : [original, ...rows];
+      const slice = all.slice((p - 1) * 20, p * 20);
+      return { actions: slice, total: 21, page: p, limit: 20 };
+    });
+
+    it('UI-34: the editor and text survive Reload latest when the action moved to another page', async () => {
+      const latest = makeAction({ id: 21, description: 'Action 21', updatedAt: '2026-10-29T05:00:00.000Z' });
+      const state = { moved: false, latest };
+      pagedServer(state);
+      const update = vi.spyOn(api, 'updateActionTaken')
+        .mockRejectedValueOnce(new api.ActionApiError(409, 'changed', 'STALE_UPDATE', {}, latest.updatedAt))
+        .mockResolvedValueOnce(latest);
+      renderStaff();
+      await openEdit();
+      fireEvent.change(screen.getByLabelText('Action description'), { target: { value: 'Keep this text' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+      expect(await screen.findByText(/changed by someone else while you were editing/i)).toBeInTheDocument();
+
+      state.moved = true;
+      fireEvent.click(screen.getByRole('button', { name: 'Reload latest' }));
+      expect(await screen.findByText(/Latest version loaded/)).toBeInTheDocument();
+      expect(screen.getByText(/is not on this page of the list/)).toBeInTheDocument();
+      expect(screen.getByLabelText('Action description')).toHaveValue('Keep this text');
+
+      fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+      await waitFor(() => expect(update).toHaveBeenCalledTimes(2));
+      expect(update.mock.calls[1][2].expectedUpdatedAt).toBe(latest.updatedAt);
+      expect(update.mock.calls[1][2].description).toBe('Keep this text');
+    });
+
+    it('UI-34: a failed reload keeps the editor, the text and the Reload latest button', async () => {
+      const latest = makeAction({ id: 21, updatedAt: '2026-10-29T05:00:00.000Z' });
+      const state = { moved: false, latest };
+      const list = pagedServer(state);
+      vi.spyOn(api, 'updateActionTaken').mockRejectedValue(new api.ActionApiError(409, 'changed', 'STALE_UPDATE', {}, latest.updatedAt));
+      renderStaff();
+      await openEdit();
+      fireEvent.change(screen.getByLabelText('Action description'), { target: { value: 'Still here' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+      await screen.findByRole('button', { name: 'Reload latest' });
+
+      list.mockRejectedValue(new Error('network down'));
+      fireEvent.click(screen.getByRole('button', { name: 'Reload latest' }));
+      expect(await screen.findByText(/latest version could not be loaded/i)).toBeInTheDocument();
+      expect(screen.getByLabelText('Action description')).toHaveValue('Still here');
+      expect(screen.getByRole('button', { name: 'Reload latest' })).toBeInTheDocument();
+    });
+
+    it('UI-35: changing page keeps an open editor and its text', async () => {
+      pagedServer({ moved: false, latest: makeAction({ id: 21 }) });
+      const confirm = vi.spyOn(window, 'confirm');
+      renderStaff();
+      await openEdit();
+      fireEvent.change(screen.getByLabelText('Action description'), { target: { value: 'Typed on page 1' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+      await screen.findByText('Action 1');
+      expect(screen.getByLabelText('Action description')).toHaveValue('Typed on page 1');
+      expect(screen.getByText(/is not on this page of the list/)).toBeInTheDocument();
+      expect(confirm).not.toHaveBeenCalled();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Previous' }));
+      await screen.findByText('Action 20');
+      expect(screen.getByLabelText('Action description')).toHaveValue('Typed on page 1');
+      expect(screen.queryByText(/is not on this page of the list/)).not.toBeInTheDocument();
+    });
+  });
 });
