@@ -58,6 +58,7 @@ Run commands: `npm --prefix server test`, `npm --prefix client test`, `npm run t
 | API-24 | API | AC-38 | Actions list with 45 actions, `page`/`limit`, `limit=500`, `page=0` | Correct slices, `total`, clamping (max 50), stable order, no overlap or gap across pages | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
 | API-25 | API | AC-40 | On a `Resolved` Ticket create `Planned`, `In Progress`, and `Completed` actions; then reopen the Ticket and create `Planned`; then try to resolve a Ticket that has an open action | `Planned`/`In Progress` on `Resolved` return `409 TICKET_RESOLVED` and save nothing; `Completed` is saved and the Ticket stays `Resolved`; `Planned` after reopen is accepted; the gate still blocks resolving with an open action | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
 | API-26 | API | AC-08 | Reuse a `clientRequestId` with a different description, then with a different staff user | `409 IDEMPOTENCY_KEY_REUSED` both times; no new row; the existing record is not returned | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
+| API-27 | API | AC-04 | POST and PATCH an Action with status `constructor`, `__proto__`, and `toString` | `400` with `details.status`; no Action and no revision written | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
 | AUTHZ-01 | Authorization | AC-03 | Requester lists actions of own Ticket | `200`, all fields visible | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
 | AUTHZ-02 | Authorization | AC-03 | Requester creates or edits an action | `403`; nothing saved | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
 | AUTHZ-03 | Authorization | AC-03 | Requester lists another Requester's Ticket actions | `404`, same as missing Ticket | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
@@ -207,10 +208,16 @@ Run commands: `npm --prefix server test`, `npm --prefix client test`, `npm run t
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | UI-26 | UI | AC-31 | Assignee select | Lists active IT Staff and Administrators only; an inactive current assignee is labelled "(inactive)" and not selectable; server rejection shows under the field | `client/src/tests/lab-04/ActionsTaken.test.tsx` | Planned |
 | UI-27 | UI | AC-32 | Lifecycle buttons and confirm panels | Buttons match the action status; Complete and Cancel require a Result; terminal actions show none | `client/src/tests/lab-04/ActionsTaken.test.tsx` | Planned |
-| UI-28 | UI | AC-37 | History views | Staff see per-action history and Ticket history (read-only, Before/After labels, no edit/delete controls); Requester sees none | `client/src/tests/lab-04/ActionsTaken.test.tsx` | Planned |
+| UI-28 | UI | AC-37 | History views | Staff open a per-action history (read-only, Before/After labels, no edit/delete controls, paginated); Requester sees none | `client/src/tests/lab-04/ActionsTaken.test.tsx` | Planned |
 | UI-29 | UI | AC-38 | Pagination controls on the actions list and history | Previous/Next and "Showing x-y of N" work; state is announced | `client/src/tests/lab-04/ActionsTaken.test.tsx` | Planned |
 | UI-30 | UI | AC-33 | Cancelling a Ticket | Confirm panel warns that open actions will be cancelled | `client/src/tests/lab-04/TicketWorkflow.test.tsx` | Planned |
 | UI-31 | UI | AC-40 | Add Action on a `Resolved` Ticket | Status select offers Completed only with the hint "Reopen the Ticket to plan new work."; a server `409 TICKET_RESOLVED` is shown as a clear alert and the entered text is kept | `client/src/tests/lab-04/ActionsTaken.test.tsx` | Planned |
+| UI-32 | UI | AC-36, AC-37 | Ticket history timeline on the Staff Ticket Detail | Status, owner, and priority events oldest first, read-only, with "No history recorded before Lab 4." for older Tickets; a Requester sees none | `client/src/tests/lab-04/TicketWorkflow.test.tsx` | Planned |
+| UI-33 | UI | AC-06 | Close, Edit/Reassign of another Action, or Add Action while the editor holds unsaved text | A confirm prompt appears; cancelling keeps the editor and text, confirming closes or switches; no prompt when nothing was changed | `client/src/tests/lab-04/ActionsTaken.test.tsx` | Planned |
+| UI-34 | UI | AC-06 | Conflict (`STALE_UPDATE`) on an Action that then moved to another page (21 Actions), and a failed reload | Reload latest keeps the editor and text, shows that the Action is on another page, and the next save uses the latest token; a failed reload keeps the text and the Reload button | `client/src/tests/lab-04/ActionsTaken.test.tsx` | Planned |
+| UI-35 | UI | AC-06, AC-38 | Change page of the Actions list while an editor is open | The editor and typed text stay; returning to the page shows the editor inline again | `client/src/tests/lab-04/ActionsTaken.test.tsx` | Planned |
+| UI-36 | UI | AC-06 | Conflict, Reload latest, current page answers without the Action while another page is still pending, then that request fails | The editor in the detached block keeps the conflict banner, the Reload latest button, a failure message and the typed text (asynchronous, deferred responses) | `client/src/tests/lab-04/ActionsTaken.test.tsx` | Planned |
+| UI-37 | UI | AC-06, FR-14 | Save still pending while the page changes so the editor moves to the detached block | Save stays disabled ("Saving..."), a second submit sends nothing, and the original request finishes with "Action saved." | `client/src/tests/lab-04/ActionsTaken.test.tsx` | Planned |
 | E2E-13 | E2E | AC-31, AC-32, AC-39 | Two staff members on one Ticket: plan an action for the other, start, complete, and cancel different actions | Different assignees and statuses all visible on one Ticket | `e2e/lab-04/actions-taken-flow.spec.ts` | Planned |
 | E2E-14 | E2E | AC-34, AC-37 | Edit an action twice as two users, then open History as staff and as the Requester | Staff see ordered Before/After revisions; Requester sees no history | `e2e/lab-04/actions-taken-flow.spec.ts` | Planned |
 | E2E-15 | E2E | AC-31 | Try to assign an action to the inactive staff member (via the UI and a direct API call) | Not selectable in the UI; API returns `400`; message shown | `e2e/lab-04/actions-taken-flow.spec.ts` | Planned |
@@ -222,9 +229,9 @@ Run commands: `npm --prefix server test`, `npm --prefix client test`, `npm run t
 | AC-01 | API-03, API-04, API-16, API-17, AUTHZ-05, E2E-01 |
 | AC-02 | DASH-04 |
 | AC-03 | AUTHZ-01, AUTHZ-02, AUTHZ-03, AUTHZ-04, UI-01, UI-03, E2E-01 |
-| AC-04 | UNIT-01, UNIT-02, UNIT-03, API-06, API-07, API-08, UI-04, UI-05, E2E-03 |
+| AC-04 | UNIT-01, UNIT-02, UNIT-03, API-06, API-07, API-08, API-27, UI-04, UI-05, E2E-03 |
 | AC-05 | API-05, E2E-04 |
-| AC-06 | API-09, API-10, API-11, API-12, E2E-02 |
+| AC-06 | API-09, API-10, API-11, API-12, UI-33, UI-34, UI-35, UI-36, UI-37, E2E-02 |
 | AC-07 | API-13, UI-09 |
 | AC-08 | API-14, API-15, API-26 |
 | AC-09 | API-01, API-02, UI-01 |
@@ -254,9 +261,9 @@ Run commands: `npm --prefix server test`, `npm --prefix client test`, `npm run t
 | AC-33 | API-23, UI-30, E2E-16 |
 | AC-34 | HIST-01, HIST-02, HIST-03, HIST-09, E2E-14 |
 | AC-35 | HIST-06, HIST-07, MIG-04 |
-| AC-36 | HIST-04, HIST-05 |
-| AC-37 | HIST-08, UI-28, E2E-14 |
-| AC-38 | API-24, HIST-10, UI-29 |
+| AC-36 | HIST-04, HIST-05, UI-32 |
+| AC-37 | HIST-08, UI-28, UI-32, E2E-14 |
+| AC-38 | API-24, HIST-10, UI-29, UI-35 |
 | AC-39 | SEED-02, E2E-13 |
 | AC-40 | API-25, UI-31, WF-04 |
 
@@ -265,11 +272,13 @@ Every AC-01..AC-40 maps to at least one planned test. AC-28 is also verified by 
 ## 4. Issue Ownership
 | Issue | Tests it must turn green |
 | :--- | :--- |
-| #31 Actions Taken | UNIT-01..03, UNIT-07, API-01..26, AUTHZ-01..05, HIST-01..03, HIST-06..10, MIG-01..04, SEED-01..02, UI-01..09, UI-26..29, UI-31, E2E-01..05, E2E-13..15 |
-| #32 Ticket workflow | UNIT-04, WF-01..14, WF-16, HIST-04..05, UI-10..14, UI-30, E2E-06..08, E2E-16 |
+| #31 Actions Taken | UNIT-01..03, UNIT-07, API-01..22, API-24..27, AUTHZ-01..05, HIST-01..03, HIST-06..10, MIG-01..04, SEED-01..02, UI-01..09, UI-26..29, UI-33..37, UI-31, E2E-01..05, E2E-13..15 |
+| #32 Ticket workflow | UNIT-04, API-23, WF-01..14, WF-16, HIST-04..05, UI-10..14, UI-30, UI-32, E2E-06..08, E2E-16 |
 | #33 Role dashboards | UNIT-05..06, WF-15, DASH-01..10, SDASH-01..08, UI-15..25, E2E-09..12 |
 | #34 Final hardening | ERR-01, PERF-01..02, STY-01..03, RSP-01..03, A11Y-01..02, REG-01..03 |
 | #35 Release | Final column updated with output from `main` |
+
+API-23 (cancelling a Ticket cancels its open Actions Taken, BR-32, AC-33) is owned by #32: the behaviour is part of the Ticket status endpoint, so it is implemented and tested together with the other status transitions. The Actions Taken API in #31 already provides the `AUTO_CANCELLED` revision type and the `Cancelled` status it relies on.
 
 ## 5. Final Status Evidence
 Completed in issue #35: this table's **Final** column is changed to `Pass` using the complete passing output of `npm --prefix server test`, `npm --prefix client test`, and `npm run test:e2e` run on `main`.

@@ -2,6 +2,7 @@ import 'dotenv/config'
 import bcrypt from 'bcryptjs'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { PrismaClient, TicketPriority, TicketStatus } from '../generated/prisma/client'
+import { seedLab4 } from './seed-lab4'
 
 const adapter = new PrismaPg({
     connectionString: process.env.DATABASE_URL
@@ -261,6 +262,8 @@ async function main() {
                 categoryId: categoryId(t.category),
                 relatedSystemId: systemId(t.system),
                 createdAt,
+                // Lab 4: a Resolved or Closed seed Ticket needs a resolution time for the dashboards
+                resolvedAt: t.status === 'Resolved' || t.status === 'Closed' ? new Date(createdAt.getTime() + 2 * 24 * 60 * 60 * 1000) : null,
                 indicatedResolvedAt: t.indicatedResolved ? new Date(createdAt.getTime() + 2 * 24 * 60 * 60 * 1000) : null,
                 comments: {
                     create: (t.comments ?? []).map((c, i) => ({
@@ -281,6 +284,9 @@ async function main() {
         created++
     }
     console.log(`✅ Seeded ${created} new Tickets (${tickets.length} defined) with Public Comments and Internal Notes.`)
+
+    const actionsCreated = await seedLab4(prisma, userId)
+    console.log(`✅ Seeded ${actionsCreated} new Actions Taken with their revisions.`)
 
     console.log('🎉 Seeding finished successfully!')
 }

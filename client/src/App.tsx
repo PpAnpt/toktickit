@@ -6,6 +6,7 @@ import { StaffTicketQueue } from './components/StaffTicketQueue';
 import { StaffTicketDetail } from './components/StaffTicketDetail';
 import { UserManagement } from './components/UserManagement';
 import { PublicComments } from './components/PublicComments';
+import { ActionsTaken } from './components/ActionsTaken';
 import { RoleBadge } from './components/RoleBadge';
 import {
   getMe,
@@ -1098,6 +1099,9 @@ function App() {
                         </div>
                       )}
                     </div>
+
+                    {/* Actions Taken (Lab 4): the Requester sees every action of their own Ticket, read-only */}
+                    <ActionsTaken ticketId={ticketDetail.id} ticketStatus={ticketDetail.status} canEdit={false} />
 
                     {/* Public Comments shared with IT Staff (Internal Notes are never shown to Requesters) */}
                     <PublicComments

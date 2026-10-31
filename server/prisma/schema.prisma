@@ -38,6 +38,27 @@ enum TicketStatus {
   Cancelled
 }
 
+enum ActionStatus {
+  Planned
+  InProgress @map("In Progress")
+  Completed
+  Cancelled
+}
+
+enum ActionRevisionType {
+  CREATED
+  EDITED
+  STATUS_CHANGED
+  ASSIGNEE_CHANGED
+  AUTO_CANCELLED
+}
+
+enum TicketEventType {
+  STATUS_CHANGED
+  OWNER_CHANGED
+  PRIORITY_CHANGED
+}
+
 enum TicketPriority {
   LOW
   MEDIUM
@@ -46,25 +67,31 @@ enum TicketPriority {
 }
 
 model User {
-  id                 Int       @id @default(autoincrement())
+  id                 Int      @id @default(autoincrement())
   name               String
-  email              String    @unique
+  email              String   @unique
   passwordHash       String
-  role               UserRole  @default(REQUESTER)
-  isActive           Boolean   @default(true)
-  mustChangePassword Boolean   @default(false)
+  role               UserRole @default(REQUESTER)
+  isActive           Boolean  @default(true)
+  mustChangePassword Boolean  @default(false)
   // Incremented on logout, password change, and admin password reset to revoke issued tokens
-  tokenVersion       Int       @default(0)
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  tokenVersion       Int      @default(0)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   // ความสัมพันธ์
-  tickets            Ticket[]         @relation("RequesterTickets")
-  assignedTickets    Ticket[]         @relation("StaffAssignedTickets")
-  comments           PublicComment[]
-  internalNotes      InternalNote[]
-}
+  tickets         Ticket[]        @relation("RequesterTickets")
+  assignedTickets Ticket[]        @relation("StaffAssignedTickets")
+  comments        PublicComment[]
+  internalNotes   InternalNote[]
 
+  // Lab 4: Actions Taken and append-only history (all relations are onDelete: Restrict, BR-40)
+  actionsPerformed ActionTaken[]         @relation("ActionPerformedBy")
+  actionsAssigned  ActionTaken[]         @relation("ActionAssignee")
+  actionsEdited    ActionTaken[]         @relation("ActionUpdatedBy")
+  actionRevisions  ActionTakenRevision[]
+  ticketEvents     TicketEvent[]
+}
 
 model RelatedSystem {
   id        Int      @id @default(autoincrement())
@@ -75,39 +102,45 @@ model RelatedSystem {
 }
 
 model Ticket {
-  id                  Int            @id @default(autoincrement())
-  ticketNumber        String         @unique
+  id                  Int             @id @default(autoincrement())
+  ticketNumber        String          @unique
   summary             String
   description         String
-  status              TicketStatus   @default(New)
-  requestedPriority   TicketPriority @default(MEDIUM)
+  status              TicketStatus    @default(New)
+  requestedPriority   TicketPriority  @default(MEDIUM)
   itPriority          TicketPriority?
   indicatedResolvedAt DateTime?
-  createdAt           DateTime       @default(now())
-  updatedAt           DateTime       @updatedAt
+  // Lab 4: set when the Ticket becomes Resolved, cleared on Reopened (BR-17)
+  resolvedAt          DateTime?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
 
   // Foreign Keys
-  requesterId         Int
-  requester           User           @relation("RequesterTickets", fields: [requesterId], references: [id])
+  requesterId Int
+  requester   User @relation("RequesterTickets", fields: [requesterId], references: [id])
 
-  ownerId             Int?
-  owner               User?          @relation("StaffAssignedTickets", fields: [ownerId], references: [id])
+  ownerId Int?
+  owner   User? @relation("StaffAssignedTickets", fields: [ownerId], references: [id])
 
-  categoryId          Int
-  category            Category       @relation(fields: [categoryId], references: [id])
+  categoryId Int
+  category   Category @relation(fields: [categoryId], references: [id])
 
-  relatedSystemId     Int
-  relatedSystem       RelatedSystem  @relation(fields: [relatedSystemId], references: [id])
+  relatedSystemId Int
+  relatedSystem   RelatedSystem @relation(fields: [relatedSystemId], references: [id])
 
-  attachments         Attachment[]
-  comments            PublicComment[]
-  internalNotes       InternalNote[]
+  attachments     Attachment[]
+  comments        PublicComment[]
+  internalNotes   InternalNote[]
+  actionsTaken    ActionTaken[]
+  actionRevisions ActionTakenRevision[]
+  events          TicketEvent[]
 
   @@index([requesterId])
   @@index([ownerId])
   @@index([status])
+  @@index([status, updatedAt])
+  @@index([requesterId, status])
 }
-
 
 model Attachment {
   id               Int      @id @default(autoincrement())
@@ -116,7 +149,7 @@ model Attachment {
   size             Int
   mimeType         String
   isRemoved        Boolean  @default(false) // สำหรับทำ Soft-remove
-  removalReason    String?  // เหตุผลในการลบไฟล์ (Removal Reason)
+  removalReason    String? // เหตุผลในการลบไฟล์ (Removal Reason)
   createdAt        DateTime @default(now())
 
   ticketId Int
@@ -130,11 +163,11 @@ model PublicComment {
   content   String
   createdAt DateTime @default(now())
 
-  ticketId  Int
-  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  ticketId Int
+  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
 
-  authorId  Int
-  author    User     @relation(fields: [authorId], references: [id])
+  authorId Int
+  author   User @relation(fields: [authorId], references: [id])
 
   @@index([ticketId])
 }
@@ -144,12 +177,80 @@ model InternalNote {
   content   String
   createdAt DateTime @default(now())
 
-  ticketId  Int
-  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  ticketId Int
+  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
 
-  authorId  Int
-  author    User     @relation(fields: [authorId], references: [id])
+  authorId Int
+  author   User @relation(fields: [authorId], references: [id])
 
   @@index([ticketId])
 }
 
+// ─── Lab 4: Actions Taken ───────────────────────────────────
+model ActionTaken {
+  id               Int          @id @default(autoincrement())
+  ticketId         Int
+  ticket           Ticket       @relation(fields: [ticketId], references: [id], onDelete: Restrict)
+  performedById    Int
+  performedBy      User         @relation("ActionPerformedBy", fields: [performedById], references: [id], onDelete: Restrict)
+  assigneeId       Int
+  assignee         User         @relation("ActionAssignee", fields: [assigneeId], references: [id], onDelete: Restrict)
+  updatedById      Int?
+  updatedBy        User?        @relation("ActionUpdatedBy", fields: [updatedById], references: [id], onDelete: Restrict)
+  status           ActionStatus @default(Completed)
+  actionAt         DateTime
+  description      String
+  result           String?
+  followUpRequired Boolean      @default(false)
+  followUpNote     String?
+  attachmentNotes  String?
+  // Idempotency (BR-13): unique per Ticket; requestDigest detects reuse with different content
+  clientRequestId  String?
+  requestDigest    String?
+  createdAt        DateTime     @default(now())
+  // updatedAt is also the optimistic-concurrency token (BR-19, BR-20); the API sets it explicitly
+  updatedAt        DateTime     @default(now())
+
+  revisions ActionTakenRevision[]
+
+  @@unique([ticketId, clientRequestId])
+  @@index([ticketId, actionAt])
+  @@index([performedById])
+  @@index([assigneeId, status])
+  @@index([ticketId, status])
+}
+
+// Insert-only evidence (BR-33, BR-34, BR-37): a database trigger rejects UPDATE and DELETE
+model ActionTakenRevision {
+  id            Int                @id @default(autoincrement())
+  actionId      Int
+  action        ActionTaken        @relation(fields: [actionId], references: [id], onDelete: Restrict)
+  ticketId      Int
+  ticket        Ticket             @relation(fields: [ticketId], references: [id], onDelete: Restrict)
+  revisionNo    Int
+  type          ActionRevisionType
+  actorId       Int
+  actor         User               @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  changedFields String[]
+  before        Json?
+  after         Json
+  createdAt     DateTime           @default(now())
+
+  @@unique([actionId, revisionNo])
+  @@index([ticketId, createdAt])
+}
+
+// Insert-only evidence (BR-35, BR-37)
+model TicketEvent {
+  id        Int             @id @default(autoincrement())
+  ticketId  Int
+  ticket    Ticket          @relation(fields: [ticketId], references: [id], onDelete: Restrict)
+  type      TicketEventType
+  fromValue String?
+  toValue   String?
+  actorId   Int
+  actor     User            @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  createdAt DateTime        @default(now())
+
+  @@index([ticketId, createdAt, id])
+}

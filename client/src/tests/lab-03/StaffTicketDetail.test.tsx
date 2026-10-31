@@ -73,6 +73,8 @@ describe('UI-04 (AC-09, AC-10, AC-11, AC-12, AC-13, AC-14): Staff Ticket Detail 
   beforeEach(() => {
     vi.clearAllMocks();
     vi.spyOn(api, 'fetchStaffMembers').mockResolvedValue(mockStaffMembers);
+    // Lab 4: the detail screen also lists Actions Taken (covered by src/tests/lab-04)
+    vi.spyOn(api, 'fetchActionsTaken').mockResolvedValue({ actions: [], total: 0, page: 1, limit: 20 });
     vi.spyOn(api, 'fetchStaffTicketDetail').mockResolvedValue(mockTicket);
     vi.spyOn(api, 'fetchPublicComments').mockResolvedValue(mockTicket.comments);
     vi.spyOn(api, 'fetchInternalNotes').mockResolvedValue(mockTicket.internalNotes);
