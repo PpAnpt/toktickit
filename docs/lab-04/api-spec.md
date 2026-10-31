@@ -32,7 +32,7 @@ This document adds to `docs/lab-03/api-spec.md` (authentication, token, base pat
 | `INVALID_ACTION_TRANSITION` | Action status change not allowed by BR-30 (400). |
 
 ### 1.3 Concurrency Convention
-Workflow writes may carry `expectedUpdatedAt` (ISO 8601). It must equal the `updatedAt` the client last received for the same record (the Ticket for status/owner/priority, the Action Taken for action edits). A mismatch returns `409 STALE_UPDATE` and changes nothing; the client should reload and let the user re-apply the change. Required for every Action Taken write (edit, status change, reassignment); optional for Ticket status/owner/priority (omitting it keeps the Lab 3 behavior; the Lab 4 client always sends it).
+Workflow writes must carry `expectedUpdatedAt` (ISO 8601). It must equal the `updatedAt` the client last received for the same record (the Ticket for status/owner/priority, the Action Taken for action edits). A mismatch returns `409 STALE_UPDATE` and changes nothing; the client should reload and let the user re-apply the change. Required for every Action Taken write (edit, status change, reassignment) and for Ticket status/owner/priority; a missing or malformed value returns `400` with `details.expectedUpdatedAt` and changes nothing. This is the one deliberate change to a Lab 3 request contract: without the token a client could overwrite another user's recent change unknowingly, so the Lab 3 tests that call these endpoints are updated to send it.
 
 **Atomicity (BR-20).** The check and the write are a single statement inside one transaction, never "read, compare, then write":
 ```sql
@@ -151,14 +151,14 @@ No delete endpoint exists for Actions Taken, revisions, or Ticket events (BR-08,
 
 ### 3.1 Update Ticket Status
 - **Endpoint**: `PATCH /api/staff/tickets/:id/status` — **Access**: IT Staff, Administrator (Requester `403`)
-- **Request**: `{ "status": "Resolved", "expectedUpdatedAt": "2026-10-29T03:20:11.000Z" }` (`expectedUpdatedAt` optional)
+- **Request**: `{ "status": "Resolved", "expectedUpdatedAt": "2026-10-29T03:20:11.000Z" }` (`expectedUpdatedAt` required)
 - **Processing order**: validate Ticket exists -> transition matrix (specification section 5) -> resolution gate (BR-16) -> atomic compare-and-set write with its history rows (BR-20). The stale check is part of the atomic write, not a separate earlier read.
 - **Side effects** (same transaction): entering `Resolved` sets `resolvedAt`; entering `Reopened` clears `resolvedAt` and `indicatedResolvedAt` (BR-17); entering `Cancelled` cancels every `Planned`/`In Progress` action with `AUTO_CANCELLED` revisions (BR-32); every change appends a `STATUS_CHANGED` Ticket event (BR-35).
 - **Success (200)**: the updated Ticket as in Lab 3, plus `updatedAt`, `resolvedAt`, `indicatedResolvedAt`, and `status` as the display string (for example `"In Progress"`).
-- **Errors**: `400 Invalid status transition from 'X' to 'Y'`; `400 RESOLUTION_GATE_FAILED` with `reasons` (for example "Complete or cancel all open actions, and record at least one completed action, before resolving this Ticket"); `401`; `403`; `404`; `409 STALE_UPDATE`.
+- **Errors**: `400` missing or malformed `expectedUpdatedAt`; `400 Invalid status transition from 'X' to 'Y'`; `400 RESOLUTION_GATE_FAILED` with `reasons` (for example "Complete or cancel all open actions, and record at least one completed action, before resolving this Ticket"); `401`; `403`; `404`; `409 STALE_UPDATE`.
 
 ### 3.2 Update Owner and Priority
-- `PATCH /api/staff/tickets/:id/owner` and `PATCH /api/staff/tickets/:id/priority` keep their Lab 3 request/response and now also accept optional `expectedUpdatedAt`, return the new `updatedAt`, return `409 STALE_UPDATE` on mismatch (atomic, BR-20), and append an `OWNER_CHANGED` / `PRIORITY_CHANGED` Ticket event in the same transaction.
+- `PATCH /api/staff/tickets/:id/owner` and `PATCH /api/staff/tickets/:id/priority` keep their Lab 3 request/response and now also require `expectedUpdatedAt` (`400` when missing), return the new `updatedAt`, return `409 STALE_UPDATE` on mismatch (atomic, BR-20), and append an `OWNER_CHANGED` / `PRIORITY_CHANGED` Ticket event in the same transaction.
 - Owner must be an active IT Staff or Administrator; otherwise `400` (BR-21).
 
 ### 3.3 Requester Indication

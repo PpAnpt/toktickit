@@ -34,7 +34,7 @@ The service desk can receive Tickets and communicate with Requesters, but cannot
 - **FR-06**: The system enforces the final Ticket status transition matrix on the server and rejects every other transition.
 - **FR-07**: The system refuses to move a Ticket to `Resolved` unless it has at least one Action Taken (resolution gate).
 - **FR-08**: A Requester's "appears resolved" indication stays advisory and never changes the status.
-- **FR-09**: Workflow writes (status, owner, priority, Action Taken edit) detect stale updates and return a conflict instead of silently overwriting.
+- **FR-09**: Workflow writes (status, owner, priority, Action Taken edit) detect stale updates and return a conflict instead of silently overwriting; the `expectedUpdatedAt` token is required on every one of them.
 - **FR-10**: The system provides a Requester Dashboard with metrics for the signed-in Requester's own Tickets only.
 - **FR-11**: The system provides an IT Staff Dashboard (also for Administrators) with operational metrics, breakdowns, recent Tickets, and the current user's recent Actions Taken.
 - **FR-12**: Every dashboard card has a backend-defined query, an empty state, and a drill-down link to an existing detailed screen.
@@ -70,7 +70,7 @@ Lab 3 rules (authentication, ownership, password, non-disclosure 404, queue vali
 - **BR-16** (resolution gate): A transition to `Resolved` requires (a) at least one Action Taken with status `Completed` and (b) no Action Taken still `Planned` or `In Progress` (each must first be completed or cancelled). Otherwise 400 with code `RESOLUTION_GATE_FAILED` and `reasons` containing `NO_COMPLETED_ACTION` and/or `OPEN_ACTIONS`. The gate is enforced on the server whatever the client sends.
 - **BR-17**: Entering `Resolved` sets `resolvedAt` to the current time. Moving to `Reopened` clears `resolvedAt` and `indicatedResolvedAt` so the Requester can indicate again. `Closed` keeps the existing `resolvedAt`.
 - **BR-18**: The Requester's "appears resolved" indication (L3-BR-14) only sets `indicatedResolvedAt`; it never changes the status.
-- **BR-19** (stale update): Workflow writes (Ticket status, owner, priority; Action Taken edit, status change, and assignee change) accept `expectedUpdatedAt` (the Ticket's `updatedAt` the client last saw, or the Action's `updatedAt` for action writes). If it differs from the stored value the server returns 409 with the current `updatedAt` and changes nothing. It is required for every Action Taken write and optional for Ticket status/owner/priority (omitted keeps the Lab 3 contract); the client always sends it.
+- **BR-19** (stale update): Workflow writes (Ticket status, owner, priority; Action Taken edit, status change, and assignee change) accept `expectedUpdatedAt` (the Ticket's `updatedAt` the client last saw, or the Action's `updatedAt` for action writes). If it differs from the stored value the server returns 409 with the current `updatedAt` and changes nothing. It is required for every workflow write, including Ticket status, owner, and priority; a request without it returns 400 naming `expectedUpdatedAt` and changes nothing, so a client that bypasses the screen cannot overwrite a newer change unknowingly.
 - **BR-20** (atomic check and write): The stale check and the write are one atomic operation, not "read, compare, then write". Each workflow write runs in a single database transaction containing one `UPDATE ... WHERE id = ? AND "updatedAt" = <expected>` (for a Ticket status change also `AND status = <status the server validated>`), the new `updatedAt` being `GREATEST(now(), previous + 1 ms)` so two writes in the same millisecond still change the token, followed by the history rows (BR-34, BR-35). If no row is updated the transaction rolls back and the server returns 409. Of N parallel requests carrying the same token, exactly one succeeds and the others get 409; exactly one history row is added.
 - **BR-21**: Only active IT Staff or Administrators can be assigned as owner; an inactive or non-staff assignee is rejected with 400 (L3-BR-09).
 
@@ -202,7 +202,7 @@ Full shapes and status codes are in `docs/lab-04/api-spec.md`. Status codes: 200
 - `PATCH /api/staff/tickets/:id/actions/:actionId`: edit, reassign, and change status, with `expectedUpdatedAt`.
 - `GET /api/staff/tickets/:id/actions/:actionId/revisions`: Action Taken revision history (IT Staff, Administrator).
 - `GET /api/staff/tickets/:id/events`: Ticket status, owner, and priority history (IT Staff, Administrator).
-- `PATCH /api/staff/tickets/:id/status|owner|priority`: now accept optional `expectedUpdatedAt`; status adds the resolution gate and compare-and-set.
+- `PATCH /api/staff/tickets/:id/status|owner|priority`: now require `expectedUpdatedAt`; status adds the resolution gate and compare-and-set.
 - `GET /api/dashboard/requester`: Requester only.
 - `GET /api/dashboard/staff`: IT Staff and Administrator.
 - `GET /api/staff/tickets` and `GET /api/tickets`: accept `status=Active`; `GET /api/tickets` also accepts `recent=updated|resolved` (BR-39).
@@ -225,7 +225,7 @@ Full shapes and status codes are in `docs/lab-04/api-spec.md`. Status codes: 200
 - **AC-10**: Given each status, when staff request each target status, then exactly the pairs in the transition matrix succeed and all others return 400; a Requester gets 403.
 - **AC-11**: Given a Ticket with no `Completed` Action Taken, or with an action still `Planned` or `In Progress`, when staff move it to `Resolved`, then 400 `RESOLUTION_GATE_FAILED` listing the reasons and the status is unchanged; given at least one `Completed` action and no open actions, then 200 and `resolvedAt` is set.
 - **AC-12**: Given a Requester who indicated "appears resolved", then the status is unchanged; when staff later reopen the Ticket, then `resolvedAt` and `indicatedResolvedAt` are cleared.
-- **AC-13**: Given a stale `expectedUpdatedAt` or a concurrent status change, when status, owner, or priority is updated, then 409 and the stored Ticket is unchanged; given N parallel writes carrying the same token, then exactly one succeeds, the rest get 409, and exactly one history row exists.
+- **AC-13**: Given a stale `expectedUpdatedAt` or a concurrent status change, when status, owner, or priority is updated, then 409 (and 400 when `expectedUpdatedAt` is missing) and the stored Ticket is unchanged; given N parallel writes carrying the same token, then exactly one succeeds, the rest get 409, and exactly one history row exists.
 - **AC-14**: Given an inactive or non-staff user as assignee, when assigning the owner, then 400.
 - **AC-15**: Given the Ticket Detail screen, then only permitted transitions are offered, a blocked resolution shows the gate message, and the summary status refreshes after a successful change.
 
@@ -277,7 +277,7 @@ Full shapes and status codes are in `docs/lab-04/api-spec.md`. Status codes: 200
 - **Requester status changes**: Requesters never change status; `Reopened` is set by IT Staff or Administrators (unchanged from Lab 3).
 - **Resolution gate**: at least one `Completed` action and no `Planned`/`In Progress` action (BR-16). Open follow-up notes do not block resolution, because follow-up is recorded as information and can continue after resolution.
 - **Comments and `updatedAt`**: Public Comments and Internal Notes keep their Lab 3 behavior and are not required to bump the Ticket's `updatedAt`; only workflow changes and Action Taken writes do (BR-11).
-- **Concurrency**: `expectedUpdatedAt` is optional on Lab 3 ticket PATCH endpoints to preserve their contract; the Lab 4 client always sends it and status changes always use compare-and-set (BR-19, BR-20).
+- **Concurrency**: `expectedUpdatedAt` is required on the Ticket status, owner, and priority PATCH endpoints. This is the one deliberate change to a Lab 3 request contract: an optional token would let a client that skips the screen overwrite another user's recent change unknowingly (labsheet section 6.1). The Lab 3 tests that call these endpoints are updated to send the token and must still pass (AC-25, WF-16); status changes always use compare-and-set (BR-19, BR-20).
 - **Time zone**: Asia/Bangkok fixed offset UTC+7 is used for the dashboard windows (BR-23); timestamps are stored in UTC.
 - **Dashboard size**: recent lists show 5 items; there is no pagination on the dashboard.
 

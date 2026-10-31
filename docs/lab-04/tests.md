@@ -78,9 +78,10 @@ Run commands: `npm --prefix server test`, `npm --prefix client test`, `npm run t
 | WF-09 | Workflow | AC-13 | Two concurrent different status changes | One succeeds, the other `409` | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
 | WF-10 | Workflow | AC-14 | Assign an inactive user, a Requester, or an unknown user as owner | `400`; owner unchanged | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
 | WF-11 | Workflow | AC-20 | `status=Active` on the staff queue and My Tickets | Returns exactly the 5 active statuses; invalid values still `400` | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
-| WF-12 | Regression | AC-25 | Status, owner, priority without `expectedUpdatedAt` | Lab 3 behavior preserved | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
+| WF-12 | Workflow | AC-13 | Status, owner, and priority PATCH without `expectedUpdatedAt`, and with a malformed value | `400` naming `expectedUpdatedAt`; Ticket unchanged | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
 | WF-13 | Workflow | AC-13 | 10 parallel Action Taken edits (and 10 parallel status changes) carrying the same `expectedUpdatedAt` | Exactly one `200`, nine `409`; exactly one revision/event added; final row equals the winner's data | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
 | WF-14 | Workflow | AC-13 | A write that fails the stale check inside the transaction | Rolled back: no change and no history row (atomic check and write) | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
+| WF-16 | Regression | AC-25 | The Lab 3 status, owner, and priority tests, updated to send `expectedUpdatedAt` | All still pass with the same expected statuses and bodies apart from the new `updatedAt` | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
 | WF-15 | Workflow | AC-20 | `GET /api/tickets?recent=` with `updated`, `resolved`, and an invalid value | Valid values filter; invalid value `400`; Lab 3 query validation unchanged | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
 
 ### 2.4 Requester Dashboard
@@ -230,7 +231,7 @@ Run commands: `npm --prefix server test`, `npm --prefix client test`, `npm run t
 | AC-10 | UNIT-04, WF-01, WF-02, WF-03 |
 | AC-11 | WF-04, WF-05, E2E-06 |
 | AC-12 | WF-06, WF-07, E2E-07, E2E-08 |
-| AC-13 | UNIT-07, WF-08, WF-09, WF-13, WF-14, E2E-08 |
+| AC-13 | UNIT-07, WF-08, WF-09, WF-12, WF-13, WF-14, E2E-08 |
 | AC-14 | WF-10 |
 | AC-15 | UI-10, UI-11, UI-12, E2E-06 |
 | AC-16 | DASH-01, DASH-02, SDASH-01, E2E-12 |
@@ -242,7 +243,7 @@ Run commands: `npm --prefix server test`, `npm --prefix client test`, `npm run t
 | AC-22 | DASH-04, DASH-07, SDASH-07 |
 | AC-23 | MIG-01, MIG-02, MIG-03 |
 | AC-24 | SEED-01, SEED-02 |
-| AC-25 | WF-12, REG-01, REG-02, REG-03 |
+| AC-25 | WF-16, REG-01, REG-02, REG-03 |
 | AC-26 | ERR-01, UI-07, UI-08, UI-14, UI-19, UI-24 |
 | AC-27 | API-15, UI-06, UI-13, E2E-05 |
 | AC-28 | UI-17, STY-01, STY-02, STY-03, RSP-01, RSP-02, RSP-03, A11Y-01, A11Y-02 |
@@ -265,7 +266,7 @@ Every AC-01..AC-39 maps to at least one planned test. AC-28 is also verified by 
 | Issue | Tests it must turn green |
 | :--- | :--- |
 | #31 Actions Taken | UNIT-01..03, UNIT-07, API-01..26, AUTHZ-01..05, HIST-01..03, HIST-06..10, MIG-01..04, SEED-01..02, UI-01..09, UI-26..29, UI-31, E2E-01..05, E2E-13..15 |
-| #32 Ticket workflow | UNIT-04, WF-01..14, HIST-04..05, UI-10..14, UI-30, E2E-06..08, E2E-16 |
+| #32 Ticket workflow | UNIT-04, WF-01..14, WF-16, HIST-04..05, UI-10..14, UI-30, E2E-06..08, E2E-16 |
 | #33 Role dashboards | UNIT-05..06, WF-15, DASH-01..10, SDASH-01..08, UI-15..25, E2E-09..12 |
 | #34 Final hardening | ERR-01, PERF-01..02, STY-01..03, RSP-01..03, A11Y-01..02, REG-01..03 |
 | #35 Release | Final column updated with output from `main` |
