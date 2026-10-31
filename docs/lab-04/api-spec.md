@@ -12,7 +12,7 @@ This document adds to `docs/lab-03/api-spec.md` (authentication, token, base pat
 | `401` | Missing, invalid, expired, or revoked token |
 | `403` | Role not permitted (or `mustChangePassword=true`) |
 | `404` | Ticket/Action does not exist, or the Ticket belongs to another Requester |
-| `409` | Stale update, concurrent change, Ticket is `Closed`/`Cancelled`, or new open work on a `Resolved` Ticket |
+| `409` | Stale update, concurrent change, Ticket is `Closed`/`Cancelled`, new open work on a `Resolved` Ticket, or a reused idempotency key |
 | `500` | Generic safe message; no stack trace, SQL, or internal detail |
 
 ### 1.2 Error Body
@@ -26,6 +26,7 @@ This document adds to `docs/lab-03/api-spec.md` (authentication, token, base pat
 | :--- | :--- |
 | `STALE_UPDATE` | `expectedUpdatedAt` differs from the stored value, or the status changed concurrently. Body also carries `currentUpdatedAt`. |
 | `TICKET_TERMINAL` | Creating or editing an Action Taken on a `Closed`/`Cancelled` Ticket. |
+| `IDEMPOTENCY_KEY_REUSED` | `clientRequestId` already used on this Ticket with a different payload or by a different user (BR-13). Nothing is created. |
 | `TICKET_RESOLVED` | Creating a `Planned` or `In Progress` Action Taken on a `Resolved` Ticket (BR-41); reopen the Ticket first. |
 | `RESOLUTION_GATE_FAILED` | Moving a Ticket to `Resolved` without a `Completed` action, or with `Planned`/`In Progress` actions. Body also carries `reasons`: `NO_COMPLETED_ACTION` and/or `OPEN_ACTIONS`. |
 | `INVALID_ACTION_TRANSITION` | Action status change not allowed by BR-30 (400). |
@@ -92,8 +93,9 @@ List endpoints accept `page` (>= 1) and `limit` and return `{ ..., "total": n, "
   ```
 - **Field rules** (BR-04..07, BR-13, BR-29..31): `actionAt` optional (default now; not earlier than the Ticket's `createdAt`; not more than 5 minutes in the future unless `status` is `Planned`). `assigneeId` optional (default: the caller); must be an active IT Staff or Administrator (BR-29). `status` optional, one of `Planned`, `In Progress`, `Completed` (default `Completed`); `Cancelled` is not allowed on create. On a `Resolved` Ticket only `Completed` is accepted (BR-41). `description` required, <= 2,000 chars. `result` required when `status` is `Completed` (<= 1,000), optional otherwise. `followUpRequired` optional boolean, default `false`. `followUpNote` required when `followUpRequired=true`, <= 1,000, ignored (stored `null`) when `false`. `attachmentNotes` optional, <= 500. `clientRequestId` optional UUID. All text is trimmed plain text. `performedById`, `performedBy`, and `createdAt` in the body are ignored.
 - **Success (201)**: `{ "action": <Action Taken> }`. The Ticket's `updatedAt` is also updated (BR-11) and a revision `CREATED` (`revisionNo` 1) is appended in the same transaction (BR-34).
-- **Replay (200)**: same `clientRequestId` on the same Ticket returns `{ "action": <existing>, "replayed": true }` without creating a second row (AC-08).
-- **Errors**: `400` validation (`details` names each invalid field); `401`; `403` Requester; `404` Ticket missing; `409 TICKET_TERMINAL`; `409 TICKET_RESOLVED`.
+- **Replay (200)**: same `clientRequestId` on the same Ticket with identical content from the same caller returns `{ "action": <existing>, "replayed": true }` without creating a second row (AC-08). The comparison uses the stored `requestDigest` of the normalized payload (whitespace-trimmed text, key order ignored, `clientRequestId` excluded), so a retry that differs only in whitespace or property order is still a replay.
+- **Key reuse (409 `IDEMPOTENCY_KEY_REUSED`)**: the same `clientRequestId` with different content, or from a different user, creates nothing and returns the conflict; the response does not include the existing record (AC-08).
+- **Errors**: `400` validation (`details` names each invalid field); `401`; `403` Requester; `404` Ticket missing; `409 TICKET_TERMINAL`; `409 TICKET_RESOLVED`; `409 IDEMPOTENCY_KEY_REUSED`.
 
 ### 2.4 Edit, Reassign, and Change Status of an Action Taken
 - **Endpoint**: `PATCH /api/staff/tickets/:id/actions/:actionId` — **Access**: IT Staff, Administrator

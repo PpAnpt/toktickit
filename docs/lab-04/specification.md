@@ -62,7 +62,7 @@ Lab 3 rules (authentication, ownership, password, non-disclosure 404, queue vali
 - **BR-10**: Requesters see every field of every Action Taken on their own Tickets, so private details belong in Internal Notes, not in Actions Taken. A Requester asking for another Requester's Ticket gets the same 404 as a missing Ticket (L3-BR-25).
 - **BR-11**: Creating or editing an Action Taken updates the Ticket's `updatedAt` in the same transaction so "recently updated" reflects real work.
 - **BR-12**: Creating an Action Taken does not change the Ticket status; status changes remain explicit.
-- **BR-13**: A create request may carry a `clientRequestId` (UUID). A repeated request with the same id for the same Ticket returns the existing record with 200 instead of creating a second one.
+- **BR-13**: A create request may carry a `clientRequestId` (UUID). A repeated request with the same id for the same Ticket **and the same content and caller** returns the existing record with 200 instead of creating a second one. The server stores a SHA-256 `requestDigest` of the normalized create payload (trimmed text, fixed key order, `clientRequestId` excluded) plus the acting user; reusing the id with a different payload or by a different user returns `409 IDEMPOTENCY_KEY_REUSED` and creates nothing, so a retry can never silently return a record that does not match what was sent. Status changes and edits do not need a key: they are protected by the compare-and-set token (BR-19, BR-20).
 
 ### Status, Resolution, and Conflict Rules
 - **BR-14**: The statuses are `New`, `Open`, `In Progress`, `Waiting for Requester`, `Resolved`, `Closed`, `Reopened`, `Cancelled`. Only IT Staff and Administrators change status; Requesters get 403.
@@ -152,6 +152,7 @@ Full detail is in `docs/lab-04/ui-spec.md`.
 | `followUpNote` | String? | required when `followUpRequired` |
 | `attachmentNotes` | String? | optional |
 | `clientRequestId` | String? | unique per Ticket (`@@unique([ticketId, clientRequestId])`) |
+| `requestDigest` | String? | SHA-256 of the normalized create payload and actor; set when `clientRequestId` is present (BR-13) |
 | `createdAt` / `updatedAt` | DateTime | `updatedAt` doubles as the concurrency token |
 
 Indexes: `(ticketId, actionAt)` for the list, `performedById` and `(assigneeId, status)` for "My Recent Actions" and open-action checks, `(ticketId, status)` for the resolution gate.
@@ -217,7 +218,7 @@ Full shapes and status codes are in `docs/lab-04/api-spec.md`. Status codes: 200
 - **AC-05**: Given a Ticket owned by staff member A, when staff member B creates an action, then it is saved with B as performer and the owner stays A.
 - **AC-06**: Given an existing action, when staff edits it with the current `expectedUpdatedAt`, then the changes are saved, *Performed by* and *Created at* are unchanged, and `updatedById` is the editor; with a stale `expectedUpdatedAt`, then 409 and no change; a DELETE request is not supported.
 - **AC-07**: Given a `Closed` or `Cancelled` Ticket, when creating or editing an action, then 409.
-- **AC-08**: Given two create requests with the same `clientRequestId` for one Ticket, then exactly one action exists and the second response returns the original with 200.
+- **AC-08**: Given two create requests with the same `clientRequestId` for one Ticket, then exactly one action exists and, when the content and caller are identical, the second response returns the original with 200; when the content or the caller differs, the second request returns `409 IDEMPOTENCY_KEY_REUSED` and nothing is created.
 - **AC-09**: Given several actions on a Ticket, when listed, then they are ordered by `actionAt` descending then `id` descending, repeatably.
 
 ### Ticket Workflow
