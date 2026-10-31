@@ -79,68 +79,39 @@ function initialValues(action: ActionTakenItem | undefined, resolvedTicket: bool
 }
 
 /**
- * What the user typed, kept by the parent instead of the form. The form can be unmounted and mounted again
- * (the list refreshes, or the edited action moves to another page) without losing the draft.
+ * The open editor. All of its state lives in the parent (ActionsTaken), not in the form: the form view can be
+ * unmounted and mounted again (the list refreshes, or the edited action moves to another page) and the typed text,
+ * the pending save, the conflict banner and the errors all carry on.
  */
-interface Draft {
+interface Editor {
+  panel: Panel;
   values: FormValues;
-  /** JSON of the values when the editor opened: the draft is dirty when it differs */
+  /** JSON of the values when the editor opened: the editor is dirty when they differ */
   baseline: string;
   /** The time field has minute precision, so it is only sent when the user changed it */
   initialActionAt: string;
-  /** One request id per open editor, so a retry after a lost response cannot create a duplicate (BR-13) */
+  /** One id per open editor, so a retry after a lost response cannot create a duplicate (BR-13) */
   requestId: string;
-  notice: string;
+  errors: Record<string, string>;
+  formError: string;
+  stale: boolean;
+  busy: boolean;
 }
 
-function newDraft(panel: Panel, resolvedTicket: boolean): Draft {
+function newEditor(panel: Panel, resolvedTicket: boolean): Editor {
   const values = initialValues(panel.kind === 'create' ? undefined : panel.action, resolvedTicket);
-  return { values, baseline: JSON.stringify(values), initialActionAt: values.actionAt, requestId: crypto.randomUUID(), notice: '' };
+  return {
+    panel, values, baseline: JSON.stringify(values), initialActionAt: values.actionAt, requestId: crypto.randomUUID(),
+    errors: {}, formError: '', stale: false, busy: false,
+  };
 }
 
-const isDirty = (draft: Draft | null) => Boolean(draft) && JSON.stringify(draft!.values) !== draft!.baseline;
+const isDirty = (editor: Editor | null) => Boolean(editor) && JSON.stringify(editor!.values) !== editor!.baseline;
 
 type ReloadOutcome = 'ok' | 'missing' | 'failed';
 
-// ─── Form ────────────────────────────────────────────────────
-
-interface ActionFormProps {
-  ticketId: number;
-  panel: Panel;
-  draft: Draft;
-  staffMembers: StaffMember[];
-  resolvedTicket: boolean;
-  onSaved: () => void;
-  onCancel: () => void;
-  /** Loads the latest saved version of the action into the panel (used after a stale-update conflict) */
-  onReloadAction: (id: number) => Promise<ReloadOutcome>;
-}
-
-const ActionForm: React.FC<ActionFormProps> = ({ ticketId, panel, draft, staffMembers, resolvedTicket, onSaved, onCancel, onReloadAction }) => {
-  const action = panel.kind === 'create' ? undefined : panel.action;
-  const kind = panel.kind;
-  const [values, setValues] = useState<FormValues>(draft.values);
-  // An edit keeps the stored time (a rounded-down time could fall just before the Ticket's creation)
-  const initialActionAt = draft.initialActionAt;
-  // The concurrency token always comes from the panel, so reloading the latest version never touches the text
-  const token = action?.updatedAt ?? '';
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [formError, setFormError] = useState(draft.notice);
-  const [stale, setStale] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const lock = useRef(false);
-  const requestId = draft.requestId;
-  const summaryRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => { draft.values = values; }, [draft, values]);
-
-  const set = <K extends keyof FormValues>(key: K, value: FormValues[K]) => setValues(prev => ({ ...prev, [key]: value }));
-
-  const assignees = staffMembers.some(m => action && m.id === action.assignee.id) || !action
-    ? staffMembers
-    : [...staffMembers, { id: action.assignee.id, name: `${action.assignee.name} (inactive)`, email: '', role: action.assignee.role }];
-
-  const showFields = {
+function fieldsFor(kind: Panel['kind']) {
+  return {
     actionAt: kind === 'create' || kind === 'edit',
     description: kind === 'create' || kind === 'edit',
     status: kind === 'create',
@@ -149,101 +120,87 @@ const ActionForm: React.FC<ActionFormProps> = ({ ticketId, panel, draft, staffMe
     followUp: kind === 'create' || kind === 'edit',
     attachmentNotes: kind === 'create' || kind === 'edit',
   };
-  // A result is required to complete or cancel, and to keep a Completed or Cancelled action valid (BR-05)
-  const resultRequired = kind === 'complete' || kind === 'cancel'
-    || (kind === 'create' && values.status === 'Completed')
-    || (kind === 'edit' && (action?.status === 'Completed' || action?.status === 'Cancelled'));
+}
 
-  const validate = (): Record<string, string> => {
-    const found: Record<string, string> = {};
-    if (showFields.description && !values.description.trim()) found.description = 'Describe what was done.';
-    if (showFields.actionAt && !values.actionAt) found.actionAt = 'Choose the action date and time.';
-    if (showFields.result && resultRequired && !values.result.trim()) {
-      found.result = kind === 'cancel' ? 'Enter the reason for cancelling.' : 'Enter the result of this action.';
-    }
-    if (showFields.followUp && values.followUpRequired && !values.followUpNote.trim()) {
-      found.followUpNote = 'Follow-up note is required when follow-up is needed.';
-    }
-    return found;
-  };
+// A result is required to complete or cancel, and to keep a Completed or Cancelled action valid (BR-05)
+function resultIsRequired({ panel, values }: Editor): boolean {
+  return panel.kind === 'complete' || panel.kind === 'cancel'
+    || (panel.kind === 'create' && values.status === 'Completed')
+    || (panel.kind === 'edit' && (panel.action.status === 'Completed' || panel.action.status === 'Cancelled'));
+}
 
-  const buildInput = (): ActionInput => {
-    const input: ActionInput = {};
-    if (showFields.actionAt && values.actionAt !== initialActionAt) {
-      input.actionAt = new Date(values.actionAt).toISOString();
-    }
-    if (showFields.description) input.description = values.description.trim();
-    if (kind === 'create') input.status = values.status;
-    if (showFields.assignee && values.assigneeId) input.assigneeId = Number(values.assigneeId);
-    if (showFields.result) input.result = values.result.trim() || null;
-    if (showFields.followUp) {
-      input.followUpRequired = values.followUpRequired;
-      input.followUpNote = values.followUpRequired ? values.followUpNote.trim() : null;
-    }
-    if (showFields.attachmentNotes) input.attachmentNotes = values.attachmentNotes.trim() || null;
-    if (kind === 'start') input.status = 'In Progress';
-    if (kind === 'complete') input.status = 'Completed';
-    // Starting or completing a scheduled action means the work happens now (BR-04: not in the future)
-    if ((kind === 'start' || kind === 'complete') && action && new Date(action.actionAt).getTime() > Date.now()) {
-      input.actionAt = new Date().toISOString();
-    }
-    if (kind === 'cancel') input.status = 'Cancelled';
-    if (kind === 'create') input.clientRequestId = requestId;
-    else input.expectedUpdatedAt = token;
-    return input;
-  };
+function validateEditor(editor: Editor): Record<string, string> {
+  const { panel, values } = editor;
+  const show = fieldsFor(panel.kind);
+  const found: Record<string, string> = {};
+  if (show.description && !values.description.trim()) found.description = 'Describe what was done.';
+  if (show.actionAt && !values.actionAt) found.actionAt = 'Choose the action date and time.';
+  if (show.result && resultIsRequired(editor) && !values.result.trim()) {
+    found.result = panel.kind === 'cancel' ? 'Enter the reason for cancelling.' : 'Enter the result of this action.';
+  }
+  if (show.followUp && values.followUpRequired && !values.followUpNote.trim()) {
+    found.followUpNote = 'Follow-up note is required when follow-up is needed.';
+  }
+  return found;
+}
 
-  const fail = (message: string, fieldErrors: Record<string, string> = {}) => {
-    setFormError(message);
-    setErrors(fieldErrors);
-    setTimeout(() => summaryRef.current?.focus(), 0);
-  };
+function buildInput(editor: Editor): ActionInput {
+  const { panel, values } = editor;
+  const kind = panel.kind;
+  const action = panel.kind === 'create' ? undefined : panel.action;
+  const show = fieldsFor(kind);
+  const input: ActionInput = {};
+  // An edit keeps the stored time (a rounded-down time could fall just before the Ticket's creation)
+  if (show.actionAt && values.actionAt !== editor.initialActionAt) {
+    input.actionAt = new Date(values.actionAt).toISOString();
+  }
+  if (show.description) input.description = values.description.trim();
+  if (kind === 'create') input.status = values.status;
+  if (show.assignee && values.assigneeId) input.assigneeId = Number(values.assigneeId);
+  if (show.result) input.result = values.result.trim() || null;
+  if (show.followUp) {
+    input.followUpRequired = values.followUpRequired;
+    input.followUpNote = values.followUpRequired ? values.followUpNote.trim() : null;
+  }
+  if (show.attachmentNotes) input.attachmentNotes = values.attachmentNotes.trim() || null;
+  if (kind === 'start') input.status = 'In Progress';
+  if (kind === 'complete') input.status = 'Completed';
+  // Starting or completing a scheduled action means the work happens now (BR-04: not in the future)
+  if ((kind === 'start' || kind === 'complete') && action && new Date(action.actionAt).getTime() > Date.now()) {
+    input.actionAt = new Date().toISOString();
+  }
+  if (kind === 'cancel') input.status = 'Cancelled';
+  if (kind === 'create') input.clientRequestId = editor.requestId;
+  else if (action) input.expectedUpdatedAt = action.updatedAt;
+  return input;
+}
 
-  const submit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    if (lock.current) return; // double click / repeated submit (FR-14)
-    setStale(false);
-    draft.notice = '';
-    const found = validate();
-    if (Object.keys(found).length > 0) {
-      fail('Please correct the highlighted fields.', found);
-      return;
-    }
-    lock.current = true;
-    setBusy(true);
-    setFormError('');
-    setErrors({});
-    try {
-      if (panel.kind === 'create') await createActionTaken(ticketId, buildInput());
-      else await updateActionTaken(ticketId, panel.action.id, buildInput());
-      onSaved();
-    } catch (err) {
-      const apiError = err instanceof ActionApiError ? err : null;
-      if (apiError?.code === 'STALE_UPDATE') {
-        setStale(true);
-        fail('This action was changed by someone else while you were editing.');
-      } else {
-        // The entered text stays in the form after any recoverable failure (FR-16)
-        fail(apiError?.message || 'The action could not be saved. Please try again.', apiError?.details ?? {});
-      }
-    } finally {
-      lock.current = false;
-      setBusy(false);
-    }
-  };
+// ─── Form (view only) ────────────────────────────────────────
 
-  const reloadAfterConflict = async () => {
-    if (panel.kind === 'create') return;
-    const outcome = await onReloadAction(panel.action.id);
-    const message = outcome === 'ok'
-      ? 'Latest version loaded. Your text was kept: review it and save again.'
-      : outcome === 'missing'
-        ? 'This action could not be found any more. Your text is kept here: copy it before you close the editor.'
-        : 'The latest version could not be loaded. Your text is kept: try Reload latest again.';
-    if (outcome === 'ok') setStale(false);
-    draft.notice = message;
-    setFormError(message);
-  };
+interface ActionFormProps {
+  editor: Editor;
+  staffMembers: StaffMember[];
+  resolvedTicket: boolean;
+  onChange: <K extends keyof FormValues>(key: K, value: FormValues[K]) => void;
+  onSubmit: () => void;
+  onClose: () => void;
+  onReload: () => void;
+}
+
+const ActionForm: React.FC<ActionFormProps> = ({ editor, staffMembers, resolvedTicket, onChange, onSubmit, onClose, onReload }) => {
+  const { panel, values, errors, formError, stale, busy } = editor;
+  const action = panel.kind === 'create' ? undefined : panel.action;
+  const kind = panel.kind;
+  const summaryRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => { if (formError) summaryRef.current?.focus(); }, [formError]);
+
+  const assignees = staffMembers.some(m => action && m.id === action.assignee.id) || !action
+    ? staffMembers
+    : [...staffMembers, { id: action.assignee.id, name: `${action.assignee.name} (inactive)`, email: '', role: action.assignee.role }];
+
+  const showFields = fieldsFor(kind);
+  const resultRequired = resultIsRequired(editor);
 
   const idPrefix = `action-${panel.kind === 'create' ? 'new' : `${kind}-${panel.action.id}`}`;
   const fieldProps = (name: string) => ({
@@ -264,14 +221,14 @@ const ActionForm: React.FC<ActionFormProps> = ({ ticketId, panel, draft, staffMe
   };
 
   return (
-    <form onSubmit={submit} noValidate className="border rounded p-3 bg-light mb-3" aria-label={titles[kind]}>
+    <form onSubmit={event => { event.preventDefault(); onSubmit(); }} noValidate className="border rounded p-3 bg-light mb-3" aria-label={titles[kind]}>
       <h6 className="fw-bold mb-3">{titles[kind]}</h6>
 
       {formError && (
         <div ref={summaryRef} tabIndex={-1} role="alert" className="alert alert-danger py-2 small">
           {formError}
           {stale && (
-            <button type="button" className="btn btn-sm btn-outline-danger ms-2" onClick={reloadAfterConflict}>Reload latest</button>
+            <button type="button" className="btn btn-sm btn-outline-danger ms-2" onClick={onReload}>Reload latest</button>
           )}
         </div>
       )}
@@ -285,7 +242,7 @@ const ActionForm: React.FC<ActionFormProps> = ({ ticketId, panel, draft, staffMe
           <div className="col-12 col-md-6">
             <label htmlFor={`${idPrefix}-actionAt`} className="form-label fw-semibold small">Action date and time</label>
             <input type="datetime-local" className={`form-control ${errors.actionAt ? 'is-invalid' : ''}`} value={values.actionAt}
-              onChange={e => set('actionAt', e.target.value)} {...fieldProps('actionAt')} />
+              onChange={e => onChange('actionAt', e.target.value)} {...fieldProps('actionAt')} />
             {fieldError('actionAt')}
           </div>
         )}
@@ -293,7 +250,7 @@ const ActionForm: React.FC<ActionFormProps> = ({ ticketId, panel, draft, staffMe
           <div className="col-12 col-md-6">
             <label htmlFor={`${idPrefix}-status`} className="form-label fw-semibold small">Status</label>
             <select className={`form-select ${errors.status ? 'is-invalid' : ''}`} value={values.status}
-              onChange={e => set('status', e.target.value as ActionStatus)} {...fieldProps('status')}>
+              onChange={e => onChange('status', e.target.value as ActionStatus)} {...fieldProps('status')}>
               {!resolvedTicket && <option value="Planned">Planned</option>}
               {!resolvedTicket && <option value="In Progress">In Progress</option>}
               <option value="Completed">Completed</option>
@@ -306,7 +263,7 @@ const ActionForm: React.FC<ActionFormProps> = ({ ticketId, panel, draft, staffMe
           <div className="col-12 col-md-6">
             <label htmlFor={`${idPrefix}-assigneeId`} className="form-label fw-semibold small">Assignee</label>
             <select className={`form-select ${errors.assigneeId ? 'is-invalid' : ''}`} value={values.assigneeId}
-              onChange={e => set('assigneeId', e.target.value)} {...fieldProps('assigneeId')}>
+              onChange={e => onChange('assigneeId', e.target.value)} {...fieldProps('assigneeId')}>
               {kind === 'create' && <option value="">Me (default)</option>}
               {assignees.map(m => (
                 <option key={m.id} value={m.id} disabled={m.name.endsWith('(inactive)')}>{m.name}</option>
@@ -321,7 +278,7 @@ const ActionForm: React.FC<ActionFormProps> = ({ ticketId, panel, draft, staffMe
         <div className="mt-3">
           <label htmlFor={`${idPrefix}-description`} className="form-label fw-semibold small">Action description</label>
           <textarea className={`form-control ${errors.description ? 'is-invalid' : ''}`} rows={3} maxLength={2000} value={values.description}
-            onChange={e => set('description', e.target.value)} {...fieldProps('description')} />
+            onChange={e => onChange('description', e.target.value)} {...fieldProps('description')} />
           {fieldError('description')}
         </div>
       )}
@@ -332,7 +289,7 @@ const ActionForm: React.FC<ActionFormProps> = ({ ticketId, panel, draft, staffMe
             {kind === 'cancel' ? 'Reason for cancelling' : 'Result'}{resultRequired ? ' (required)' : ''}
           </label>
           <textarea className={`form-control ${errors.result ? 'is-invalid' : ''}`} rows={2} maxLength={1000} value={values.result}
-            onChange={e => set('result', e.target.value)} {...fieldProps('result')} />
+            onChange={e => onChange('result', e.target.value)} {...fieldProps('result')} />
           {fieldError('result')}
         </div>
       )}
@@ -341,14 +298,14 @@ const ActionForm: React.FC<ActionFormProps> = ({ ticketId, panel, draft, staffMe
         <div className="mt-3">
           <div className="form-check">
             <input type="checkbox" className="form-check-input" id={`${idPrefix}-followUpRequired`} checked={values.followUpRequired}
-              disabled={busy} onChange={e => set('followUpRequired', e.target.checked)} />
+              disabled={busy} onChange={e => onChange('followUpRequired', e.target.checked)} />
             <label className="form-check-label small fw-semibold" htmlFor={`${idPrefix}-followUpRequired`}>Follow-up required?</label>
           </div>
           {values.followUpRequired && (
             <div className="mt-2">
               <label htmlFor={`${idPrefix}-followUpNote`} className="form-label fw-semibold small">Follow-up note (required)</label>
               <textarea className={`form-control ${errors.followUpNote ? 'is-invalid' : ''}`} rows={2} maxLength={1000} value={values.followUpNote}
-                onChange={e => set('followUpNote', e.target.value)} {...fieldProps('followUpNote')} />
+                onChange={e => onChange('followUpNote', e.target.value)} {...fieldProps('followUpNote')} />
               {fieldError('followUpNote')}
             </div>
           )}
@@ -359,7 +316,7 @@ const ActionForm: React.FC<ActionFormProps> = ({ ticketId, panel, draft, staffMe
         <div className="mt-3">
           <label htmlFor={`${idPrefix}-attachmentNotes`} className="form-label fw-semibold small">Attachment notes</label>
           <textarea className={`form-control ${errors.attachmentNotes ? 'is-invalid' : ''}`} rows={2} maxLength={500} value={values.attachmentNotes}
-            onChange={e => set('attachmentNotes', e.target.value)} {...fieldProps('attachmentNotes')} />
+            onChange={e => onChange('attachmentNotes', e.target.value)} {...fieldProps('attachmentNotes')} />
           <div className="form-text">Which file or image should the reader look for?</div>
           {fieldError('attachmentNotes')}
         </div>
@@ -369,7 +326,7 @@ const ActionForm: React.FC<ActionFormProps> = ({ ticketId, panel, draft, staffMe
         <button type="submit" className="btn btn-sm text-white" style={{ backgroundColor: '#006B3C' }} disabled={busy}>
           {busy ? 'Saving...' : saveLabels[kind]}
         </button>
-        <button type="button" className="btn btn-sm btn-outline-secondary" onClick={onCancel} disabled={busy}>Close</button>
+        <button type="button" className="btn btn-sm btn-outline-secondary" onClick={onClose} disabled={busy}>Close</button>
       </div>
     </form>
   );
@@ -448,12 +405,17 @@ export const ActionsTaken: React.FC<ActionsTakenProps> = ({ ticketId, ticketStat
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [notice, setNotice] = useState('');
-  const [panel, setPanel] = useState<Panel | null>(null);
-  const draftRef = useRef<Draft | null>(null);
+  const [editor, setEditor] = useState<Editor | null>(null);
+  // Always the latest editor, for async handlers that finish after a render
+  const editorRef = useRef<Editor | null>(null);
+  editorRef.current = editor;
+  // Guards a save in flight; it lives here so it survives the form view being unmounted (FR-14)
+  const lock = useRef(false);
 
   const terminal = ticketStatus === 'Closed' || ticketStatus === 'Cancelled';
   const resolvedTicket = ticketStatus === 'Resolved';
   const editable = canEdit && !terminal;
+  const busy = Boolean(editor?.busy);
 
   const load = useCallback(async (targetPage: number) => {
     setLoading(true);
@@ -472,57 +434,112 @@ export const ActionsTaken: React.FC<ActionsTakenProps> = ({ ticketId, ticketStat
 
   // Closing the editor, opening another one, or leaving the page must not silently throw away typed text (ui-spec 4.3)
   useEffect(() => {
-    if (!panel) return;
-    const warn = (event: BeforeUnloadEvent) => { if (isDirty(draftRef.current)) event.preventDefault(); };
+    if (!editor) return;
+    const warn = (event: BeforeUnloadEvent) => { if (isDirty(editorRef.current)) event.preventDefault(); };
     window.addEventListener('beforeunload', warn);
     return () => window.removeEventListener('beforeunload', warn);
-  }, [panel]);
+  }, [editor === null]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /** Changes the editor identified by `key` only: a late answer never touches a newer editor */
+  const patchEditor = (key: string, patch: Partial<Editor>) =>
+    setEditor(prev => (prev && prev.requestId === key ? { ...prev, ...patch } : prev));
 
   /** Replaces the open editor (or closes it) after the user agreed to discard unsaved text */
   const switchPanel = (next: Panel | null) => {
-    if (isDirty(draftRef.current) && !window.confirm('Discard your unsaved changes to this action?')) return;
+    if (editorRef.current?.busy) return; // a save is in flight
+    if (isDirty(editorRef.current) && !window.confirm('Discard your unsaved changes to this action?')) return;
     setNotice('');
-    draftRef.current = next ? newDraft(next, resolvedTicket) : null;
-    setPanel(next);
+    setEditor(next ? newEditor(next, resolvedTicket) : null);
   };
 
-  const saved = () => {
-    draftRef.current = null;
-    setPanel(null);
-    setNotice('Action saved.');
-    load(page);
-    onChanged?.();
+  const changeField = <K extends keyof FormValues>(key: K, value: FormValues[K]) =>
+    setEditor(prev => (prev ? { ...prev, values: { ...prev.values, [key]: value } } : prev));
+
+  const submit = async () => {
+    const current = editorRef.current;
+    if (!current || lock.current) return; // double click / repeated submit (FR-14)
+    const key = current.requestId;
+    const found = validateEditor(current);
+    if (Object.keys(found).length > 0) {
+      patchEditor(key, { stale: false, formError: 'Please correct the highlighted fields.', errors: found });
+      return;
+    }
+    lock.current = true;
+    patchEditor(key, { busy: true, stale: false, formError: '', errors: {} });
+    try {
+      if (current.panel.kind === 'create') await createActionTaken(ticketId, buildInput(current));
+      else await updateActionTaken(ticketId, current.panel.action.id, buildInput(current));
+      if (editorRef.current?.requestId === key) {
+        setEditor(null);
+        setNotice('Action saved.');
+      }
+      load(page);
+      onChanged?.();
+    } catch (err) {
+      const apiError = err instanceof ActionApiError ? err : null;
+      if (apiError?.code === 'STALE_UPDATE') {
+        patchEditor(key, { stale: true, formError: 'This action was changed by someone else while you were editing.' });
+      } else {
+        // The entered text stays in the form after any recoverable failure (FR-16)
+        patchEditor(key, { formError: apiError?.message || 'The action could not be saved. Please try again.', errors: apiError?.details ?? {} });
+      }
+    } finally {
+      lock.current = false;
+      patchEditor(key, { busy: false });
+    }
   };
 
   /**
-   * Loads the saved version of an action that changed under the editor and puts it into the panel. The action can
-   * have moved to another page (its time changed), so the other pages are searched too. The draft is never touched.
+   * Loads the saved version of the edited action into the editor after a conflict. The action can have moved to
+   * another page (its time changed), so the other pages are searched too. The typed text is never touched.
    */
-  const reloadAction = async (id: number): Promise<ReloadOutcome> => {
+  const reload = async () => {
+    const current = editorRef.current;
+    if (!current || current.panel.kind === 'create') return;
+    const key = current.requestId;
+    const id = current.panel.action.id;
+    let outcome: ReloadOutcome = 'ok';
+    let latest: ActionTakenItem | undefined;
     try {
-      const current = await fetchActionsTaken(ticketId, page, PAGE_SIZE);
-      setData({ actions: current.actions, total: current.total });
-      let found: ActionTakenItem | undefined = current.actions.find(a => a.id === id);
-      for (let p = 1; !found && p <= Math.ceil(current.total / PAGE_SIZE); p++) {
+      const first = await fetchActionsTaken(ticketId, page, PAGE_SIZE);
+      setData({ actions: first.actions, total: first.total });
+      latest = first.actions.find(a => a.id === id);
+      for (let p = 1; !latest && p <= Math.ceil(first.total / PAGE_SIZE); p++) {
         if (p === page) continue;
-        found = (await fetchActionsTaken(ticketId, p, PAGE_SIZE)).actions.find(a => a.id === id);
+        latest = (await fetchActionsTaken(ticketId, p, PAGE_SIZE)).actions.find(a => a.id === id);
       }
-      if (!found) return 'missing';
-      const latest = found;
-      setPanel(prev => (prev && prev.kind !== 'create' && prev.action.id === id ? { kind: prev.kind, action: latest } : prev));
-      return 'ok';
+      if (!latest) outcome = 'missing';
     } catch {
-      return 'failed';
+      outcome = 'failed';
     }
+    if (outcome === 'ok' && latest) {
+      const fresh = latest;
+      setEditor(prev => (prev && prev.requestId === key && prev.panel.kind !== 'create'
+        ? { ...prev, panel: { kind: prev.panel.kind, action: fresh }, stale: false, errors: {}, formError: 'Latest version loaded. Your text was kept: review it and save again.' }
+        : prev));
+      return;
+    }
+    patchEditor(key, {
+      stale: true,
+      formError: outcome === 'missing'
+        ? 'This action could not be found any more. Your text is kept here: copy it before you close the editor.'
+        : 'The latest version could not be loaded. Your text is kept: try Reload latest again.',
+    });
   };
 
   const total = data?.total ?? 0;
   const first = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
   const last = Math.min(page * PAGE_SIZE, total);
   const open = (kind: PanelKind, action: ActionTakenItem) => switchPanel({ kind, action });
-  const panelOn = (id: number) => panel && panel.kind !== 'create' && panel.action.id === id ? panel : null;
+  const editorOn = (id: number) => editor && editor.panel.kind !== 'create' && editor.panel.action.id === id ? editor : null;
   // The edited action is not on the page being shown (it moved, or the user changed page): the editor stays on screen
-  const detached = panel && panel.kind !== 'create' && data && !data.actions.some(a => a.id === panel.action.id) ? panel : null;
+  const detached = editor && editor.panel.kind !== 'create' && data
+    && !data.actions.some(a => a.id === (editor.panel as { action: ActionTakenItem }).action.id) ? editor : null;
+
+  const renderForm = (shown: Editor) => (
+    <ActionForm editor={shown} staffMembers={staffMembers} resolvedTicket={resolvedTicket}
+      onChange={changeField} onSubmit={submit} onClose={() => switchPanel(null)} onReload={reload} />
+  );
 
   return (
     <section className="card shadow-sm border-0 mb-4" aria-labelledby={`actions-title-${ticketId}`}>
@@ -530,7 +547,7 @@ export const ActionsTaken: React.FC<ActionsTakenProps> = ({ ticketId, ticketStat
         <h5 id={`actions-title-${ticketId}`} className="mb-0 fw-bold text-dark">Actions Taken ({total})</h5>
         {editable && (
           <button type="button" className="btn btn-sm text-white" style={{ backgroundColor: '#006B3C' }}
-            disabled={panel?.kind === 'create'} onClick={() => switchPanel({ kind: 'create' })}>
+            disabled={editor?.panel.kind === 'create' || busy} onClick={() => switchPanel({ kind: 'create' })}>
             + Add Action
           </button>
         )}
@@ -541,17 +558,13 @@ export const ActionsTaken: React.FC<ActionsTakenProps> = ({ ticketId, ticketStat
           <p className="small text-muted">This Ticket is {ticketStatus.toLowerCase()}, so Actions Taken can no longer be added or changed.</p>
         )}
 
-        {panel?.kind === 'create' && editable && draftRef.current && (
-          <ActionForm ticketId={ticketId} panel={panel} draft={draftRef.current} staffMembers={staffMembers} resolvedTicket={resolvedTicket}
-            onSaved={saved} onCancel={() => switchPanel(null)} onReloadAction={reloadAction} />
-        )}
-        {detached && editable && draftRef.current && (
+        {editor?.panel.kind === 'create' && editable && renderForm(editor)}
+        {detached && editable && (
           <div>
             <div className="alert alert-warning py-2 small" role="status">
-              Action {detached.action.id} is not on this page of the list (it moved, or you changed page). Your editor and text are kept.
+              Action {(detached.panel as { action: ActionTakenItem }).action.id} is not on this page of the list (it moved, or you changed page). Your editor and text are kept.
             </div>
-            <ActionForm key={`${detached.kind}-${detached.action.id}`} ticketId={ticketId} panel={detached} draft={draftRef.current}
-              staffMembers={staffMembers} resolvedTicket={resolvedTicket} onSaved={saved} onCancel={() => switchPanel(null)} onReloadAction={reloadAction} />
+            {renderForm(detached)}
           </div>
         )}
 
@@ -569,7 +582,7 @@ export const ActionsTaken: React.FC<ActionsTakenProps> = ({ ticketId, ticketStat
         )}
 
         {data && data.actions.map(a => {
-          const active = panelOn(a.id);
+          const active = editorOn(a.id);
           const isOpenAction = a.status === 'Planned' || a.status === 'In Progress';
           return (
             <article key={a.id} className="border rounded p-3 mb-3" aria-label={`Action ${a.id}`}>
@@ -601,19 +614,14 @@ export const ActionsTaken: React.FC<ActionsTakenProps> = ({ ticketId, ticketStat
 
               {editable && !active && (
                 <div className="d-flex flex-wrap gap-2 mt-2">
-                  <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => open('edit', a)}>Edit</button>
-                  {a.status === 'Planned' && <button type="button" className="btn btn-sm btn-outline-primary" onClick={() => open('start', a)}>Start</button>}
-                  {isOpenAction && <button type="button" className="btn btn-sm btn-outline-success" onClick={() => open('complete', a)}>Complete</button>}
-                  {isOpenAction && <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => open('cancel', a)}>Cancel</button>}
-                  <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => open('reassign', a)}>Reassign</button>
+                  <button type="button" className="btn btn-sm btn-outline-secondary" disabled={busy} onClick={() => open('edit', a)}>Edit</button>
+                  {a.status === 'Planned' && <button type="button" className="btn btn-sm btn-outline-primary" disabled={busy} onClick={() => open('start', a)}>Start</button>}
+                  {isOpenAction && <button type="button" className="btn btn-sm btn-outline-success" disabled={busy} onClick={() => open('complete', a)}>Complete</button>}
+                  {isOpenAction && <button type="button" className="btn btn-sm btn-outline-danger" disabled={busy} onClick={() => open('cancel', a)}>Cancel</button>}
+                  <button type="button" className="btn btn-sm btn-outline-secondary" disabled={busy} onClick={() => open('reassign', a)}>Reassign</button>
                 </div>
               )}
-              {editable && active && draftRef.current && (
-                <div className="mt-3">
-                  <ActionForm key={`${active.kind}-${a.id}`} ticketId={ticketId} panel={active} draft={draftRef.current} staffMembers={staffMembers}
-                    resolvedTicket={resolvedTicket} onSaved={saved} onCancel={() => switchPanel(null)} onReloadAction={reloadAction} />
-                </div>
-              )}
+              {editable && active && <div className="mt-3">{renderForm(active)}</div>}
               {canEdit && <History ticketId={ticketId} actionId={a.id} />}
             </article>
           );

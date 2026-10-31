@@ -216,6 +216,8 @@ Run commands: `npm --prefix server test`, `npm --prefix client test`, `npm run t
 | UI-33 | UI | AC-06 | Close, Edit/Reassign of another Action, or Add Action while the editor holds unsaved text | A confirm prompt appears; cancelling keeps the editor and text, confirming closes or switches; no prompt when nothing was changed | `client/src/tests/lab-04/ActionsTaken.test.tsx` | Planned |
 | UI-34 | UI | AC-06 | Conflict (`STALE_UPDATE`) on an Action that then moved to another page (21 Actions), and a failed reload | Reload latest keeps the editor and text, shows that the Action is on another page, and the next save uses the latest token; a failed reload keeps the text and the Reload button | `client/src/tests/lab-04/ActionsTaken.test.tsx` | Planned |
 | UI-35 | UI | AC-06, AC-38 | Change page of the Actions list while an editor is open | The editor and typed text stay; returning to the page shows the editor inline again | `client/src/tests/lab-04/ActionsTaken.test.tsx` | Planned |
+| UI-36 | UI | AC-06 | Conflict, Reload latest, current page answers without the Action while another page is still pending, then that request fails | The editor in the detached block keeps the conflict banner, the Reload latest button, a failure message and the typed text (asynchronous, deferred responses) | `client/src/tests/lab-04/ActionsTaken.test.tsx` | Planned |
+| UI-37 | UI | AC-06, FR-14 | Save still pending while the page changes so the editor moves to the detached block | Save stays disabled ("Saving..."), a second submit sends nothing, and the original request finishes with "Action saved." | `client/src/tests/lab-04/ActionsTaken.test.tsx` | Planned |
 | E2E-13 | E2E | AC-31, AC-32, AC-39 | Two staff members on one Ticket: plan an action for the other, start, complete, and cancel different actions | Different assignees and statuses all visible on one Ticket | `e2e/lab-04/actions-taken-flow.spec.ts` | Planned |
 | E2E-14 | E2E | AC-34, AC-37 | Edit an action twice as two users, then open History as staff and as the Requester | Staff see ordered Before/After revisions; Requester sees no history | `e2e/lab-04/actions-taken-flow.spec.ts` | Planned |
 | E2E-15 | E2E | AC-31 | Try to assign an action to the inactive staff member (via the UI and a direct API call) | Not selectable in the UI; API returns `400`; message shown | `e2e/lab-04/actions-taken-flow.spec.ts` | Planned |
@@ -229,7 +231,7 @@ Run commands: `npm --prefix server test`, `npm --prefix client test`, `npm run t
 | AC-03 | AUTHZ-01, AUTHZ-02, AUTHZ-03, AUTHZ-04, UI-01, UI-03, E2E-01 |
 | AC-04 | UNIT-01, UNIT-02, UNIT-03, API-06, API-07, API-08, API-27, UI-04, UI-05, E2E-03 |
 | AC-05 | API-05, E2E-04 |
-| AC-06 | API-09, API-10, API-11, API-12, UI-33, UI-34, UI-35, E2E-02 |
+| AC-06 | API-09, API-10, API-11, API-12, UI-33, UI-34, UI-35, UI-36, UI-37, E2E-02 |
 | AC-07 | API-13, UI-09 |
 | AC-08 | API-14, API-15, API-26 |
 | AC-09 | API-01, API-02, UI-01 |
@@ -270,7 +272,7 @@ Every AC-01..AC-40 maps to at least one planned test. AC-28 is also verified by 
 ## 4. Issue Ownership
 | Issue | Tests it must turn green |
 | :--- | :--- |
-| #31 Actions Taken | UNIT-01..03, UNIT-07, API-01..22, API-24..27, AUTHZ-01..05, HIST-01..03, HIST-06..10, MIG-01..04, SEED-01..02, UI-01..09, UI-26..29, UI-33..35, UI-31, E2E-01..05, E2E-13..15 |
+| #31 Actions Taken | UNIT-01..03, UNIT-07, API-01..22, API-24..27, AUTHZ-01..05, HIST-01..03, HIST-06..10, MIG-01..04, SEED-01..02, UI-01..09, UI-26..29, UI-33..37, UI-31, E2E-01..05, E2E-13..15 |
 | #32 Ticket workflow | UNIT-04, API-23, WF-01..14, WF-16, HIST-04..05, UI-10..14, UI-30, UI-32, E2E-06..08, E2E-16 |
 | #33 Role dashboards | UNIT-05..06, WF-15, DASH-01..10, SDASH-01..08, UI-15..25, E2E-09..12 |
 | #34 Final hardening | ERR-01, PERF-01..02, STY-01..03, RSP-01..03, A11Y-01..02, REG-01..03 |

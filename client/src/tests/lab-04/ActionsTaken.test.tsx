@@ -488,5 +488,61 @@ describe('Lab 4: ActionsTaken component (Issue #31)', () => {
       expect(screen.getByLabelText('Action description')).toHaveValue('Typed on page 1');
       expect(screen.queryByText(/is not on this page of the list/)).not.toBeInTheDocument();
     });
+
+    const deferred = <T,>() => {
+      let resolve!: (value: T) => void;
+      let reject!: (reason: unknown) => void;
+      const promise = new Promise<T>((res, rej) => { resolve = res; reject = rej; });
+      return { promise, resolve, reject };
+    };
+
+    it("UI-36: the conflict banner and Reload latest survive the editor moving to the detached block while another page is still loading", async () => {
+      const latest = makeAction({ id: 21, description: "Action 21", updatedAt: "2026-10-29T05:00:00.000Z" });
+      const rows = Array.from({ length: 20 }, (_, i) => makeAction({ id: 20 - i, description: "Action " + (20 - i) }));
+      let moved = false;
+      const secondPage = deferred<api.ActionsPage>();
+      vi.spyOn(api, "fetchActionsTaken").mockImplementation(async (_t, p) => {
+        if (!moved) return { actions: p === 1 ? [makeAction({ id: 21, description: "Action 21" }), ...rows] : [makeAction({ id: 0 })], total: 21, page: p, limit: 20 };
+        return p === 1 ? { actions: rows, total: 21, page: 1, limit: 20 } : secondPage.promise;
+      });
+      vi.spyOn(api, "updateActionTaken").mockRejectedValue(new api.ActionApiError(409, "changed", "STALE_UPDATE", {}, latest.updatedAt));
+      renderStaff();
+      await openEdit();
+      fireEvent.change(screen.getByLabelText("Action description"), { target: { value: "Keep this text" } });
+      fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+      await screen.findByRole("button", { name: "Reload latest" });
+
+      moved = true;
+      fireEvent.click(screen.getByRole("button", { name: "Reload latest" }));
+      // page 1 answered without the action, so the editor is now in the detached block; page 2 is still pending
+      expect(await screen.findByText(/is not on this page of the list/)).toBeInTheDocument();
+      secondPage.reject(new Error("network down"));
+
+      expect(await screen.findByText(/latest version could not be loaded/i)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Reload latest" })).toBeInTheDocument();
+      expect(screen.getByLabelText("Action description")).toHaveValue("Keep this text");
+    });
+
+    it("UI-37: a save in flight stays locked when the editor moves to the detached block, and finishes normally", async () => {
+      pagedServer({ moved: false, latest: makeAction({ id: 21 }) });
+      const saving = deferred<api.ActionTakenItem>();
+      const update = vi.spyOn(api, "updateActionTaken").mockReturnValue(saving.promise);
+      renderStaff();
+      await openEdit();
+      fireEvent.change(screen.getByLabelText("Action description"), { target: { value: "Saving this" } });
+      fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+      await waitFor(() => expect(update).toHaveBeenCalledTimes(1));
+
+      fireEvent.click(screen.getByRole("button", { name: "Next" }));
+      await screen.findByText(/is not on this page of the list/);
+      expect(screen.getByRole("button", { name: "Saving..." })).toBeDisabled();
+      fireEvent.submit(screen.getByRole("form"));
+      expect(update).toHaveBeenCalledTimes(1);
+
+      saving.resolve(makeAction({ id: 21, description: "Saving this", updatedAt: "2026-10-29T06:00:00.000Z" }));
+      expect(await screen.findByText("Action saved.")).toBeInTheDocument();
+      expect(screen.queryByRole("form")).not.toBeInTheDocument();
+      expect(update).toHaveBeenCalledTimes(1);
+    });
   });
 });
