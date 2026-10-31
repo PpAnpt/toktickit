@@ -116,6 +116,7 @@ Run commands: `npm --prefix server test`, `npm --prefix client test`, `npm run t
 | MIG-01 | Migration | AC-23 | Apply Labs 1 to 3 migrations, insert Lab 3 data, apply the Lab 4 migration | All Users, Tickets, Attachments, Comments, Notes preserved; the new tables, enums, and immutability trigger exist; `prisma migrate diff` is empty | `server/tests/lab-04/migration.test.ts` | Planned |
 | MIG-02 | Migration | AC-23 | Rehearse the documented recovery: on a scratch database apply Labs 1 to 3 migrations and insert Lab 3 data, take `pg_dump -Fc`, apply the Lab 4 migration, then `pg_restore --exit-on-error` the dump into a separate clean recovery database | Recovery database has the Lab 3 data (row counts and ownership equal the pre-upgrade snapshot), none of the Lab 4 tables, enums, trigger, or `resolvedAt`, a `_prisma_migrations` history equal to the Lab 3 baseline, and `prisma migrate deploy` applies the Lab 4 migration to it cleanly again | `server/tests/lab-04/migration.test.ts` | Planned |
 | MIG-03 | Migration | AC-23 | Backfill of `resolvedAt`; legacy Tickets list zero actions | `resolvedAt = updatedAt` for Resolved/Closed; others `NULL` | `server/tests/lab-04/migration.test.ts` | Planned |
+| MIG-04 | Migration | AC-35 | On the test database, delete a Ticket that has an action, an Action Taken that has revisions, and a User referenced by an action; then run the documented `TRUNCATE` test cleanup; then run the same cleanup against a database whose name does not end `_test` | The three deletes fail with a foreign-key error and nothing changes (`onDelete: Restrict`, BR-40); the `TRUNCATE` cleanup empties the three Lab 4 tables on the `_test` database so fixtures can then be removed; the cleanup helper refuses to run on any other database | `server/tests/lab-04/migration.test.ts` | Planned |
 | SEED-01 | Seed | AC-24 | Run the seed twice | No duplicate users, Tickets, or actions | `server/tests/lab-04/seed.test.ts` | Planned |
 | SEED-02 | Seed | AC-24, AC-39 | Seed coverage | All Ticket statuses and priorities, owned and unowned Tickets, Tickets with 0/1/many actions, one Ticket whose actions have different assignees and all four action statuses, an action assigned to the inactive staff member, edited actions with revisions, Ticket events, non-zero and zero dashboard metrics | `server/tests/lab-04/seed.test.ts` | Planned |
 
@@ -248,7 +249,7 @@ Run commands: `npm --prefix server test`, `npm --prefix client test`, `npm run t
 | AC-32 | API-20, API-21, API-22, UI-27, E2E-13 |
 | AC-33 | API-23, UI-30, E2E-16 |
 | AC-34 | HIST-01, HIST-02, HIST-03, HIST-09, E2E-14 |
-| AC-35 | HIST-06, HIST-07 |
+| AC-35 | HIST-06, HIST-07, MIG-04 |
 | AC-36 | HIST-04, HIST-05 |
 | AC-37 | HIST-08, UI-28, E2E-14 |
 | AC-38 | API-24, HIST-10, UI-29 |
@@ -259,7 +260,7 @@ Every AC-01..AC-39 maps to at least one planned test. AC-28 is also verified by 
 ## 4. Issue Ownership
 | Issue | Tests it must turn green |
 | :--- | :--- |
-| #31 Actions Taken | UNIT-01..03, UNIT-07, API-01..24, AUTHZ-01..05, HIST-01..03, HIST-06..10, MIG-01..03, SEED-01..02, UI-01..09, UI-26..29, E2E-01..05, E2E-13..15 |
+| #31 Actions Taken | UNIT-01..03, UNIT-07, API-01..24, AUTHZ-01..05, HIST-01..03, HIST-06..10, MIG-01..04, SEED-01..02, UI-01..09, UI-26..29, E2E-01..05, E2E-13..15 |
 | #32 Ticket workflow | UNIT-04, WF-01..14, HIST-04..05, UI-10..14, UI-30, E2E-06..08, E2E-16 |
 | #33 Role dashboards | UNIT-05..06, WF-15, DASH-01..10, SDASH-01..08, UI-15..25, E2E-09..12 |
 | #34 Final hardening | ERR-01, PERF-01..02, STY-01..03, RSP-01..03, A11Y-01..02, REG-01..03 |

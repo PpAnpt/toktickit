@@ -95,6 +95,7 @@ Lab 3 rules (authentication, ownership, password, non-disclosure 404, queue vali
 - **BR-37** (immutability): The database rejects `UPDATE` and `DELETE` on the revision and event tables (trigger created by the migration), so history cannot be rewritten even by a faulty query. Tests prove it with direct SQL.
 - **BR-38** (pagination): List endpoints are paginated with `page` and `limit` and return `total`. Actions list: default 20, maximum 50. History lists: default 50, maximum 100. Values outside the range are clamped like the Lab 3 queue.
 - **BR-39** (recent filters): The Requester cards "Recently Updated" and "Recently Resolved" link to My Tickets with `recent=updated` and `recent=resolved`. These filters use the same shared predicate and window function as the metrics (BR-23), so the list contains exactly the Tickets the card counted for the same snapshot, including a Ticket that was resolved and then closed inside the window, and excluding a Ticket resolved before the window.
+- **BR-40** (restrict, not cascade; test cleanup): Foreign keys from `ActionTaken`, `ActionTakenRevision`, and `TicketEvent` use `onDelete: Restrict`, so deleting a Ticket, Action Taken, or User that is referenced by them fails in the database instead of cascading into the immutable history (BR-37). Automated tests, which must clean up their fixtures, run only against the dedicated test database (name ending `_test`, checked before cleanup) and remove Lab 4 rows with `TRUNCATE "ActionTakenRevision", "TicketEvent", "ActionTaken"` (the row-level trigger of BR-37 does not fire for `TRUNCATE`) before deleting Tickets and Users with the Lab 3 helper. This cleanup is a test-only helper and is never exposed by the API.
 
 ### Role Authorization Matrix (new and changed operations)
 | Operation | Requester | IT Staff | Administrator | Notes |
@@ -138,7 +139,7 @@ Full detail is in `docs/lab-04/ui-spec.md`.
 | Field | Type | Notes |
 | :--- | :--- | :--- |
 | `id` | Int PK | autoincrement |
-| `ticketId` | Int FK -> `Ticket(id)` | `onDelete: Cascade` |
+| `ticketId` | Int FK -> `Ticket(id)` | `onDelete: Restrict` (BR-40) |
 | `performedById` | Int FK -> `User(id)` | set from token, never changed |
 | `assigneeId` | Int FK -> `User(id)` | active staff/admin when set (BR-29); defaults to creator |
 | `status` | Enum `ActionStatus` | `Planned`, `In Progress` (`InProgress`), `Completed`, `Cancelled` (BR-30) |
@@ -161,6 +162,8 @@ Indexes: `(ticketId, actionAt)` for the list, `performedById` and `(assigneeId, 
 | `TicketEvent` | `id`, `ticketId` FK, `type` Enum (`STATUS_CHANGED`, `OWNER_CHANGED`, `PRIORITY_CHANGED`), `fromValue` String?, `toValue` String?, `actorId` FK -> `User`, `createdAt` | index `(ticketId, createdAt, id)` |
 
 A migration trigger on both tables raises an error for any `UPDATE` or `DELETE` (BR-37). The current-state `ActionTaken` row is the editable projection; these tables are the evidence.
+
+All foreign keys of the three new models (`ticketId`, `actionId`, `performedById`, `assigneeId`, `updatedById`, `actorId`) use `onDelete: Restrict` (BR-40). A cascading delete would be a `DELETE` on a history row and would either be rejected by the immutability trigger or erase the evidence, so the database refuses to delete a Ticket, Action Taken, or User that has actions or history. Because the application has no delete endpoint for these records (BR-08, BR-33), nothing in normal operation needs to delete them.
 
 ### 7.2 Changed model `Ticket`
 - New nullable `resolvedAt DateTime?`; relation `actionsTaken ActionTaken[]`.
@@ -248,7 +251,7 @@ Full shapes and status codes are in `docs/lab-04/api-spec.md`. Status codes: 200
 - **AC-32**: Given actions in each status, when staff move them, then exactly the transitions of BR-30 succeed (start, complete, cancel), `Completed` and `Cancelled` cannot change status, and completing or cancelling without a Result returns 400.
 - **AC-33**: Given a Ticket with `Planned` or `In Progress` actions, when the Ticket is moved to `Cancelled`, then those actions become `Cancelled` in the same transaction with an `AUTO_CANCELLED` revision, and completed actions are untouched.
 - **AC-34**: Given an action that is created, edited by staff A, then edited by staff B, then completed, then each step appends one revision with number, type, actor, time, changed fields, and before/after snapshots, so A's and B's original values can be reconstructed.
-- **AC-35**: Given the history tables, then no API can update or delete a revision or Ticket event (404/405), and a direct SQL `UPDATE` or `DELETE` is rejected by the database.
+- **AC-35**: Given the history tables, then no API can update or delete a revision or Ticket event (404/405), a direct SQL `UPDATE` or `DELETE` is rejected by the database, and deleting a Ticket, Action Taken, or User that has actions or history is also rejected (`onDelete: Restrict`, BR-40).
 - **AC-36**: Given status, owner, and priority changes (including reopen), then each appends a Ticket event with from, to, actor, and time, listed in stable ascending order.
 - **AC-37**: Given history endpoints, then IT Staff and Administrators receive 200 and a Requester receives 403 with no data; the Staff Ticket Detail shows the history and the Requester view does not.
 - **AC-38**: Given more actions or history rows than the page size, then the endpoints return the requested page with `total`, `page`, and `limit`, clamp out-of-range values, and keep the order stable across pages.
