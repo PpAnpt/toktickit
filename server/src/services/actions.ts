@@ -1,6 +1,11 @@
 import crypto from 'crypto';
 import { ActionStatus, Prisma, TicketStatus } from '../../generated/prisma/client';
 import { getPrisma } from '../prisma';
+import {
+    ACTION_TRANSITIONS, ASSIGNABLE_ROLES, UUID_PATTERN, checkActionAt, checkMerged, readCommon, readDate, statusLabel,
+} from './action-rules';
+
+export { ACTION_TRANSITIONS, LIMITS, statusLabel } from './action-rules';
 
 /**
  * Actions Taken service (Lab 4, docs/lab-04/specification.md BR-01..BR-13, BR-29..BR-34, BR-40/41).
@@ -23,32 +28,6 @@ export class ApiError extends Error {
         super(message);
     }
 }
-
-export const LIMITS = { description: 2000, result: 1000, followUpNote: 1000, attachmentNotes: 500 } as const;
-const FUTURE_TOLERANCE_MS = 5 * 60 * 1000;
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-export const statusLabel: Record<ActionStatus, string> = {
-    Planned: 'Planned',
-    InProgress: 'In Progress',
-    Completed: 'Completed',
-    Cancelled: 'Cancelled',
-};
-const statusByLabel: Record<string, ActionStatus> = {
-    'Planned': 'Planned',
-    'In Progress': 'InProgress',
-    'InProgress': 'InProgress',
-    'Completed': 'Completed',
-    'Cancelled': 'Cancelled',
-};
-// BR-30: Completed and Cancelled are terminal for status
-export const ACTION_TRANSITIONS: Record<ActionStatus, ActionStatus[]> = {
-    Planned: ['InProgress', 'Completed', 'Cancelled'],
-    InProgress: ['Completed', 'Cancelled'],
-    Completed: [],
-    Cancelled: [],
-};
-const ASSIGNABLE_ROLES = ['IT_STAFF', 'ADMINISTRATOR'];
 
 /**
  * Next concurrency token: strictly greater than the previous one, so two writes in the same
@@ -129,93 +108,6 @@ async function assertEligibleAssignee(tx: Tx, assigneeId: number, details: Recor
     const user = await tx.user.findUnique({ where: { id: assigneeId } });
     if (!user || !user.isActive || !ASSIGNABLE_ROLES.includes(user.role)) {
         details.assigneeId = 'Choose an active IT Staff or Administrator.';
-    }
-}
-
-// ─── Input parsing ────────────────────────────────────────
-
-function readText(body: Record<string, unknown>, key: keyof typeof LIMITS, details: Record<string, string>): string | null | undefined {
-    const raw = body[key];
-    if (raw === undefined) return undefined;
-    if (raw === null) return null;
-    if (typeof raw !== 'string') {
-        details[key] = 'Must be text.';
-        return undefined;
-    }
-    const text = raw.trim();
-    if (text.length > LIMITS[key]) {
-        details[key] = `Must be at most ${LIMITS[key]} characters.`;
-        return undefined;
-    }
-    return text === '' ? null : text;
-}
-
-function readDate(body: Record<string, unknown>, key: string, details: Record<string, string>): Date | undefined {
-    const raw = body[key];
-    if (raw === undefined) return undefined;
-    const date = typeof raw === 'string' ? new Date(raw) : null;
-    if (!date || Number.isNaN(date.getTime())) {
-        details[key] = 'Must be a valid date and time.';
-        return undefined;
-    }
-    return date;
-}
-
-function readStatus(body: Record<string, unknown>, details: Record<string, string>): ActionStatus | undefined {
-    if (body.status === undefined) return undefined;
-    const status = typeof body.status === 'string' ? statusByLabel[body.status] : undefined;
-    if (!status) {
-        details.status = 'Choose a valid status.';
-        return undefined;
-    }
-    return status;
-}
-
-function readCommon(body: Record<string, unknown>, details: Record<string, string>) {
-    const description = readText(body, 'description', details);
-    const result = readText(body, 'result', details);
-    const followUpNote = readText(body, 'followUpNote', details);
-    const attachmentNotes = readText(body, 'attachmentNotes', details);
-    const actionAt = readDate(body, 'actionAt', details);
-    const status = readStatus(body, details);
-
-    let assigneeId: number | undefined;
-    if (body.assigneeId !== undefined) {
-        if (typeof body.assigneeId === 'number' && Number.isInteger(body.assigneeId) && body.assigneeId > 0) {
-            assigneeId = body.assigneeId;
-        } else {
-            details.assigneeId = 'Choose an active IT Staff or Administrator.';
-        }
-    }
-
-    let followUpRequired: boolean | undefined;
-    if (body.followUpRequired !== undefined) {
-        if (typeof body.followUpRequired === 'boolean') {
-            followUpRequired = body.followUpRequired;
-        } else {
-            details.followUpRequired = 'Must be true or false.';
-        }
-    }
-    return { description, result, followUpNote, attachmentNotes, actionAt, status, assigneeId, followUpRequired };
-}
-
-/** Rules shared by create and edit, applied to the final (merged) values. */
-function checkMerged(
-    m: { description: string | null | undefined; result: string | null | undefined; status: ActionStatus; followUpRequired: boolean; followUpNote: string | null | undefined },
-    details: Record<string, string>,
-) {
-    if (!m.description) details.description = 'Describe what was done.';
-    if ((m.status === 'Completed' || m.status === 'Cancelled') && !m.result) {
-        details.result = m.status === 'Cancelled' ? 'Enter the reason for cancelling.' : 'Enter the result of this action.';
-    }
-    if (m.followUpRequired && !m.followUpNote) details.followUpNote = 'Follow-up note is required when follow-up is needed.';
-}
-
-function checkActionAt(actionAt: Date, status: ActionStatus, ticketCreatedAt: Date, details: Record<string, string>) {
-    if (actionAt.getTime() < ticketCreatedAt.getTime()) {
-        details.actionAt = 'Action time cannot be before the Ticket was created.';
-    } else if (status !== 'Planned' && actionAt.getTime() > Date.now() + FUTURE_TOLERANCE_MS) {
-        details.actionAt = 'Action time cannot be in the future.';
     }
 }
 
