@@ -74,6 +74,8 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
   const [confirmCancel, setConfirmCancel] = useState(false);
   // One workflow write at a time: they share the Ticket's updatedAt token (BR-19)
   const writeLock = useRef(false);
+  // Whether Actions Taken holds unsaved text (reported by that component)
+  const actionDraftDirty = useRef(false);
   const isBusy = isUpdatingStatus || isUpdatingOwner || isUpdatingPriority;
 
   // `refresh` keeps the screen mounted: the first load shows the spinner, a reload must not unmount Actions Taken,
@@ -171,12 +173,19 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
   );
 
   // Handle Status Transition
-  const handleTransitionStatus = (nextStatus: string) => runWrite(
+  const handleTransitionStatus = (nextStatus: string) => {
+    // Closed and Cancelled lock Actions Taken, so unsaved text there would be unreachable: ask before sending
+    if ((nextStatus === 'Closed' || nextStatus === 'Cancelled') && actionDraftDirty.current
+      && !window.confirm('You have unsaved text in Actions Taken. If you continue, the Ticket will be ' + nextStatus.toLowerCase() + ' and that text cannot be saved. Continue anyway?')) {
+      return;
+    }
+    return runWrite(
     setIsUpdatingStatus,
     token => updateTicketStatus(ticketId, nextStatus, token),
     updated => setActionSuccess(`Status changed to ${updated.status}.`),
     'Failed to transition status',
-  );
+    );
+  };
 
   // The latest saved Ticket replaces the stale view after a conflict
   // If the reload fails the conflict message stays, together with the reason, so the user can try again
@@ -422,6 +431,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
             ticketStatus={ticket.status}
             canEdit
             staffMembers={staffMembers}
+            onDirtyChange={dirty => { actionDraftDirty.current = dirty; }}
             onChanged={() => {
               // A recorded action changes what the gate and conflict messages described
               setGate(null);

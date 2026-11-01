@@ -545,4 +545,59 @@ describe('Lab 4: ActionsTaken component (Issue #31)', () => {
       expect(update).toHaveBeenCalledTimes(1);
     });
   });
+
+  describe('Ticket status changes while an editor is open (UI-38, UI-39)', () => {
+    const rendered = (status: string) => (
+      <ActionsTaken ticketId={10} ticketStatus={status} canEdit staffMembers={staffMembers} />
+    );
+
+    it('UI-38: when the Ticket becomes Closed or Cancelled under an unsaved draft, the draft stays visible but cannot be saved, and Close asks first', async () => {
+      vi.spyOn(api, 'fetchActionsTaken').mockResolvedValue(page([makeAction()]));
+      const update = vi.spyOn(api, 'updateActionTaken');
+      const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+      const view = render(rendered('Open'));
+      fireEvent.click(await screen.findByRole('button', { name: 'Edit' }));
+      fireEvent.change(screen.getByLabelText('Action description'), { target: { value: 'Draft kept' } });
+
+      view.rerender(rendered('Cancelled'));
+      expect(screen.getByLabelText('Action description')).toHaveValue('Draft kept');
+      expect(screen.getByText(/can no longer be saved/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Save changes' })).toBeDisabled();
+      fireEvent.submit(screen.getByRole('form'));
+      expect(update).not.toHaveBeenCalled();
+      expect(screen.queryByRole('button', { name: '+ Add Action' })).not.toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+      expect(confirm).toHaveBeenCalledTimes(1);
+      expect(screen.getByLabelText('Action description')).toHaveValue('Draft kept');
+      confirm.mockReturnValue(true);
+      fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+      expect(screen.queryByRole('form')).not.toBeInTheDocument();
+    });
+
+    it('UI-38: with nothing typed the editor simply goes away when the Ticket becomes terminal', async () => {
+      vi.spyOn(api, 'fetchActionsTaken').mockResolvedValue(page([makeAction()]));
+      const view = render(rendered('Open'));
+      fireEvent.click(await screen.findByRole('button', { name: 'Edit' }));
+      view.rerender(rendered('Closed'));
+      expect(screen.queryByRole('form')).not.toBeInTheDocument();
+    });
+
+    it('UI-39: a new-action draft planned as Planned becomes Completed when the Ticket turns Resolved, and keeps its text', async () => {
+      vi.spyOn(api, 'fetchActionsTaken').mockResolvedValue(page([]));
+      const create = vi.spyOn(api, 'createActionTaken').mockResolvedValue({ action: makeAction(), replayed: false });
+      const view = render(rendered('Open'));
+      fireEvent.click(await screen.findByRole('button', { name: '+ Add Action' }));
+      fireEvent.change(screen.getByLabelText('Status'), { target: { value: 'Planned' } });
+      fireEvent.change(screen.getByLabelText('Action description'), { target: { value: 'Plan the swap' } });
+
+      view.rerender(rendered('Resolved'));
+      expect(screen.getByLabelText('Status')).toHaveValue('Completed');
+      expect(screen.getByLabelText('Action description')).toHaveValue('Plan the swap');
+      fireEvent.change(screen.getByLabelText(/^Result/), { target: { value: 'Swapped' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Save action' }));
+      await waitFor(() => expect(create).toHaveBeenCalled());
+      expect(create.mock.calls[0][1].status).toBe('Completed');
+    });
+  });
 });

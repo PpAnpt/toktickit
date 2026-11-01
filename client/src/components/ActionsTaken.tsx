@@ -27,6 +27,8 @@ interface ActionsTakenProps {
   staffMembers?: StaffMember[];
   /** Called after an action was saved so the parent can refresh the Ticket summary */
   onChanged?: () => void;
+  /** Tells the parent whether an editor holds unsaved text, so it can ask before a change that would hide the editor */
+  onDirtyChange?: (dirty: boolean) => void;
 }
 
 type PanelKind = 'edit' | 'start' | 'complete' | 'cancel' | 'reassign';
@@ -185,9 +187,11 @@ interface ActionFormProps {
   onSubmit: () => void;
   onClose: () => void;
   onReload: () => void;
+  /** The Ticket became Closed or Cancelled: the text stays visible but cannot be saved */
+  locked?: boolean;
 }
 
-const ActionForm: React.FC<ActionFormProps> = ({ editor, staffMembers, resolvedTicket, onChange, onSubmit, onClose, onReload }) => {
+const ActionForm: React.FC<ActionFormProps> = ({ editor, staffMembers, resolvedTicket, onChange, onSubmit, onClose, onReload, locked = false }) => {
   const { panel, values, errors, formError, stale, busy } = editor;
   const action = panel.kind === 'create' ? undefined : panel.action;
   const kind = panel.kind;
@@ -221,7 +225,7 @@ const ActionForm: React.FC<ActionFormProps> = ({ editor, staffMembers, resolvedT
   };
 
   return (
-    <form onSubmit={event => { event.preventDefault(); onSubmit(); }} noValidate className="border rounded p-3 bg-light mb-3" aria-label={titles[kind]}>
+    <form onSubmit={event => { event.preventDefault(); if (!locked) onSubmit(); }} noValidate className="border rounded p-3 bg-light mb-3" aria-label={titles[kind]}>
       <h6 className="fw-bold mb-3">{titles[kind]}</h6>
 
       {formError && (
@@ -230,6 +234,12 @@ const ActionForm: React.FC<ActionFormProps> = ({ editor, staffMembers, resolvedT
           {stale && (
             <button type="button" className="btn btn-sm btn-outline-danger ms-2" onClick={onReload}>Reload latest</button>
           )}
+        </div>
+      )}
+
+      {locked && (
+        <div className="alert alert-warning py-2 small" role="status">
+          This Ticket is now closed or cancelled, so this action can no longer be saved. Your text is kept here: copy it before you close the editor.
         </div>
       )}
 
@@ -323,7 +333,7 @@ const ActionForm: React.FC<ActionFormProps> = ({ editor, staffMembers, resolvedT
       )}
 
       <div className="d-flex gap-2 mt-3">
-        <button type="submit" className="btn btn-sm text-white" style={{ backgroundColor: '#006B3C' }} disabled={busy}>
+        <button type="submit" className="btn btn-sm text-white" style={{ backgroundColor: '#006B3C' }} disabled={busy || locked}>
           {busy ? 'Saving...' : saveLabels[kind]}
         </button>
         <button type="button" className="btn btn-sm btn-outline-secondary" onClick={onClose} disabled={busy}>Close</button>
@@ -399,7 +409,7 @@ const History: React.FC<{ ticketId: number; actionId: number }> = ({ ticketId, a
 
 // ─── Main component ──────────────────────────────────────────
 
-export const ActionsTaken: React.FC<ActionsTakenProps> = ({ ticketId, ticketStatus, canEdit, staffMembers = [], onChanged }) => {
+export const ActionsTaken: React.FC<ActionsTakenProps> = ({ ticketId, ticketStatus, canEdit, staffMembers = [], onChanged, onDirtyChange }) => {
   const [page, setPage] = useState(1);
   const [data, setData] = useState<{ actions: ActionTakenItem[]; total: number } | null>(null);
   const [loading, setLoading] = useState(true);
@@ -412,10 +422,24 @@ export const ActionsTaken: React.FC<ActionsTakenProps> = ({ ticketId, ticketStat
   // Guards a save in flight; it lives here so it survives the form view being unmounted (FR-14)
   const lock = useRef(false);
 
+  // The parent asks before a transition that would hide the editor, so it needs to know when text is unsaved
+  const dirty = isDirty(editor);
+  useEffect(() => { onDirtyChange?.(dirty); }, [dirty]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const terminal = ticketStatus === 'Closed' || ticketStatus === 'Cancelled';
   const resolvedTicket = ticketStatus === 'Resolved';
   const editable = canEdit && !terminal;
   const busy = Boolean(editor?.busy);
+  // A draft that holds text stays on screen when the Ticket becomes terminal; it just cannot be saved any more
+  const showEditor = canEdit && (editable || dirty);
+
+  // A Resolved Ticket accepts only a Completed record (BR-41): a draft planned earlier is switched, its text is kept
+  useEffect(() => {
+    if (!resolvedTicket) return;
+    setEditor(prev => (prev && prev.panel.kind === 'create' && prev.values.status !== 'Completed'
+      ? { ...prev, values: { ...prev.values, status: 'Completed' } }
+      : prev));
+  }, [resolvedTicket]);
 
   const load = useCallback(async (targetPage: number) => {
     setLoading(true);
@@ -546,7 +570,7 @@ export const ActionsTaken: React.FC<ActionsTakenProps> = ({ ticketId, ticketStat
 
   const renderForm = (shown: Editor) => (
     <ActionForm editor={shown} staffMembers={staffMembers} resolvedTicket={resolvedTicket}
-      onChange={changeField} onSubmit={submit} onClose={() => switchPanel(null)} onReload={reload} />
+      onChange={changeField} onSubmit={submit} onClose={() => switchPanel(null)} onReload={reload} locked={!editable} />
   );
 
   return (
@@ -566,8 +590,8 @@ export const ActionsTaken: React.FC<ActionsTakenProps> = ({ ticketId, ticketStat
           <p className="small text-muted">This Ticket is {ticketStatus.toLowerCase()}, so Actions Taken can no longer be added or changed.</p>
         )}
 
-        {editor?.panel.kind === 'create' && editable && renderForm(editor)}
-        {detached && editable && (
+        {editor?.panel.kind === 'create' && showEditor && renderForm(editor)}
+        {detached && showEditor && (
           <div>
             <div className="alert alert-warning py-2 small" role="status">
               Action {(detached.panel as { action: ActionTakenItem }).action.id} is not on this page of the list (it moved, or you changed page). Your editor and text are kept.
@@ -629,7 +653,7 @@ export const ActionsTaken: React.FC<ActionsTakenProps> = ({ ticketId, ticketStat
                   <button type="button" className="btn btn-sm btn-outline-secondary" disabled={busy} onClick={() => open('reassign', a)}>Reassign</button>
                 </div>
               )}
-              {editable && active && <div className="mt-3">{renderForm(active)}</div>}
+              {showEditor && active && <div className="mt-3">{renderForm(active)}</div>}
               {canEdit && <History ticketId={ticketId} actionId={a.id} />}
             </article>
           );

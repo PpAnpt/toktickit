@@ -177,6 +177,40 @@ test.describe('Lab 4: Ticket workflow (Issue #32)', () => {
     expect((await ticketOf(request, sarahToken, ticket.id)).status).toBe('In Progress');
   });
 
+  test('E2E-16: cancelling with unsaved Action text asks first; declining keeps the Ticket and the text', async ({ page, request }) => {
+    const ticket = await newTicket(request);
+    const staffToken = await openByApi(request, ticket.id, ACCOUNTS.sarah);
+    await createAction(request, staffToken, ticket.id, { description: 'Existing action', result: 'Done' });
+    await openAsStaff(page, ACCOUNTS.sarah, ticket.ticketNumber);
+
+    await page.getByRole('button', { name: '+ Add Action' }).click();
+    await page.getByLabel('Action description').fill('Half-written action that must not be lost');
+
+    const dialogs: string[] = [];
+    let accept = false;
+    page.on('dialog', async dialog => {
+      dialogs.push(dialog.message());
+      if (accept) await dialog.accept(); else await dialog.dismiss();
+    });
+
+    await move(page, 'Cancelled').click();
+    await page.getByRole('alertdialog').getByRole('button', { name: 'Cancel Ticket' }).click();
+    await expect.poll(() => dialogs.length).toBe(1);
+    expect(dialogs[0]).toContain('unsaved text');
+    await expect(page.getByLabel('Action description')).toHaveValue('Half-written action that must not be lost');
+    expect((await ticketOf(request, staffToken, ticket.id)).status).toBe('Open');
+
+    accept = true;
+    await move(page, 'Cancelled').click();
+    await page.getByRole('alertdialog').getByRole('button', { name: 'Cancel Ticket' }).click();
+    await expect(statusMessage(page, 'Cancelled')).toBeVisible();
+    // the draft is still there, but it can no longer be saved
+    await expect(page.getByLabel('Action description')).toHaveValue('Half-written action that must not be lost');
+    await expect(page.getByText(/can no longer be saved/)).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Save action' })).toBeDisabled();
+    expect((await ticketOf(request, staffToken, ticket.id)).status).toBe('Cancelled');
+  });
+
   test('E2E-16: cancelling a Ticket asks first and cancels its open actions automatically', async ({ page, request }) => {
     const ticket = await newTicket(request);
     const staffToken = await openByApi(request, ticket.id, ACCOUNTS.sarah);

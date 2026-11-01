@@ -239,6 +239,59 @@ describe('Lab 4: Ticket workflow controls (Issue #32)', () => {
     await waitFor(() => expect(screen.queryByTestId('resolution-gate-message')).not.toBeInTheDocument());
   });
 
+  describe('unsaved Action text before a terminal transition (UI-30)', () => {
+    const openDraft = async () => {
+      fireEvent.click(await screen.findByRole('button', { name: 'Edit' }));
+      fireEvent.change(screen.getByLabelText('Action description'), { target: { value: 'Typed but not saved' } });
+    };
+
+    it('UI-30: Cancel Ticket with an unsaved Action draft asks first; declining keeps the Ticket and the text, confirming cancels', async () => {
+      const update = vi.spyOn(api, 'updateTicketStatus').mockResolvedValue(makeTicket({ status: 'Cancelled', updatedAt: '2026-10-30T08:05:00.000Z' }));
+      const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+      setup(makeTicket(), undefined, [action()]);
+      await openDraft();
+
+      fireEvent.click(screen.getByRole('button', { name: /Move to Cancelled/ }));
+      fireEvent.click(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Cancel Ticket' }));
+      expect(confirm).toHaveBeenCalledTimes(1);
+      expect(confirm.mock.calls[0][0]).toMatch(/unsaved/i);
+      expect(update).not.toHaveBeenCalled();
+      expect(screen.getByLabelText('Action description')).toHaveValue('Typed but not saved');
+      expect(moveButtons()).toContain('Cancelled');
+
+      confirm.mockReturnValue(true);
+      fireEvent.click(screen.getByRole('button', { name: /Move to Cancelled/ }));
+      fireEvent.click(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Cancel Ticket' }));
+      await waitFor(() => expect(update).toHaveBeenCalledWith(1, 'Cancelled', TOKEN));
+    });
+
+    it('UI-30: Resolved to Closed with an unsaved edit asks first; declining sends nothing', async () => {
+      const update = vi.spyOn(api, 'updateTicketStatus').mockResolvedValue(makeTicket({ status: 'Closed', updatedAt: '2026-10-30T08:05:00.000Z' }));
+      const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+      setup(makeTicket({ status: 'Resolved' }), undefined, [action()]);
+      await openDraft();
+      fireEvent.click(screen.getByRole('button', { name: /Move to Closed/ }));
+      expect(confirm).toHaveBeenCalledTimes(1);
+      expect(update).not.toHaveBeenCalled();
+      expect(screen.getByLabelText('Action description')).toHaveValue('Typed but not saved');
+
+      confirm.mockReturnValue(true);
+      fireEvent.click(screen.getByRole('button', { name: /Move to Closed/ }));
+      await waitFor(() => expect(update).toHaveBeenCalledWith(1, 'Closed', TOKEN));
+    });
+
+    it('UI-30: no prompt for a transition that keeps the editor usable', async () => {
+      const update = vi.spyOn(api, 'updateTicketStatus').mockResolvedValue(makeTicket({ status: 'In Progress', updatedAt: '2026-10-30T08:05:00.000Z' }));
+      const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+      setup(makeTicket(), undefined, [action()]);
+      await openDraft();
+      fireEvent.click(screen.getByRole('button', { name: /Move to In Progress/ }));
+      await waitFor(() => expect(update).toHaveBeenCalled());
+      expect(confirm).not.toHaveBeenCalled();
+      expect(screen.getByLabelText('Action description')).toHaveValue('Typed but not saved');
+    });
+  });
+
   it('UI-30: Move to Cancelled opens a confirm panel that warns about open actions; Keep leaves everything, Confirm cancels', async () => {
     const update = vi.spyOn(api, 'updateTicketStatus').mockResolvedValue(makeTicket({ status: 'Cancelled', updatedAt: '2026-10-30T08:05:00.000Z' }));
     const { fetchActions } = setup();

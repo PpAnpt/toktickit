@@ -162,7 +162,7 @@ No delete endpoint exists for Actions Taken, revisions, or Ticket events (BR-08,
 - Owner must be an active IT Staff or Administrator; otherwise `400` (BR-21).
 
 ### 3.3 Requester Indication
-`POST /api/tickets/:id/indicate-resolved` is unchanged: it sets `indicatedResolvedAt` only and never changes the status (BR-18).
+`POST /api/tickets/:id/indicate-resolved` keeps its Lab 3 request and response: it sets `indicatedResolvedAt` only and never changes the status (BR-18). It now runs like the other Ticket writes: the Ticket row is locked, ownership (`404` for another Requester), a final status (`400`) and an earlier indication (`409`) are checked on the locked row, and the new `updatedAt` token is computed from that row (BR-20). A Requester therefore cannot indicate after Staff resolved or closed the Ticket, and simultaneous requests give one `200` and the rest `409`.
 
 ### 3.4 Queue and My Tickets Filter
 `GET /api/staff/tickets` and `GET /api/tickets` accept `status=Active`, meaning `New`, `Open`, `In Progress`, `Waiting for Requester`, `Reopened` (BR-24, BR-28). `GET /api/tickets` (My Tickets, own Tickets only) also accepts `recent=updated` (`updatedAt >= windowStart`) and `recent=resolved` (status `Resolved` or `Closed` and `resolvedAt >= windowStart`); any other value is `400`. These filters call the same shared predicate and window function as the Requester dashboard metrics (BR-39), so list `total` equals the card value for the same snapshot. All other query validation from Lab 3 is unchanged.
