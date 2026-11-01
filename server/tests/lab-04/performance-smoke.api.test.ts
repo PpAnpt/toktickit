@@ -97,7 +97,8 @@ describe('Lab 4: performance smoke (Issue #34)', () => {
 
         // The application reads DATABASE_URL when it first needs the database, so point it at the fixture before importing
         process.env.DATABASE_URL = perfUrl;
-        app = (await import('../../src/index')).default;
+        const mod = (await import('../../src/index.js')) as any;
+        app = mod.default?.default ?? mod.default;
         const login = async (email: string) => (await request(app).post('/api/auth/login').send({ email, password: PASSWORD })).body.token as string;
         tokens = { requester: await login('perf1@example.com'), staff: await login('perf81@example.com'), admin: await login('perf99@example.com') };
         process.env.DATABASE_URL = testUrl;
@@ -107,7 +108,7 @@ describe('Lab 4: performance smoke (Issue #34)', () => {
         const out = path.resolve(SERVER_DIR, '../artifacts/lab-04/performance');
         mkdirSync(out, { recursive: true });
         writeFileSync(path.join(out, 'summary.json'), JSON.stringify({ environment: header, fixture: sizes, limitMs: LIMIT_MS, results: summaries }, null, 2));
-        const { getPrisma } = await import('../../src/prisma');
+        const { getPrisma } = await import('../../src/prisma.js');
         await getPrisma().$disconnect();
         await admin(c => c.query(`DROP DATABASE IF EXISTS "${PERF_DB}" WITH (FORCE)`));
     }, 60_000);

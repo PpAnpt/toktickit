@@ -225,7 +225,8 @@ const ActionForm: React.FC<ActionFormProps> = ({ editor, staffMembers, resolvedT
   };
 
   return (
-    <form onSubmit={event => { event.preventDefault(); if (!locked) onSubmit(); }} noValidate className="border rounded p-3 bg-light mb-3" aria-label={titles[kind]}>
+    <form onSubmit={event => { event.preventDefault(); if (!locked) onSubmit(); }} noValidate className="border rounded p-3 bg-light mb-3" aria-label={titles[kind]}
+      onKeyDown={event => { if (event.key === 'Escape') { event.stopPropagation(); onClose(); } }}>
       <h6 className="fw-bold mb-3">{titles[kind]}</h6>
 
       {formError && (
@@ -477,12 +478,22 @@ export const ActionsTaken: React.FC<ActionsTakenProps> = ({ ticketId, ticketStat
     setEditor(prev => (prev && prev.requestId === key ? { ...prev, ...patch } : prev));
 
   /** Replaces the open editor (or closes it) after the user agreed to discard unsaved text */
+  const opener = useRef<HTMLElement | null>(null);
   const switchPanel = (next: Panel | null) => {
     if (editorRef.current?.busy) return; // a save is in flight
     if (isDirty(editorRef.current) && !window.confirm('Discard your unsaved changes to this action?')) return;
     setNotice('');
+    // Remember what opened the editor so closing it can give the focus back (keyboard users do not lose their place)
+    if (next && !editorRef.current) opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     setEditor(next ? newEditor(next, resolvedTicket) : null);
   };
+
+  const editorOpen = editor !== null;
+  useEffect(() => {
+    if (editorOpen || !opener.current) return;
+    if (opener.current.isConnected) opener.current.focus();
+    opener.current = null;
+  }, [editorOpen]);
 
   const changeField = <K extends keyof FormValues>(key: K, value: FormValues[K]) =>
     setEditor(prev => (prev ? { ...prev, values: { ...prev.values, [key]: value } } : prev));
@@ -634,7 +645,7 @@ export const ActionsTaken: React.FC<ActionsTakenProps> = ({ ticketId, ticketStat
               <p className="mb-1 small"><strong>Result:</strong> {a.result ? <span style={{ whiteSpace: 'pre-wrap' }}>{a.result}</span> : <span className="text-muted">Not recorded</span>}</p>
               {a.followUpRequired && (
                 <p className="mb-1 small">
-                  <span className="badge bg-warning text-dark me-2">Follow-up</span>
+                  <span className="badge bg-warning text-dark me-2"><span aria-hidden="true">⚑ </span>Follow-up needed</span>
                   <span style={{ whiteSpace: 'pre-wrap' }}>{a.followUpNote}</span>
                 </p>
               )}

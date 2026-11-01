@@ -16,7 +16,7 @@ Lab 4 keeps the Zen Green design language of `docs/lab-03/ui-spec.md` (colour to
 | Conflict / stale banner | Information blue `#2563EB` text on `#EFF6FF`, role `alert` | Text "This Ticket changed since you opened it" and a Reload button |
 | Resolution gate message | Error red `#B30000`, role `alert`, shown next to the status buttons | Text "Record at least one Action Taken before resolving this Ticket" |
 
-All new interactive elements keep the Lab 3 focus ring (2px `#0B7A46` outline, 2px offset) and a minimum 40px touch height.
+All new interactive elements keep the Lab 3 focus ring (2px `#0B7A46` outline, 2px offset) and a minimum 40px touch height. The ring also replaces Bootstrap's own faint ring on buttons and form controls. **Escape** closes an open Add/Edit form (with the usual discard prompt when text is unsaved) and returns the focus to the control that opened it. Clickable Ticket cards in My Tickets are keyboard operable (Tab, Enter or Space).
 
 ## 2. Application Shell and Navigation (FR-13, AC-29)
 
