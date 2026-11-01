@@ -186,3 +186,44 @@ test.describe('Clean console (Issue #34)', () => {
     expect(problems).toEqual([]);
   });
 });
+
+test.describe('RSP-04: every other screen of the application fits the three widths (AC-28)', () => {
+  test('Create Ticket, My Tickets, Ticket Queue, User Management and the Change Password dialog have no horizontal scroll', async ({ page }) => {
+    test.setTimeout(150_000);
+    const menu = (name: RegExp) => page.getByRole('navigation', { name: 'Main navigation' }).getByRole('button', { name });
+    for (const { width, height } of VIEWPORTS) {
+      await page.setViewportSize({ width, height });
+      await signIn(page, 'david.lee@example.com');
+      await menu(/^Create Ticket/).click();
+      await expect(page.getByText(/Create New Support Ticket/)).toBeVisible();
+      expect(await fitsViewport(page), `Create Ticket ${width}`).toBe(true);
+      await menu(/^My Tickets/).click();
+      await expect(page.getByTestId('my-tickets-total')).toBeVisible();
+      expect(await fitsViewport(page), `My Tickets ${width}`).toBe(true);
+      await page.getByRole('button', { name: 'Change Password' }).click();
+      await expect(page.getByRole('dialog', { name: /Change Your Password/ })).toBeVisible();
+      expect(await fitsViewport(page), `Change Password ${width}`).toBe(true);
+      await page.keyboard.press('Escape');
+      await expect(page.getByRole('dialog')).toHaveCount(0);
+      await signOut(page);
+
+      await signIn(page, 'sarah.connor@example.com');
+      await menu(/^Ticket Queue/).click();
+      await expect(page.locator('text=Total in Queue')).toBeVisible();
+      expect(await fitsViewport(page), `Ticket Queue ${width}`).toBe(true);
+      await signOut(page);
+
+      await signIn(page, 'admin@example.com', 'Admin123!');
+      await menu(/^User Management/).click();
+      await expect(page.locator('h3:has-text("User Management")')).toBeVisible();
+      expect(await fitsViewport(page), `User Management ${width}`).toBe(true);
+      await page.getByRole('button', { name: /Create New User/ }).click();
+      const dialog = page.getByRole('dialog', { name: 'Create New User' });
+      await expect(dialog).toBeVisible();
+      expect(await fitsViewport(page), `Create user dialog ${width}`).toBe(true);
+      await page.keyboard.press('Escape');
+      await expect(dialog).toHaveCount(0);
+      await signOut(page);
+    }
+  });
+});

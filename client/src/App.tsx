@@ -11,6 +11,7 @@ import { UserManagement } from './components/UserManagement';
 import { PublicComments } from './components/PublicComments';
 import { ActionsTaken } from './components/ActionsTaken';
 import { RoleBadge } from './components/RoleBadge';
+import { Modal } from './components/Modal';
 import {
   getMe,
   logout as apiLogout,
@@ -1233,11 +1234,11 @@ function App() {
 
       {/* Soft-removal with Reason Confirmation Modal */}
       {removingAttachment && (
-        <div className="modal show d-block" tabIndex={-1} style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1055 }}>
+        <Modal titleId="remove-attachment-title" onClose={() => setRemovingAttachment(null)} busy={isSubmittingRemoval}>
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content shadow border-0">
               <div className="modal-header py-3" style={{ backgroundColor: '#EAF6EF', borderLeft: '4px solid #006B3C' }}>
-                <h5 className="modal-title fw-bold" style={{ color: '#006B3C' }}>Confirm Attachment Removal</h5>
+                <h5 id="remove-attachment-title" className="modal-title fw-bold" style={{ color: '#006B3C' }}>Confirm Attachment Removal</h5>
                 <button
                   type="button"
                   className="btn-close"
@@ -1288,7 +1289,7 @@ function App() {
               </div>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

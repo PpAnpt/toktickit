@@ -137,17 +137,19 @@ Placed on the **Staff Ticket Detail** as a section titled "Actions Taken ({count
 No page-level horizontal scrolling at 1280px, 768px, or 375px. Evidence is stored in `artifacts/lab-04/screenshots/{staff-dashboard,requester-dashboard,actions-taken}/` and regenerated with `npm run screenshots`.
 
 ## 6. Visual and Accessibility Checklist (completed for Lab 4 Part 9 evidence)
-Items are checked off in the Pull Request that delivers the related screen; the final state is recorded here before release.
+Every item was checked against the finished application on 2026-11-01 and is backed by the automated test or screenshot named after it. Nothing is ticked on appearance alone.
 
-- [ ] **Design consistency**: Zen Green tokens, badges, buttons, and cards reused on all new screens.
-- [ ] **Dashboards**: metric cards show label, value, and an accessible drill-down; empty, loading, forbidden, and error states are visible.
-- [ ] **Actions Taken**: list, create, edit, assign, start/complete/cancel, and read-only (Requester) views are visually distinct; the follow-up and status badges use text.
-- [ ] **History**: revision and Ticket event history is read-only with Before/After labels, hidden from Requesters, and paginated.
-- [ ] **Editable vs read-only**: editable fields have white backgrounds and borders; Performed by and recorded times are plain or tinted read-only text.
-- [ ] **Validation placement**: errors appear directly under the field and in a focused summary; the Follow-up Note error appears under its own field.
-- [ ] **Keyboard focus**: visible ring everywhere; Add/Edit forms, dialogs, and metric cards are fully operable by keyboard; focus returns after closing a dialog.
-- [ ] **Clipping and overlap**: no truncated unreachable text or overlapping controls at 1280px, 768px, and 375px.
-- [ ] **Horizontal overflow**: none on any viewport.
-- [ ] **Status cues**: statuses, priorities, follow-up, and conflict/gate messages have text, not only color.
-- [ ] **Navigation**: active page marked with `aria-current`; each role sees only its entries.
-- [ ] **Console and links**: no console errors, broken links, or placeholder text.
+- [x] **Design consistency**: Zen Green tokens, badges, buttons and cards are reused on all new screens (screenshots in `artifacts/lab-04/screenshots/`; STY-01..03).
+- [x] **Dashboards**: metric cards show label, value and a drill-down link named "label: value. Open list." with loading, empty, forbidden and error states (UI-15..24, E2E-09..12).
+- [x] **Actions Taken**: list, create, edit, assign, start/complete/cancel and the read-only Requester view are visually distinct; the follow-up and status badges use text (UI-01..09, 26..29, STY-01; screenshots in `actions-taken/`).
+- [x] **History**: revision and Ticket event history is read-only with Before/After labels, hidden from Requesters and paginated (UI-28, UI-32, HIST-06..08).
+- [x] **Editable vs read-only**: editable fields are form controls; Performed by and recorded times are plain text, never a field (STY-03).
+- [x] **Validation placement**: errors appear directly under the field and in a focused summary (UI-04, UI-05, STY-02; the Follow-up Note error is under its own field).
+- [x] **Keyboard focus**: a 2px #0B7A46 ring on every control including Bootstrap buttons; the Add/Edit form works from the keyboard and Escape closes it with the focus returned (A11Y-01, A11Y-02); every modal dialog (create, edit and reset user, attachment removal, Change Password) is a named `role="dialog"` with `aria-modal`, takes the focus when it opens, keeps Tab inside, closes with Escape (not while saving) and returns the focus (MOD-01..04, RSP-04).
+- [x] **Clipping and overlap**: no clipped or overlapping content and every status button and form is inside the viewport at 1280, 768 and 375 px (RSP-01..04).
+- [x] **Horizontal overflow**: none on any screen at the three widths: both dashboards, Ticket Detail with the Add form and the gate message, Create Ticket, My Tickets, Ticket Queue, User Management and the dialogs (RSP-01..04).
+- [x] **Status cues**: statuses, priorities, follow-up and the conflict and gate messages carry text or a symbol, not only a colour (STY-01, STY-02, UI-12, UI-14).
+- [x] **Navigation**: the active page is marked with `aria-current`; each role sees only its entries; every role lands on its Dashboard (UI-25, E2E-12).
+- [x] **Console and links**: no console error, page error or failed request while using each role's main pages, no broken relative link in the README and `docs/lab-04`, no placeholder text (the console sweep in `responsive-accessibility.spec.ts`).
+
+**Not measured:** colour contrast was judged from the design tokens and screenshots, not with an automated contrast tool; screen-reader output was not listened to, only the roles, names and states that a screen reader reads were tested.
