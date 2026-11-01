@@ -33,3 +33,7 @@ docs/lab-04/lab-04-report.pdf
 
 # Claude Code local settings
 .claude/settings.local.json
+
+# Generated report PDFs and fetched PR data (regenerate with npm run report / fetch-pr-info.ts)
+docs/lab-*/report_*.pdf
+scripts/pr-details.json
