@@ -263,6 +263,17 @@ textarea:focus-visible,
   outline-offset: 2px;
 }
 
+/* Bootstrap draws its own faint ring on .btn and form controls and removes the outline: keep the ring of the design system */
+.btn:focus-visible,
+.btn-check:focus-visible + .btn,
+.form-control:focus-visible,
+.form-select:focus-visible,
+.form-check-input:focus-visible {
+  outline: 2px solid #0b7a46 !important;
+  outline-offset: 2px;
+  box-shadow: none !important;
+}
+
 /* Lab 4: dashboards */
 .dashboard-card {
   min-height: 7.5rem;

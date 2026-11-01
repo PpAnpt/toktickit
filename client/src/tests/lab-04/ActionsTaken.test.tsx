@@ -56,7 +56,7 @@ describe('Lab 4: ActionsTaken component (Issue #31)', () => {
     expect(within(cards[0]).getByText(/Performed by Sarah Connor/)).toBeInTheDocument();
     expect(within(cards[0]).getByText(/Assigned to James Gordon/)).toBeInTheDocument();
     expect(within(cards[0]).getByText('Completed')).toBeInTheDocument();       // status shown as text, not colour only
-    expect(within(cards[0]).getByText('Follow-up')).toBeInTheDocument();
+    expect(within(cards[0]).getByText(/Follow-up needed/)).toBeInTheDocument();
     expect(within(cards[0]).getByText('Check on Friday')).toBeInTheDocument();
     expect(within(cards[0]).getByText(/Look for:/)).toBeInTheDocument();
     expect(within(cards[0]).getByText(/Edited by James Gordon/)).toBeInTheDocument();

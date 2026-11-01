@@ -110,8 +110,8 @@ Run commands: `npm --prefix server test`, `npm --prefix client test`, `npm run t
 | SDASH-06 | API | AC-19 | Empty database state | Every metric `0`; lists `[]`; no error | `server/tests/lab-04/staff-dashboard.api.test.ts` | Planned |
 | SDASH-07 | API | AC-22 | Shape and size | At most 5 items per list | `server/tests/lab-04/staff-dashboard.api.test.ts` | Planned |
 | SDASH-08 | API | AC-20 | Drill-down parity: queue with each card's filter | Queue `total` equals the metric | `server/tests/lab-04/staff-dashboard.api.test.ts` | Planned |
-| ERR-01 | API | AC-26 | Forced database failure on dashboard, actions, and status endpoints | `500` with a generic message; no stack, SQL, or ids | `server/tests/lab-04/safe-errors.api.test.ts` | Planned |
-| PERF-01 | Performance | AC-30 | Requester and staff dashboards against the performance fixture (section 6) | p95 of 30 timed requests under 1 second | `server/tests/lab-04/performance-smoke.api.test.ts` | Planned |
+| ERR-01 | API | AC-26 | Forced database failure on dashboard, actions, and status endpoints | `500` with only a generic `error` message; no stack, SQL, table names, hosts or ids (database failure simulated on dashboards, Actions Taken list/create, history, status/owner/priority) | `server/tests/lab-04/safe-errors.api.test.ts` | Planned |
+| PERF-01 | Performance | AC-30 | Requester and staff dashboards against the performance fixture (section 6) | p95 of 30 timed requests under 1 second; the fixture is generated in a scratch database `toktickit_perf` by SQL `generate_series` (seed `setseed(0.4242)`) inside the test and the results are written to `artifacts/lab-04/performance/summary.json` | `server/tests/lab-04/performance-smoke.api.test.ts` | Planned |
 | PERF-02 | Performance | AC-30 | Actions Taken list (first page, `limit=20`) for the Ticket with 2,000 actions in the performance fixture | p95 of 30 timed requests under 1 second | `server/tests/lab-04/performance-smoke.api.test.ts` | Planned |
 
 ### 2.6 Migration and Seed
@@ -156,14 +156,14 @@ Run commands: `npm --prefix server test`, `npm --prefix client test`, `npm run t
 ### 2.8 UI Style, Responsive, and Accessibility
 | Test ID | Type | Requirement / AC | What It Tests | Expected Result | Automated Test File | Final |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| STY-01 | UI style | AC-28 | Follow-up badge | Contains the text "Follow-up needed" in addition to color | `client/src/tests/lab-04/ZenGreenStyle.test.tsx` | Planned |
+| STY-01 | UI style | AC-28 | Follow-up badge | Contains the text "Follow-up needed" (with a flag symbol) in addition to colour | `client/src/tests/lab-04/ZenGreenStyle.test.tsx` | Planned |
 | STY-02 | UI style | AC-28 | Attention card and gate/conflict messages | Text cue present; `role="alert"` on messages | `client/src/tests/lab-04/ZenGreenStyle.test.tsx` | Planned |
 | STY-03 | UI style | AC-28 | Editable vs read-only fields | Different classes/attributes; Performed by is not editable | `client/src/tests/lab-04/ZenGreenStyle.test.tsx` | Planned |
 | RSP-01 | Responsive | AC-28 | Dashboards at 1280px, 768px, 375px | No horizontal overflow, clipping, or overlap | `e2e/lab-04/responsive-accessibility.spec.ts` | Planned |
 | RSP-02 | Responsive | AC-28 | Actions Taken area and Add/Edit form at three widths | No overflow; the form fits the mobile viewport | `e2e/lab-04/responsive-accessibility.spec.ts` | Planned |
 | RSP-03 | Responsive | AC-28 | Status controls and stale/gate messages at three widths | Fully visible, buttons reachable | `e2e/lab-04/responsive-accessibility.spec.ts` | Planned |
 | A11Y-01 | Accessibility | AC-28 | Keyboard only: open Add Action, fill, submit, edit | Entire flow operable; labels linked to inputs | `e2e/lab-04/responsive-accessibility.spec.ts` | Planned |
-| A11Y-02 | Accessibility | AC-28 | Focus visibility and dialog behavior | Visible focus ring; Escape closes; focus returns to opener | `e2e/lab-04/responsive-accessibility.spec.ts` | Planned |
+| A11Y-02 | Accessibility | AC-28 | Focus visibility and dialog behavior | Visible 2px #0B7A46 focus ring on Bootstrap buttons too; Escape closes the editor (asking first when text is unsaved) and focus returns to the opener; My Tickets cards open with Enter or Space | `e2e/lab-04/responsive-accessibility.spec.ts` | Planned |
 
 ### 2.9 End to End
 | Test ID | Type | Requirement / AC | What It Tests | Expected Result | Automated Test File | Final |

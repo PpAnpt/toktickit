@@ -914,9 +914,19 @@ function App() {
                       key={t.id}
                       className="card shadow-sm border-0 p-3 bg-white ticket-card"
                       style={{ cursor: 'pointer', transition: 'transform 0.15s ease' }}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`Open ${t.ticketNumber}: ${t.summary}`}
                       onClick={() => {
                         setSelectedTicketId(t.id);
                         window.history.pushState(null, '', `/tickets/${t.id}`);
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
+                          event.preventDefault();
+                          setSelectedTicketId(t.id);
+                          window.history.pushState(null, '', `/tickets/${t.id}`);
+                        }
                       }}
                     >
                       <div className="d-flex justify-content-between align-items-start flex-wrap gap-2">
