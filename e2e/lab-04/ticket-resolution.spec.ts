@@ -66,6 +66,7 @@ async function signIn(page: Page, email: string) {
 
 async function openAsStaff(page: Page, email: string, ticketNumber: string) {
   await signIn(page, email);
+  await page.getByRole('button', { name: /^Ticket Queue/ }).click();
   await expect(page.locator('table tbody tr').first()).toBeVisible();
   await page.fill('input[placeholder*="Search ticket #, summary, requester"]', ticketNumber);
   await expect(page.locator('table tbody tr')).toHaveCount(1);

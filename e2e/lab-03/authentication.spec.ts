@@ -36,8 +36,8 @@ test.describe('E2E-01: Authentication & First-Login Password Change Flow', () =>
     await page.click('button:has-text("Logout")');
 
     // 5. Verify returned to login screen
-    await expect(page.locator('h2')).toContainText('TokTickIT');
     await expect(page.locator('#email')).toBeVisible();
+    await expect(page.locator('h2')).toContainText('TokTickIT');
     await expect(page.locator('text=You have been signed out')).toBeVisible();
 
     // 6. Direct API access with the old token is blocked after logout (session invalidated)
@@ -117,6 +117,7 @@ test.describe('E2E-01: Authentication & First-Login Password Change Flow', () =>
     // Verify the user reaches the portal and the IT Staff queue loads with the new session
     await expect(page.locator('.navbar').getByText('Elena Rostova')).toBeVisible();
     await expect(page.getByTestId('role-badge')).toHaveText('IT Staff');
+    await page.getByRole('button', { name: /^Ticket Queue/ }).click();
     await expect(page.locator('text=IT Staff Ticket Queue')).toBeVisible();
     await expect(page.locator('table tbody tr').first()).toBeVisible();
 

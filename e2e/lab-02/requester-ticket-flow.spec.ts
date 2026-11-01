@@ -17,6 +17,8 @@ test.describe('Lab 2 Requester regression with authenticated identity', () => {
     // 1. Sign in as a Requester — no Development Requester selector exists any more
     await signIn(page, 'david.lee@example.com', 'Password123!');
     await expect(page.locator('#requesterSelect')).toHaveCount(0);
+    // Every role lands on its Dashboard (Lab 4): open the Create Ticket page from the menu
+    await page.getByRole('navigation', { name: 'Main navigation' }).getByRole('button', { name: /^Create Ticket/ }).click();
     await expect(page.locator('h4')).toContainText('Create New Support Ticket');
 
     // 2. Fill and submit the Create Ticket form with one attachment
@@ -66,6 +68,8 @@ test.describe('Lab 2 Requester regression with authenticated identity', () => {
     // 7. Another Requester opening the same ticket URL sees a safe "not available" message
     await page.click('button:has-text("Logout")');
     await signIn(page, 'jennifer.anderson@example.com', 'Password123!');
+    // Every role lands on its Dashboard (Lab 4): open the Create Ticket page from the menu
+    await page.getByRole('navigation', { name: 'Main navigation' }).getByRole('button', { name: /^Create Ticket/ }).click();
     await expect(page.locator('h4')).toContainText('Create New Support Ticket');
     await page.goto(ticketUrl);
     await expect(page.locator('text=Ticket Unavailable')).toBeVisible();
