@@ -8,14 +8,24 @@ import {
   type UserProfile
 } from '../api';
 
+/** Filters a dashboard card or breakdown row opens the queue with (api-spec section 4) */
+export interface QueueFilters {
+  status?: string;
+  priority?: string;
+  owner?: string;
+}
+
 interface StaffTicketQueueProps {
   currentUser: UserProfile;
   onSelectTicket?: (ticketId: number) => void;
+  /** Applied once when the queue opens, for dashboard drill-down links */
+  initialFilters?: QueueFilters;
 }
 
 export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
   currentUser,
-  onSelectTicket
+  onSelectTicket,
+  initialFilters,
 }) => {
   const isCompact = useIsCompactViewport();
   const [tickets, setTickets] = useState<StaffTicket[]>([]);
@@ -25,9 +35,9 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
 
   // Filter and pagination states
   const [search, setSearch] = useState<string>('');
-  const [statusFilter, setStatusFilter] = useState<string>('All');
-  const [priorityFilter, setPriorityFilter] = useState<string>('All');
-  const [ownerFilter, setOwnerFilter] = useState<string>('All');
+  const [statusFilter, setStatusFilter] = useState<string>(initialFilters?.status ?? 'All');
+  const [priorityFilter, setPriorityFilter] = useState<string>(initialFilters?.priority ?? 'All');
+  const [ownerFilter, setOwnerFilter] = useState<string>(initialFilters?.owner ?? 'All');
   const [sortBy, setSortBy] = useState<string>('createdAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -189,6 +199,7 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
                 }}
               >
                 <option value="All">All Statuses</option>
+                <option value="Active">Active (not Resolved, Closed or Cancelled)</option>
                 <option value="New">New</option>
                 <option value="Open">Open</option>
                 <option value="In Progress">In Progress</option>

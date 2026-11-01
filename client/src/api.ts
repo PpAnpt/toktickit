@@ -758,5 +758,19 @@ async function dashboardRequest<T>(endpoint: string): Promise<T> {
 }
 
 /** A 403 arrives as an ApiError with status 403 so the screen can show the forbidden state without data */
-export const fetchRequesterDashboard = (): Promise<RequesterDashboardData> => dashboardRequest('/api/dashboard/requester');
-export const fetchStaffDashboard = (): Promise<StaffDashboardData> => dashboardRequest('/api/dashboard/staff');
+/** A body without the expected shape is an error state, never a half-rendered or crashing screen */
+function requireMetrics<T extends { metrics?: unknown }>(data: T): T {
+  if (!data || typeof data.metrics !== 'object' || data.metrics === null) {
+    throw new ActionApiError(0, 'The dashboard response was not understood.');
+  }
+  return data;
+}
+
+export const fetchRequesterDashboard = async (): Promise<RequesterDashboardData> => {
+  const data = requireMetrics(await dashboardRequest<RequesterDashboardData>('/api/dashboard/requester'));
+  return { ...data, attention: data.attention ?? [], recentTickets: data.recentTickets ?? [] };
+};
+export const fetchStaffDashboard = async (): Promise<StaffDashboardData> => {
+  const data = requireMetrics(await dashboardRequest<StaffDashboardData>('/api/dashboard/staff'));
+  return { ...data, byStatus: data.byStatus ?? {}, byPriority: data.byPriority ?? {}, recentTickets: data.recentTickets ?? [], myRecentActions: data.myRecentActions ?? [] };
+};

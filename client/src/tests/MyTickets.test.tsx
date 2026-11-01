@@ -23,6 +23,8 @@ describe('UI-02: MyTickets Empty State', () => {
         render(<App />);
 
         // Wait for authenticated app to load
+        // Every role lands on the Dashboard now: open the Create Ticket page first
+        fireEvent.click(await screen.findByRole('button', { name: /^Create Ticket/i }));
         await screen.findByText(/Create New Support Ticket/i);
 
         // Navigate to My Tickets tab

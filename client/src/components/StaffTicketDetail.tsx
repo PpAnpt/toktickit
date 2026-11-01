@@ -25,6 +25,8 @@ interface StaffTicketDetailProps {
   ticketId: number;
   currentUser: UserProfile;
   onBack: () => void;
+  /** Text of the back button; the Ticket Queue by default, the Dashboard when it was opened from there */
+  backLabel?: string;
   onTicketUpdated?: () => void;
 }
 
@@ -45,6 +47,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
   ticketId,
   currentUser,
   onBack,
+  backLabel = 'Back to Queue',
   onTicketUpdated
 }) => {
   const [ticket, setTicket] = useState<StaffTicketDetailType | null>(null);
@@ -303,7 +306,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
     return (
       <div className="container py-5 text-center">
         <div className="alert alert-danger mb-3">Ticket not found or error loading data.</div>
-        <button className="btn btn-outline-success" onClick={onBack}>&larr; Back to Queue</button>
+        <button className="btn btn-outline-success" onClick={onBack}>&larr; {backLabel}</button>
       </div>
     );
   }
@@ -316,7 +319,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
       <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
         <div className="d-flex align-items-center gap-3">
           <button className="btn btn-outline-secondary btn-sm" onClick={onBack}>
-            &larr; Back to Queue
+            &larr; {backLabel}
           </button>
           <div>
             <h3 className="fw-bold mb-0 d-inline-block me-2" style={{ color: '#006B3C' }}>
