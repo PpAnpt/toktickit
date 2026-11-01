@@ -32,7 +32,7 @@ The service desk can receive Tickets and communicate with Requesters, but cannot
 - **FR-04**: Requesters can view all Actions Taken of their own Tickets, read-only. They cannot create or edit them.
 - **FR-05**: The Ticket Detail screen for IT Staff shows an Actions Taken area with a list, a create mode, and a view/edit mode.
 - **FR-06**: The system enforces the final Ticket status transition matrix on the server and rejects every other transition.
-- **FR-07**: The system refuses to move a Ticket to `Resolved` unless it has at least one Action Taken (resolution gate).
+- **FR-07**: The system refuses to move a Ticket to `Resolved` unless it has at least one `Completed` Action Taken and no `Planned` or `In Progress` one (resolution gate, BR-16).
 - **FR-08**: A Requester's "appears resolved" indication stays advisory and never changes the status.
 - **FR-09**: Workflow writes (status, owner, priority, Action Taken edit) detect stale updates and return a conflict instead of silently overwriting; the `expectedUpdatedAt` token is required on every one of them.
 - **FR-10**: The system provides a Requester Dashboard with metrics for the signed-in Requester's own Tickets only.

@@ -359,7 +359,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
       )}
 
       {/* Indicated Resolved Alert Banner */}
-      {ticket.indicatedResolvedAt && (
+      {ticket.indicatedResolvedAt && !['Resolved', 'Closed', 'Cancelled'].includes(ticket.status) && (
         <div className="alert alert-info d-flex align-items-center mb-4" role="alert">
           <span className="fs-5 me-2">💡</span>
           <div>
@@ -772,6 +772,12 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
                 <span className="text-muted">Created:</span>{' '}
                 <span>{new Date(ticket.createdAt).toLocaleString()}</span>
               </div>
+              {ticket.resolvedAt && (
+                <div className="mb-2">
+                  <span className="text-muted">Resolved:</span>{' '}
+                  <span>{new Date(ticket.resolvedAt).toLocaleString()}</span>
+                </div>
+              )}
               <div>
                 <span className="text-muted">Last Updated:</span>{' '}
                 <span>{new Date(ticket.updatedAt).toLocaleString()}</span>

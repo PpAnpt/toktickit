@@ -87,6 +87,9 @@ test.describe('Lab 4: Ticket workflow (Issue #32)', () => {
     const gate = page.getByTestId('resolution-gate-message');
     await expect(gate).toContainText('No completed action');
     await expect(gate.getByRole('link', { name: 'Go to Actions Taken' })).toBeVisible();
+    await gate.getByRole('link', { name: 'Go to Actions Taken' }).click();
+    await expect(page.getByRole('heading', { name: /Actions Taken/ })).toBeInViewport(); // the link really goes to the section
+    await expect(page.getByRole('button', { name: '+ Add Action' })).toBeVisible(); // and the screen did not navigate away
     await expect(statusMessage(page, 'Resolved')).toHaveCount(0);
     await expect(move(page, 'Resolved')).toBeEnabled(); // the server stays the authority
 
@@ -132,6 +135,9 @@ test.describe('Lab 4: Ticket workflow (Issue #32)', () => {
     await expect(move(page, 'Resolved')).toBeVisible();
     await move(page, 'Resolved').click();
     await expect(statusMessage(page, 'Resolved')).toBeVisible();
+    // once resolved the advisory notice is no longer shown, and the Resolved date is
+    await expect(page.getByText(/Requester says the problem appears resolved/)).toHaveCount(0);
+    await expect(page.getByText('Resolved:')).toBeVisible();
     await move(page, 'Closed').click();
     await expect(statusMessage(page, 'Closed')).toBeVisible();
     await expect(page.getByText(/No further status transitions are permitted/)).toBeVisible();

@@ -97,7 +97,7 @@ Placed on the **Staff Ticket Detail** as a section titled "Actions Taken ({count
 - After a successful change the Ticket summary (status badge in the header, status field, `resolvedAt`) refreshes without a full page reload, and a status message announces "Status changed to {status}."
 - While a transition is in flight, all status buttons are disabled to prevent double submission.
 - `Closed` and `Cancelled` lock Actions Taken, so before sending either transition the screen asks for confirmation when an Action editor holds unsaved text; declining sends nothing and keeps the text. If the Ticket becomes terminal for another reason (another user), a draft that holds text stays on screen with the notice that it can no longer be saved, and Close asks before discarding it.
-- A requester's resolution indication is shown as an informational notice "Requester says the problem appears resolved. Review the actions and update the Ticket." It does not alter the status controls.
+- A requester's resolution indication is shown as an informational notice "Requester says the problem appears resolved. Review the actions and update the Ticket." It does not alter the status controls. The notice is only shown while the Ticket is still open for a decision; once it is `Resolved`, `Closed`, or `Cancelled` it is no longer shown (the stored indication is kept until a reopen clears it). The Ticket details list a **Resolved** date once `resolvedAt` is set and drop it after a reopen.
 
 ### 4.5 Final Polish Items (FR-15, FR-16)
 - Remove temporary, duplicate, or inconsistent UI elements left from earlier labs (for example duplicate headings and unused buttons) and replace placeholder text.

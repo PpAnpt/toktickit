@@ -314,6 +314,32 @@ describe('Lab 4: Ticket workflow controls (Issue #32)', () => {
     await waitFor(() => expect(fetchActions.mock.calls.length).toBeGreaterThanOrEqual(2));
   });
 
+  it('UI-12: the Ticket details show when the Ticket was resolved, and drop it again after a reopen', async () => {
+    const resolvedAt = '2026-10-30T07:30:00.000Z';
+    const update = vi.spyOn(api, 'updateTicketStatus')
+      .mockResolvedValueOnce(makeTicket({ status: 'Resolved', resolvedAt, updatedAt: '2026-10-30T08:05:00.000Z' }))
+      .mockResolvedValueOnce(makeTicket({ status: 'Reopened', resolvedAt: null, updatedAt: '2026-10-30T08:09:00.000Z' }));
+    setup();
+    expect(screen.queryByText('Resolved:')).not.toBeInTheDocument();
+    fireEvent.click(await screen.findByRole('button', { name: /Move to Resolved/ }));
+    expect(await screen.findByText('Resolved:')).toBeInTheDocument();
+    expect(screen.getByText(new Date(resolvedAt).toLocaleString())).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /Move to Reopened/ }));
+    await waitFor(() => expect(update).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(screen.queryByText('Resolved:')).not.toBeInTheDocument());
+  });
+
+  it('the Requester notice is not shown once the Ticket is Resolved, Closed or Cancelled', async () => {
+    for (const status of ['Resolved', 'Closed', 'Cancelled']) {
+      const { unmount } = setup(makeTicket({ status, indicatedResolvedAt: '2026-10-30T07:00:00.000Z' }));
+      await screen.findByText('Status & Workflow Transitions');
+      expect(screen.queryByText(/Requester says the problem appears resolved/), status).not.toBeInTheDocument();
+      unmount();
+      vi.restoreAllMocks();
+    }
+  });
+
   it('shows the Requester indication as an informational notice that does not change the controls', async () => {
     setup(makeTicket({ indicatedResolvedAt: '2026-10-30T07:00:00.000Z' }));
     expect(await screen.findByText(/Requester says the problem appears resolved\. Review the actions and update the Ticket\./)).toBeInTheDocument();
