@@ -174,9 +174,11 @@ describe('Lab 4: Ticket workflow API (Issue #32)', () => {
     describe('Requester indication is advisory (AC-12)', () => {
         it('WF-06: indicating resolved sets indicatedResolvedAt and never the status', async () => {
             const ticket = await createTicket({ status: 'Open' });
+            const before = await tokenOf(ticket.id);
             const res = await request(app).post(`/api/tickets/${ticket.id}/indicate-resolved`).set(bearer(david.token));
             expect(res.status).toBe(200);
             const row = await prisma().ticket.findUniqueOrThrow({ where: { id: ticket.id } });
+            expect(row.updatedAt.getTime()).toBeGreaterThan(new Date(before).getTime()); // staff holding the old token get a conflict
             expect(row.status).toBe('Open');
             expect(row.indicatedResolvedAt).not.toBeNull();
             expect(row.resolvedAt).toBeNull();

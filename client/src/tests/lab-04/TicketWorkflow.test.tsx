@@ -34,9 +34,9 @@ function makeTicket(overrides: Partial<api.StaffTicketDetail> = {}): api.StaffTi
   } as api.StaffTicketDetail;
 }
 
-function setup(ticket = makeTicket(), eventsPage: api.TicketEventsPage = { events: [], total: 0, page: 1, limit: 50 }) {
+function setup(ticket = makeTicket(), eventsPage: api.TicketEventsPage = { events: [], total: 0, page: 1, limit: 50 }, actions: api.ActionTakenItem[] = []) {
   vi.spyOn(api, 'fetchStaffMembers').mockResolvedValue(members);
-  const fetchActions = vi.spyOn(api, 'fetchActionsTaken').mockResolvedValue({ actions: [], total: 0, page: 1, limit: 20 });
+  const fetchActions = vi.spyOn(api, 'fetchActionsTaken').mockResolvedValue({ actions, total: actions.length, page: 1, limit: 20 });
   vi.spyOn(api, 'fetchPublicComments').mockResolvedValue([]);
   vi.spyOn(api, 'fetchInternalNotes').mockResolvedValue([]);
   const fetchEvents = vi.spyOn(api, 'fetchTicketEvents').mockResolvedValue(eventsPage);
@@ -183,6 +183,60 @@ describe('Lab 4: Ticket workflow controls (Issue #32)', () => {
     fireEvent.change(screen.getByLabelText('Operational IT Priority'), { target: { value: 'URGENT' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save IT Priority' }));
     await waitFor(() => expect(priority).toHaveBeenCalledWith(1, 'URGENT', TOKEN));
+  });
+
+  const action = (overrides: Partial<api.ActionTakenItem> = {}): api.ActionTakenItem => ({
+    id: 7, ticketId: 1, actionAt: '2026-10-29T03:15:00.000Z', description: 'Checked the dock', result: 'Dock is fine',
+    performedBy: { id: 5, name: 'Sarah Connor', role: 'IT_STAFF' }, assignee: { id: 5, name: 'Sarah Connor', role: 'IT_STAFF' }, status: 'Completed', followUpRequired: false, followUpNote: null,
+    attachmentNotes: null, createdAt: '2026-10-29T03:20:00.000Z', updatedAt: '2026-10-29T03:20:00.000Z', updatedBy: null, ...overrides,
+  });
+
+  it('UI-14: Reload after a conflict keeps an unsaved Action draft and never shows the loading screen', async () => {
+    vi.spyOn(api, 'updateTicketStatus').mockRejectedValue(new api.ActionApiError(409, 'changed', 'STALE_UPDATE'));
+    const { fetchDetail } = setup(makeTicket(), undefined, [action()]);
+    fireEvent.click(await screen.findByRole('button', { name: 'Edit' }));
+    fireEvent.change(screen.getByLabelText('Action description'), { target: { value: 'My unsaved edit' } });
+
+    fireEvent.click(screen.getByRole('button', { name: /Move to Resolved/ }));
+    const conflict = await screen.findByTestId('conflict-message');
+    fetchDetail.mockResolvedValue(makeTicket({ status: 'In Progress', updatedAt: '2026-10-30T09:00:00.000Z' }));
+    fireEvent.click(within(conflict).getByRole('button', { name: 'Reload' }));
+
+    expect(screen.queryByText('Loading ticket details...')).not.toBeInTheDocument();
+    await waitFor(() => expect(moveButtons()).toEqual(['Waiting for Requester', 'Resolved', 'Cancelled']));
+    expect(screen.queryByText('Loading ticket details...')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Action description')).toHaveValue('My unsaved edit');
+    expect(screen.queryByTestId('conflict-message')).not.toBeInTheDocument();
+  });
+
+  it('UI-14: a failed Reload keeps the screen, the draft and the conflict message, and says why', async () => {
+    vi.spyOn(api, 'updateTicketStatus').mockRejectedValue(new api.ActionApiError(409, 'changed', 'STALE_UPDATE'));
+    const { fetchDetail } = setup(makeTicket(), undefined, [action()]);
+    fireEvent.click(await screen.findByRole('button', { name: 'Edit' }));
+    fireEvent.change(screen.getByLabelText('Action description'), { target: { value: 'Still here' } });
+    fireEvent.click(screen.getByRole('button', { name: /Move to Resolved/ }));
+    const conflict = await screen.findByTestId('conflict-message');
+    fetchDetail.mockRejectedValue(new Error('Failed to fetch ticket detail'));
+    fireEvent.click(within(conflict).getByRole('button', { name: 'Reload' }));
+    expect(await screen.findByText('Failed to fetch ticket detail')).toBeInTheDocument();
+    expect(screen.getByLabelText('Action description')).toHaveValue('Still here');
+    expect(screen.getByRole('button', { name: /Move to Resolved/ })).toBeInTheDocument();
+  });
+
+  it('UI-11: the gate message goes away once an action is recorded, because the facts it described changed', async () => {
+    vi.spyOn(api, 'updateTicketStatus').mockRejectedValue(
+      new api.ActionApiError(400, 'gate', 'RESOLUTION_GATE_FAILED', {}, undefined, { reasons: ['NO_COMPLETED_ACTION'], openActions: 0 }));
+    vi.spyOn(api, 'createActionTaken').mockResolvedValue({ action: action({ id: 8 }), replayed: false });
+    setup();
+    fireEvent.click(await screen.findByRole('button', { name: /Move to Resolved/ }));
+    expect(await screen.findByTestId('resolution-gate-message')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: '+ Add Action' }));
+    fireEvent.change(screen.getByLabelText('Action description'), { target: { value: 'Fixed it' } });
+    fireEvent.change(screen.getByLabelText(/^Result/), { target: { value: 'Works' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save action' }));
+    await screen.findByText('Action saved.');
+    await waitFor(() => expect(screen.queryByTestId('resolution-gate-message')).not.toBeInTheDocument());
   });
 
   it('UI-30: Move to Cancelled opens a confirm panel that warns about open actions; Keep leaves everything, Confirm cancels', async () => {

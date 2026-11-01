@@ -1,5 +1,6 @@
 import { Router, Response } from 'express';
 import { getPrisma } from '../prisma';
+import { nextToken } from '../services/actions';
 import { requireAppAccess, requireRole, AuthenticatedRequest } from '../middlewares/auth';
 import { TicketStatus } from '../../generated/prisma/client';
 
@@ -190,7 +191,8 @@ router.post(
 
             const updated = await getPrisma().ticket.update({
                 where: { id: ticket.id },
-                data: { indicatedResolvedAt: new Date() },
+                // The Ticket token must move on every change the staff screen could be showing (BR-20)
+                data: { indicatedResolvedAt: new Date(), updatedAt: nextToken(ticket.updatedAt) },
             });
 
             res.status(200).json({

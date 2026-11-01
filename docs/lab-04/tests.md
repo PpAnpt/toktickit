@@ -137,10 +137,10 @@ Run commands: `npm --prefix server test`, `npm --prefix client test`, `npm run t
 | UI-08 | UI | AC-26 | Network/500 error on create | Alert shown; entered text kept | `client/src/tests/lab-04/ActionsTaken.test.tsx` | Planned |
 | UI-09 | UI | AC-07 | `Closed`/`Cancelled` Ticket | Add and Edit hidden with an explanation | `client/src/tests/lab-04/ActionsTaken.test.tsx` | Planned |
 | UI-10 | UI | AC-15 | Status buttons for each status | Only permitted "Move to ..." buttons; none for terminal statuses | `client/src/tests/lab-04/TicketWorkflow.test.tsx` | Planned |
-| UI-11 | UI | AC-15 | `RESOLUTION_GATE_FAILED` | Gate message names the reasons with a link to Actions Taken; status unchanged | `client/src/tests/lab-04/TicketWorkflow.test.tsx` | Planned |
+| UI-11 | UI | AC-15 | `RESOLUTION_GATE_FAILED` | Gate message names the reasons with a link to Actions Taken; status unchanged; the message clears once an action is recorded | `client/src/tests/lab-04/TicketWorkflow.test.tsx` | Planned |
 | UI-12 | UI | AC-15 | Successful transition | Summary status badge refreshes; status message announced | `client/src/tests/lab-04/TicketWorkflow.test.tsx` | Planned |
 | UI-13 | UI | AC-27 | Transition in flight | All status buttons disabled; one request | `client/src/tests/lab-04/TicketWorkflow.test.tsx` | Planned |
-| UI-14 | UI | AC-26 | `409` on a transition | Conflict message with Reload; no status change shown | `client/src/tests/lab-04/TicketWorkflow.test.tsx` | Planned |
+| UI-14 | UI | AC-26 | `409` on a transition | Conflict message with Reload; no status change shown; Reload keeps the screen mounted, so an unsaved Action draft survives, and a failed Reload keeps the message and says why | `client/src/tests/lab-04/TicketWorkflow.test.tsx` | Planned |
 | UI-15 | UI | AC-18 | Staff dashboard cards and lists | Labels, values, recent Tickets, and My Recent Actions render | `client/src/tests/lab-04/StaffDashboard.test.tsx` | Planned |
 | UI-16 | UI | AC-20 | Staff drill-down links | Each card/row links to the queue filter in `api-spec.md` | `client/src/tests/lab-04/StaffDashboard.test.tsx` | Planned |
 | UI-17 | UI | AC-28 | Loading state | Skeletons with `aria-busy`; no stale numbers | `client/src/tests/lab-04/StaffDashboard.test.tsx` | Planned |

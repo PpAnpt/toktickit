@@ -76,8 +76,10 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
   const writeLock = useRef(false);
   const isBusy = isUpdatingStatus || isUpdatingOwner || isUpdatingPriority;
 
-  const loadTicketData = useCallback(async () => {
-    setIsLoading(true);
+  // `refresh` keeps the screen mounted: the first load shows the spinner, a reload must not unmount Actions Taken,
+  // which holds the user's unsaved editor text. Returns whether the data was loaded.
+  const loadTicketData = useCallback(async (refresh = false): Promise<boolean> => {
+    if (!refresh) setIsLoading(true);
     setError('');
     try {
       const [ticketData, membersData, commentsData, notesData] = await Promise.all([
@@ -92,8 +94,10 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
       setInternalNotes(notesData.length > 0 ? notesData : (ticketData.internalNotes || []));
       setSelectedOwnerId(ticketData.owner ? String(ticketData.owner.id) : '');
       setSelectedPriority(ticketData.itPriority || ticketData.requestedPriority || 'MEDIUM');
+      return true;
     } catch (err: any) {
       setError(err.message || 'Failed to load ticket details');
+      return false;
     } finally {
       setIsLoading(false);
     }
@@ -175,7 +179,10 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
   );
 
   // The latest saved Ticket replaces the stale view after a conflict
-  const handleReload = () => { resetFeedback(); loadTicketData(); };
+  // If the reload fails the conflict message stays, together with the reason, so the user can try again
+  const handleReload = async () => {
+    if (await loadTicketData(true)) resetFeedback();
+  };
 
   // Handle Post Public Comment
   const handlePostComment = async (e: React.FormEvent) => {
@@ -416,6 +423,9 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
             canEdit
             staffMembers={staffMembers}
             onChanged={() => {
+              // A recorded action changes what the gate and conflict messages described
+              setGate(null);
+              setConflict(false);
               fetchStaffTicketDetail(ticketId).then(setTicket).catch(() => { /* the saved action is authoritative; keep the current view */ });
               if (onTicketUpdated) onTicketUpdated();
             }}
@@ -613,7 +623,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
                       <div className="d-flex gap-2">
                         <button type="button" className="btn btn-sm btn-danger" disabled={isBusy}
                           onClick={() => { setConfirmCancel(false); handleTransitionStatus('Cancelled'); }}>Cancel Ticket</button>
-                        <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => setConfirmCancel(false)}>Keep Ticket</button>
+                        <button type="button" className="btn btn-sm btn-outline-secondary" autoFocus onClick={() => setConfirmCancel(false)}>Keep Ticket</button>
                       </div>
                     </div>
                   )}
