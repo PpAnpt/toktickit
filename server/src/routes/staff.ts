@@ -5,6 +5,7 @@ import { TicketPriority } from '../../generated/prisma/client';
 import { statusDisplay, statusFilter } from '../services/ticket-status';
 import { changeOwner, changePriority, changeStatus } from '../services/workflow';
 import { sendApiError } from './send-error';
+import { effectivePriorityWhere } from '../services/dashboard';
 
 const router = Router();
 
@@ -74,13 +75,7 @@ router.get('/tickets', async (req: AuthenticatedRequest, res: Response) => {
 
         // Priority filter (checks effective IT Priority, or requestedPriority if itPriority is null)
         if (priorityParam && priorityParam !== 'All') {
-            const prio = priorityParam.toUpperCase() as TicketPriority;
-            andConditions.push({
-                OR: [
-                    { itPriority: prio },
-                    { itPriority: null, requestedPriority: prio },
-                ],
-            });
+            andConditions.push(effectivePriorityWhere(priorityParam.toUpperCase() as TicketPriority));
         }
 
         // Owner filter
