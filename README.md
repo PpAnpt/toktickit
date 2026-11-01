@@ -124,8 +124,8 @@ npm run dev                 # http://localhost:5173
 
 ```bash
 npm --prefix server test    # unit, API, migration, seed, safe-error and performance-smoke tests (258)
-npm --prefix client test    # UI component tests (128)
-npm run test:e2e            # Playwright end-to-end tests (33); starts server and client
+npm --prefix client test    # UI component tests (133)
+npm run test:e2e            # Playwright end-to-end tests (34); starts server and client
 npm run screenshots         # Regenerates artifacts/lab-03/screenshots
 npx playwright test --config scripts/screenshots-lab4.config.ts   # Regenerates artifacts/lab-04/screenshots
 bash scripts/api-authorization-evidence.sh   # curl evidence of 401/403/404 rules (API must be running)

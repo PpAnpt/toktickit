@@ -11,45 +11,45 @@
   "results": [
     {
       "endpoint": "GET /api/dashboard/requester",
-      "min": 13.2,
-      "median": 17.6,
-      "p95": 23.1,
-      "max": 24.3
+      "min": 4.4,
+      "median": 6.1,
+      "p95": 6.8,
+      "max": 7.3
     },
     {
       "endpoint": "GET /api/dashboard/staff (IT Staff)",
-      "min": 18,
-      "median": 21.6,
-      "p95": 25.5,
-      "max": 27.6
+      "min": 7.7,
+      "median": 8.6,
+      "p95": 10.5,
+      "max": 10.7
     },
     {
       "endpoint": "GET /api/dashboard/staff (Administrator)",
-      "min": 16.1,
-      "median": 25.3,
-      "p95": 31.6,
-      "max": 51.9
+      "min": 8.7,
+      "median": 9.6,
+      "p95": 10.5,
+      "max": 10.5
     },
     {
       "endpoint": "GET /api/tickets/:id/actions?limit=20",
-      "min": 9.3,
-      "median": 13.4,
-      "p95": 19.3,
-      "max": 24.9
+      "min": 5.8,
+      "median": 7.1,
+      "p95": 9,
+      "max": 10
     },
     {
       "endpoint": "GET /api/staff/tickets/:id/actions/:actionId/revisions",
-      "min": 7.5,
-      "median": 10.1,
-      "p95": 12.3,
-      "max": 13.8
+      "min": 5.2,
+      "median": 5.9,
+      "p95": 6.8,
+      "max": 7.1
     },
     {
       "endpoint": "GET /api/tickets/:id/events",
-      "min": 6.9,
-      "median": 8.7,
-      "p95": 12.1,
-      "max": 13.4
+      "min": 4.6,
+      "median": 5.6,
+      "p95": 7.1,
+      "max": 7.2
     }
   ]
 }

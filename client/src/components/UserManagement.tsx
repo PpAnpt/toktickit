@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import {
+
+import { Modal } from './Modal';import {
   fetchAdminUsers,
   createAdminUser,
   updateAdminUser,
@@ -391,11 +392,11 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
 
       {/* CREATE USER MODAL */}
       {isCreateOpen && (
-        <div className="modal show d-block" tabIndex={-1} style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1055 }}>
+        <Modal titleId="create-user-title" onClose={() => setIsCreateOpen(false)} busy={isCreating}>
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content shadow border-0">
               <div className="modal-header py-3" style={{ backgroundColor: '#EAF6EF', borderLeft: '4px solid #006B3C' }}>
-                <h5 className="modal-title fw-bold" style={{ color: '#006B3C' }}>Create New User</h5>
+                <h5 id="create-user-title" className="modal-title fw-bold" style={{ color: '#006B3C' }}>Create New User</h5>
                 <button
                   type="button"
                   className="btn-close"
@@ -476,16 +477,16 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
               </form>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
 
       {/* EDIT USER MODAL */}
       {editingUser && (
-        <div className="modal show d-block" tabIndex={-1} style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1055 }}>
+        <Modal titleId="edit-user-title" onClose={() => setEditingUser(null)} busy={isEditing}>
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content shadow border-0">
               <div className="modal-header py-3" style={{ backgroundColor: '#EAF6EF', borderLeft: '4px solid #006B3C' }}>
-                <h5 className="modal-title fw-bold" style={{ color: '#006B3C' }}>Edit User Account</h5>
+                <h5 id="edit-user-title" className="modal-title fw-bold" style={{ color: '#006B3C' }}>Edit User Account</h5>
                 <button
                   type="button"
                   className="btn-close"
@@ -574,16 +575,16 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
               </form>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
 
       {/* RESET PASSWORD MODAL */}
       {resettingUser && (
-        <div className="modal show d-block" tabIndex={-1} style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1055 }}>
+        <Modal titleId="reset-password-title" onClose={() => setResettingUser(null)} busy={isResetting}>
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content shadow border-0">
               <div className="modal-header py-3" style={{ backgroundColor: '#EAF6EF', borderLeft: '4px solid #006B3C' }}>
-                <h5 className="modal-title fw-bold" style={{ color: '#006B3C' }}>Reset User Password</h5>
+                <h5 id="reset-password-title" className="modal-title fw-bold" style={{ color: '#006B3C' }}>Reset User Password</h5>
                 <button
                   type="button"
                   className="btn-close"
@@ -633,7 +634,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
               </form>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

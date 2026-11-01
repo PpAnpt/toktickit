@@ -65,15 +65,15 @@ Link: https://github.com/PpAnpt/toktickit/blob/main/docs/lab-04/specification.md
 
 # Answer Part 3: Test DD and Traceability
 
-Link: https://github.com/PpAnpt/toktickit/blob/main/docs/lab-04/tests.md. Planned rows 158, Final **Pass** 158 (section 5 of the document explains how each row was matched to the passing output).
+Link: https://github.com/PpAnpt/toktickit/blob/main/docs/lab-04/tests.md. Planned rows 163, Final **Pass** 163 (section 5 of the document explains how each row was matched to the passing output).
 
 | Suite | Command | Result |
 |---|---|---|
 | Server | `npm --prefix server test` | 258 passed, 0 failed (26 files) |
-| Client | `npm --prefix client test` | 128 passed, 0 failed (17 files) |
-| Playwright E2E | `npm run test:e2e` | 33 passed, 0 failed |
+| Client | `npm --prefix client test` | 133 passed, 0 failed (18 files) |
+| Playwright E2E | `npm run test:e2e` | 34 passed, 0 failed |
 
-Complete output: `artifacts/lab-04/test-output/server.txt`, `client.txt`, `e2e.txt` (commit `b4d34e6`, the code that the release PR brings to `main`). Run on `main` after the release merge: see the last paragraph of this Part.
+Complete output: `artifacts/lab-04/test-output/server.txt`, `client.txt`, `e2e.txt` (PR #42 head, the code that the release PR brings to `main`). Run on `main` after the release merge: see the last paragraph of this Part.
 
 {{include docs/lab-04/tests.md}}
 
@@ -170,8 +170,8 @@ Permitted transitions follow the final matrix (`specification.md`, tested for al
 
 # Answer Part 9: Zen Green UI, Responsive, Accessibility and Final Polish
 
-**Evidence:** `ui-spec.md` (rendered below, with the completed checklist in its last section), the screenshots of Parts 5 to 8 at 1280, 768 and 375 px, and these tests: `RSP-01..03` (no horizontal scroll, form and status buttons inside the viewport at the three widths), `A11Y-01` (add and edit an action with the keyboard only, fields reached by their labels; My Tickets cards open with Enter), `A11Y-02` (2px #0B7A46 focus ring, Escape closes the editor and returns the focus), `STY-01..03` (the follow-up badge says "Follow-up needed", messages are alerts with words, editable and read-only fields differ), `ERR-01` (safe generic 500 errors), `PERF-01/02` (p95 21 to 32 ms for six endpoints against a 1,000 ms limit on 5,000 Tickets and 20,000 actions; `artifacts/lab-04/performance/summary.json`).
+**Evidence:** `ui-spec.md` (rendered below, with the completed checklist in its last section), the screenshots of Parts 5 to 8 at 1280, 768 and 375 px, and these tests: `RSP-01..04` (no horizontal scroll on every screen and dialog, form and status buttons inside the viewport at the three widths), `MOD-01..04` (every dialog has a role and a name, takes the focus, keeps Tab inside, closes with Escape and returns the focus), `A11Y-01` (add and edit an action with the keyboard only, fields reached by their labels; My Tickets cards open with Enter), `A11Y-02` (2px #0B7A46 focus ring, Escape closes the editor and returns the focus), `STY-01..03` (the follow-up badge says "Follow-up needed", messages are alerts with words, editable and read-only fields differ), `ERR-01` (safe generic 500 errors), `PERF-01/02` (p95 21 to 32 ms for six endpoints against a 1,000 ms limit on 5,000 Tickets and 20,000 actions; `artifacts/lab-04/performance/summary.json`).
 
-Defects found while writing these tests and fixed in PR #41: the follow-up badge said only "Follow-up"; Bootstrap hid the focus outline on buttons; Escape did not close the editor and focus was lost; My Tickets cards could not be opened from the keyboard. **Not measured:** colour contrast was checked by design tokens and screenshots, not with an automated contrast tool.
+Defects found while writing these tests and fixed in PR #41: the follow-up badge said only "Follow-up"; Bootstrap hid the focus outline on buttons; Escape did not close the editor and focus was lost; My Tickets cards could not be opened from the keyboard. The final audit against the labsheet (section 7, no inaccessible modal dialogs) found that five dialogs (create, edit and reset user, attachment removal, and Change Password) had no accessible name, Escape or focus handling; they were fixed in PR #42. **Not measured:** colour contrast was checked by design tokens and screenshots, not with an automated contrast tool.
 
 {{include docs/lab-04/ui-spec.md}}

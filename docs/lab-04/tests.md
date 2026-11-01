@@ -156,12 +156,17 @@ Run commands: `npm --prefix server test`, `npm --prefix client test`, `npm run t
 ### 2.8 UI Style, Responsive, and Accessibility
 | Test ID | Type | Requirement / AC | What It Tests | Expected Result | Automated Test File | Final |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| MOD-01 | UI | AC-28 | A modal dialog | `role="dialog"` named by its title, `aria-modal`, first control focused | `client/src/tests/lab-04/Modal.test.tsx` | Pass |
+| MOD-02 | UI | AC-28 | Escape in a dialog | Closes it and returns the focus to the opener; ignored while a request is in flight | `client/src/tests/lab-04/Modal.test.tsx` | Pass |
+| MOD-03 | UI | AC-28 | Tab and Shift+Tab in a dialog | The focus stays inside it | `client/src/tests/lab-04/Modal.test.tsx` | Pass |
+| MOD-04 | UI | AC-28 | Change Password dialog | The voluntary one closes with Escape; the mandatory first-login one cannot be dismissed | `client/src/tests/lab-04/Modal.test.tsx` | Pass |
 | STY-01 | UI style | AC-28 | Follow-up badge | Contains the text "Follow-up needed" (with a flag symbol) in addition to colour | `client/src/tests/lab-04/ZenGreenStyle.test.tsx` | Pass |
 | STY-02 | UI style | AC-28 | Attention card and gate/conflict messages | Text cue present; `role="alert"` on messages | `client/src/tests/lab-04/ZenGreenStyle.test.tsx` | Pass |
 | STY-03 | UI style | AC-28 | Editable vs read-only fields | Different classes/attributes; Performed by is not editable | `client/src/tests/lab-04/ZenGreenStyle.test.tsx` | Pass |
 | RSP-01 | Responsive | AC-28 | Dashboards at 1280px, 768px, 375px | No horizontal overflow, clipping, or overlap | `e2e/lab-04/responsive-accessibility.spec.ts` | Pass |
 | RSP-02 | Responsive | AC-28 | Actions Taken area and Add/Edit form at three widths | No overflow; the form fits the mobile viewport | `e2e/lab-04/responsive-accessibility.spec.ts` | Pass |
 | RSP-03 | Responsive | AC-28 | Status controls and stale/gate messages at three widths | Fully visible, buttons reachable | `e2e/lab-04/responsive-accessibility.spec.ts` | Pass |
+| RSP-04 | Responsive | AC-28 | Create Ticket, My Tickets, Ticket Queue, User Management, the Change Password dialog and the Create User dialog at three widths | No horizontal overflow; the dialogs open, take the focus and close with Escape | `e2e/lab-04/responsive-accessibility.spec.ts` | Pass |
 | A11Y-01 | Accessibility | AC-28 | Keyboard only: open Add Action, fill, submit, edit | Entire flow operable; labels linked to inputs | `e2e/lab-04/responsive-accessibility.spec.ts` | Pass |
 | A11Y-02 | Accessibility | AC-28 | Focus visibility and dialog behavior | Visible 2px #0B7A46 focus ring on Bootstrap buttons too; Escape closes the editor (asking first when text is unsaved) and focus returns to the opener; My Tickets cards open with Enter or Space | `e2e/lab-04/responsive-accessibility.spec.ts` | Pass |
 
@@ -255,7 +260,7 @@ Run commands: `npm --prefix server test`, `npm --prefix client test`, `npm run t
 | AC-25 | WF-16, REG-01, REG-02, REG-03 |
 | AC-26 | ERR-01, UI-07, UI-08, UI-14, UI-19, UI-24 |
 | AC-27 | API-15, UI-06, UI-13, E2E-05 |
-| AC-28 | UI-17, STY-01, STY-02, STY-03, RSP-01, RSP-02, RSP-03, A11Y-01, A11Y-02 |
+| AC-28 | UI-17, STY-01, STY-02, STY-03, MOD-01, MOD-02, MOD-03, MOD-04, RSP-01, RSP-02, RSP-03, RSP-04, A11Y-01, A11Y-02 |
 | AC-29 | UI-25, E2E-12 |
 | AC-30 | PERF-01, PERF-02 |
 | AC-31 | API-17, API-18, API-19, UI-26, E2E-13, E2E-15 |
@@ -277,23 +282,23 @@ Every AC-01..AC-40 maps to at least one planned test. AC-28 is also verified by 
 | #31 Actions Taken | UNIT-01..03, UNIT-07, API-01..22, API-24..27, AUTHZ-01..05, HIST-01..03, HIST-06..10, MIG-01..04, SEED-01..02, UI-01..09, UI-26..29, UI-33..39, UI-31, E2E-01..05, E2E-13..15 |
 | #32 Ticket workflow | UNIT-04, API-23, WF-01..14, WF-16, HIST-04..05, UI-10..14, UI-30, UI-32, E2E-06..08, E2E-16 |
 | #33 Role dashboards | UNIT-05..06, WF-15, DASH-01..10, SDASH-01..08, UI-15..25, E2E-09..12 |
-| #34 Final hardening | ERR-01, PERF-01..02, STY-01..03, RSP-01..03, A11Y-01..02, REG-01..03 |
+| #34 Final hardening | ERR-01, PERF-01..02, STY-01..03, MOD-01..04, RSP-01..04, A11Y-01..02, REG-01..03 |
 | #35 Release | Final column updated with output from `main` |
 
 API-23 (cancelling a Ticket cancels its open Actions Taken, BR-32, AC-33) is owned by #32: the behaviour is part of the Ticket status endpoint, so it is implemented and tested together with the other status transitions. The Actions Taken API in #31 already provides the `AUTO_CANCELLED` revision type and the `Cancelled` status it relies on.
 
 ## 5. Final Status Evidence
-All three suites were run in full, with verbose output saved in `artifacts/lab-04/test-output/`, on the code of `lab4-staging` at merge commit `b4d34e6` (all five feature Pull Requests merged). The release Pull Request `lab4-staging` to `main` brings exactly this code to `main`; the same three commands are repeated on `main` after that merge (result recorded in the submission report).
+All three suites were run in full, with verbose output saved in `artifacts/lab-04/test-output/`, on the code of `lab4-staging` at merge commit `b4d34e6` plus the audit fixes of PR #42 (all five feature Pull Requests merged). The release Pull Request `lab4-staging` to `main` brings exactly this code to `main`; the same three commands are repeated on `main` after that merge (result recorded in the submission report).
 
 | Suite | Command | Result | Full output |
 | :--- | :--- | :--- | :--- |
 | Server (unit, API/integration, authorization, workflow, migration, seed, safe errors, performance smoke, and the Lab 1 to 3 regression suites) | `npm --prefix server test` | **258 passed, 0 failed** (26 files) | `artifacts/lab-04/test-output/server.txt` |
-| Client (UI component tests) | `npm --prefix client test` | **128 passed, 0 failed** (17 files) | `artifacts/lab-04/test-output/client.txt` |
-| End to end (Playwright, Labs 2 to 4) | `npm run test:e2e` | **33 passed, 0 failed** | `artifacts/lab-04/test-output/e2e.txt` |
+| Client (UI component tests) | `npm --prefix client test` | **133 passed, 0 failed** (18 files) | `artifacts/lab-04/test-output/client.txt` |
+| End to end (Playwright, Labs 2 to 4) | `npm run test:e2e` | **34 passed, 0 failed** | `artifacts/lab-04/test-output/e2e.txt` |
 
 All runs used the isolated database `localdb_test` (the development database was never touched); the E2E run followed `npx tsx prisma/seed.ts` on that database. Type checks `tsc --noEmit` (server) and `tsc -b` (client) pass.
 
-How the **Final** column was set: every Test ID of the plan was matched by name against the passing output, so a row is `Pass` only because a test carrying that ID ran and passed. 155 of the 158 IDs appear by name in the output; the other three, REG-01 to REG-03, are suite-level rows (the existing Lab 1 to 3 server, client and Playwright suites), which are `Pass` because those suites ran inside the three runs above without a failure. Performance numbers (PERF-01, PERF-02) are in `artifacts/lab-04/performance/summary.json`.
+How the **Final** column was set: every Test ID of the plan was matched by name against the passing output, so a row is `Pass` only because a test carrying that ID ran and passed. 160 of the 163 IDs appear by name in the output; the other three, REG-01 to REG-03, are suite-level rows (the existing Lab 1 to 3 server, client and Playwright suites), which are `Pass` because those suites ran inside the three runs above without a failure. Performance numbers (PERF-01, PERF-02) are in `artifacts/lab-04/performance/summary.json`.
 
 ## 6. Performance Smoke Protocol (PERF-01, PERF-02, AC-30)
 The measurement is defined so that anyone can repeat it and get comparable numbers.

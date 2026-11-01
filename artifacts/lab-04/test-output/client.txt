@@ -1,54 +1,58 @@
 
  RUN  v4.1.10 C:/Users/Anapat/Downloads/Lab1_Starter_Scaffold/toktickit/client
 
- ✓ src/tests/lab-03/PublicComments.test.tsx > UI-07: Requester Public Comments > renders existing comments with author and role, and an empty state 515ms
- ✓ src/tests/lab-03/StaffTicketQueue.test.tsx > UI-03 (AC-08, AC-14): Staff Ticket Queue Component Tests > should render the queue title, stats bar, and ticket list with badges 530ms
- ✓ src/tests/lab-03/UserManagement.test.tsx > UI-05 (AC-17, AC-18, AC-19, AC-20, AC-22): User Management Component Tests > renders user management table with user records, role badges, and status badges 418ms
- ✓ src/tests/lab-03/StaffTicketQueue.test.tsx > UI-03 (AC-08, AC-14): Staff Ticket Queue Component Tests > should filter tickets when search keyword is typed 239ms
- ✓ src/tests/lab-04/Accessibility.test.tsx > Lab 4: Zen Green style and keyboard behaviour (Issue #34) > STY-01: the follow-up badge says "Follow-up needed" in words, not only in colour 460ms
- ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > UI-01: renders every field, newest first as returned by the server 824ms
- ✓ src/tests/lab-03/Login.test.tsx > UI-01: Login Component Tests > should render all login form elements (email, password, sign-in button) 825ms
- ✓ src/tests/lab-03/ChangePassword.test.tsx > UI-02: ChangePassword Component Tests > should render all password update fields 831ms
- ✓ src/tests/lab-03/StaffTicketQueue.test.tsx > UI-03 (AC-08, AC-14): Staff Ticket Queue Component Tests > should filter tickets when status or priority dropdown changes 302ms
- ✓ src/tests/lab-03/AppShell.test.tsx > UI-06: Application shell, role navigation, and session handling > Requester sees only Create Ticket and My Tickets, with name and role badge 929ms
- ✓ src/tests/lab-03/PublicComments.test.tsx > UI-07: Requester Public Comments > renders comment content as plain text, not HTML 80ms
- ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > UI-02: shows the empty message, with the resolve hint for staff only 172ms
- ✓ src/tests/CreateTicket.test.tsx > UI-01: CreateTicket UI > should show validation message when submitting without a summary 1143ms
- ✓ src/tests/lab-04/RequesterDashboard.test.tsx > Lab 4: Requester dashboard (Issue #33) > UI-21: four labelled cards show their values and the Last 7 days sub-label on the two recent ones 1100ms
- ✓ src/tests/lab-03/StaffTicketQueue.test.tsx > UI-03 (AC-08, AC-14): Staff Ticket Queue Component Tests > should display empty state when no tickets are returned 118ms
- ✓ src/tests/lab-03/Login.test.tsx > UI-01: Login Component Tests > should show error when submitting empty fields 251ms
- ✓ src/tests/AttachmentSection.test.tsx > UI-03: AttachmentSection UI > should show file in attachment list when a valid file is selected 1288ms
- ✓ src/tests/lab-03/AppShell.test.tsx > UI-06: Application shell, role navigation, and session handling > IT Staff sees only the Ticket Queue 250ms
- ✓ src/tests/lab-03/ChangePassword.test.tsx > UI-02: ChangePassword Component Tests > should show error if passwords do not match 310ms
- ✓ src/tests/lab-03/PublicComments.test.tsx > UI-07: Requester Public Comments > posts a new comment and appends it to the thread 610ms
- ✓ src/tests/MyTickets.test.tsx > UI-02: MyTickets Empty State > should display empty state graphic and text when there are 0 tickets 1393ms
- ✓ src/tests/lab-03/Login.test.tsx > UI-01: Login Component Tests > should invoke onLoginSuccess when credentials are valid 303ms
- ✓ src/tests/lab-03/Login.test.tsx > UI-01: Login Component Tests > should display error alert when authentication fails 214ms
- ✓ src/tests/lab-04/RequesterDashboard.test.tsx > Lab 4: Requester dashboard (Issue #33) > UI-22: the attention and recent lists show number, summary and status, and each row opens its Ticket 303ms
- ✓ src/tests/lab-03/PublicComments.test.tsx > UI-07: Requester Public Comments > shows a safe error message when posting fails 255ms
- ✓ src/tests/lab-03/ChangePassword.test.tsx > UI-02: ChangePassword Component Tests > should show error if new password is shorter than 8 characters 281ms
- ✓ src/tests/lab-04/Accessibility.test.tsx > Lab 4: Zen Green style and keyboard behaviour (Issue #34) > STY-02: validation and conflict messages are alerts with words, and the status is text 892ms
- ✓ src/tests/lab-03/PublicComments.test.tsx > UI-07: Requester Public Comments > disables posting for an empty comment and hides the form when posting is not allowed 135ms
- ✓ src/tests/lab-03/ChangePassword.test.tsx > UI-02: ChangePassword Component Tests > should invoke onPasswordChanged when new password is valid 170ms
- ✓ src/tests/lab-03/AppShell.test.tsx > UI-06: Application shell, role navigation, and session handling > Administrator sees User Management and Ticket Queue 206ms
- ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > UI-03: staff see Add and Edit; a Requester sees neither and no history 378ms
- ✓ src/tests/lab-03/StaffTicketDetail.test.tsx > UI-04 (AC-09, AC-10, AC-11, AC-12, AC-13, AC-14): Staff Ticket Detail Component Tests > renders ticket details, metadata, attachments, and allowed transitions 1290ms
- ✓ src/tests/lab-04/Navigation.test.tsx > UI-25: role navigation, landing page and dashboard drill-down (Issue #33) > a Requester lands on the Requester dashboard; the menu is Dashboard, Create Ticket, My Tickets with Dashboard marked 1454ms
- ✓ src/tests/lab-04/RequesterDashboard.test.tsx > Lab 4: Requester dashboard (Issue #33) > UI-22: with nothing to show, both lists explain why 171ms
- ✓ src/tests/lab-04/Accessibility.test.tsx > Lab 4: Zen Green style and keyboard behaviour (Issue #34) > STY-03: editable fields differ from read-only text, and Performed by is never a field 238ms
- ✓ src/tests/lab-04/Navigation.test.tsx > UI-25: role navigation, landing page and dashboard drill-down (Issue #33) > a user who must change the initial password gets no dashboard and no dashboard request until it is saved 224ms
- ✓ src/tests/lab-03/UserManagement.test.tsx > UI-05 (AC-17, AC-18, AC-19, AC-20, AC-22): User Management Component Tests > filters users by search query and role filter dropdown 494ms
- ✓ src/tests/lab-03/StaffTicketQueue.test.tsx > UI-03 (AC-08, AC-14): Staff Ticket Queue Component Tests > should call onSelectTicket when clicking View button or row 702ms
- ✓ src/tests/lab-03/AppShell.test.tsx > UI-06: Application shell, role navigation, and session handling > a user who must change the initial password sees no application screens 314ms
- ✓ src/tests/lab-03/StaffTicketDetail.test.tsx > UI-04 (AC-09, AC-10, AC-11, AC-12, AC-13, AC-14): Staff Ticket Detail Component Tests > allows IT staff to claim ticket ownership 444ms
- ✓ src/tests/RequesterTicketDetail.test.tsx > UI-04: RequesterTicketDetail View > should display ticket details, metadata, and back button when ticket is selected 1826ms
- ✓ src/tests/lab-04/Accessibility.test.tsx > Lab 4: Zen Green style and keyboard behaviour (Issue #34) > A11Y-02: Escape closes the editor and focus returns to the button that opened it 177ms
- ✓ src/tests/lab-04/Accessibility.test.tsx > Lab 4: Zen Green style and keyboard behaviour (Issue #34) > A11Y-02: Escape with unsaved text asks first and keeps the editor when declined 138ms
- ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > UI-04: validation messages appear under their fields, the summary gets focus, and nothing is sent 357ms
- ✓ src/tests/lab-04/RequesterDashboard.test.tsx > Lab 4: Requester dashboard (Issue #33) > UI-23: every card opens My Tickets with the filter from api-spec section 4.1; quick actions are present 273ms
- ✓ src/tests/lab-03/UserManagement.test.tsx > UI-05 (AC-17, AC-18, AC-19, AC-20, AC-22): User Management Component Tests > opens Create User modal, fills form, and creates new account 966ms
- ✓ src/tests/lab-04/StaffDashboard.test.tsx > Lab 4: IT Staff dashboard (Issue #33) > UI-15: welcome line, five metric cards, recent Tickets and My Recent Actions render with their values 1747ms
- ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > UI-05: the follow-up note appears only when follow-up is checked and is then required 250ms
+ ✓ src/tests/lab-03/UserManagement.test.tsx > UI-05 (AC-17, AC-18, AC-19, AC-20, AC-22): User Management Component Tests > renders user management table with user records, role badges, and status badges 303ms
+ ✓ src/tests/lab-03/StaffTicketQueue.test.tsx > UI-03 (AC-08, AC-14): Staff Ticket Queue Component Tests > should render the queue title, stats bar, and ticket list with badges 306ms
+ ✓ src/tests/lab-04/Accessibility.test.tsx > Lab 4: Zen Green style and keyboard behaviour (Issue #34) > STY-01: the follow-up badge says "Follow-up needed" in words, not only in colour 254ms
+ ✓ src/tests/lab-04/Modal.test.tsx > Lab 4: accessible modal dialog (Issue #34, review of the whole work) > MOD-01: is a modal dialog named by its title, and the first control gets the focus 378ms
+ ✓ src/tests/lab-04/Modal.test.tsx > Lab 4: accessible modal dialog (Issue #34, review of the whole work) > MOD-02: Escape closes it and the focus returns to the button that opened it 39ms
+ ✓ src/tests/lab-04/Modal.test.tsx > Lab 4: accessible modal dialog (Issue #34, review of the whole work) > MOD-02: Escape is ignored while a request is in flight 46ms
+ ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > UI-01: renders every field, newest first as returned by the server 512ms
+ ✓ src/tests/lab-03/StaffTicketQueue.test.tsx > UI-03 (AC-08, AC-14): Staff Ticket Queue Component Tests > should filter tickets when search keyword is typed 183ms
+ ✓ src/tests/lab-03/AppShell.test.tsx > UI-06: Application shell, role navigation, and session handling > Requester sees only Create Ticket and My Tickets, with name and role badge 504ms
+ ✓ src/tests/lab-03/Login.test.tsx > UI-01: Login Component Tests > should render all login form elements (email, password, sign-in button) 524ms
+ ✓ src/tests/lab-03/PublicComments.test.tsx > UI-07: Requester Public Comments > renders existing comments with author and role, and an empty state 277ms
+ ✓ src/tests/lab-03/PublicComments.test.tsx > UI-07: Requester Public Comments > renders comment content as plain text, not HTML 36ms
+ ✓ src/tests/lab-04/Modal.test.tsx > Lab 4: accessible modal dialog (Issue #34, review of the whole work) > MOD-03: Tab and Shift+Tab stay inside the dialog 59ms
+ ✓ src/tests/lab-04/Modal.test.tsx > Lab 4: accessible modal dialog (Issue #34, review of the whole work) > MOD-04: the voluntary Change Password dialog closes with Escape; the mandatory one cannot be dismissed 173ms
+ ✓ src/tests/lab-03/ChangePassword.test.tsx > UI-02: ChangePassword Component Tests > should render all password update fields 521ms
+ ✓ src/tests/CreateTicket.test.tsx > UI-01: CreateTicket UI > should show validation message when submitting without a summary 656ms
+ ✓ src/tests/AttachmentSection.test.tsx > UI-03: AttachmentSection UI > should show file in attachment list when a valid file is selected 660ms
+ ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > UI-02: shows the empty message, with the resolve hint for staff only 88ms
+ ✓ src/tests/lab-04/RequesterDashboard.test.tsx > Lab 4: Requester dashboard (Issue #33) > UI-21: four labelled cards show their values and the Last 7 days sub-label on the two recent ones 614ms
+ ✓ src/tests/lab-03/StaffTicketQueue.test.tsx > UI-03 (AC-08, AC-14): Staff Ticket Queue Component Tests > should filter tickets when status or priority dropdown changes 183ms
+ ✓ src/tests/lab-03/AppShell.test.tsx > UI-06: Application shell, role navigation, and session handling > IT Staff sees only the Ticket Queue 85ms
+ ✓ src/tests/lab-04/Accessibility.test.tsx > Lab 4: Zen Green style and keyboard behaviour (Issue #34) > STY-02: validation and conflict messages are alerts with words, and the status is text 384ms
+ ✓ src/tests/lab-03/PublicComments.test.tsx > UI-07: Requester Public Comments > posts a new comment and appends it to the thread 360ms
+ ✓ src/tests/lab-03/PublicComments.test.tsx > UI-07: Requester Public Comments > shows a safe error message when posting fails 84ms
+ ✓ src/tests/lab-03/Login.test.tsx > UI-01: Login Component Tests > should show error when submitting empty fields 152ms
+ ✓ src/tests/MyTickets.test.tsx > UI-02: MyTickets Empty State > should display empty state graphic and text when there are 0 tickets 740ms
+ ✓ src/tests/lab-03/StaffTicketDetail.test.tsx > UI-04 (AC-09, AC-10, AC-11, AC-12, AC-13, AC-14): Staff Ticket Detail Component Tests > renders ticket details, metadata, attachments, and allowed transitions 663ms
+ ✓ src/tests/lab-03/PublicComments.test.tsx > UI-07: Requester Public Comments > disables posting for an empty comment and hides the form when posting is not allowed 68ms
+ ✓ src/tests/lab-03/ChangePassword.test.tsx > UI-02: ChangePassword Component Tests > should show error if passwords do not match 195ms
+ ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > UI-03: staff see Add and Edit; a Requester sees neither and no history 118ms
+ ✓ src/tests/lab-03/AppShell.test.tsx > UI-06: Application shell, role navigation, and session handling > Administrator sees User Management and Ticket Queue 119ms
+ ✓ src/tests/lab-04/Accessibility.test.tsx > Lab 4: Zen Green style and keyboard behaviour (Issue #34) > STY-03: editable fields differ from read-only text, and Performed by is never a field 128ms
+ ✓ src/tests/lab-04/Accessibility.test.tsx > Lab 4: Zen Green style and keyboard behaviour (Issue #34) > A11Y-02: Escape closes the editor and focus returns to the button that opened it 65ms
+ ✓ src/tests/lab-04/RequesterDashboard.test.tsx > Lab 4: Requester dashboard (Issue #33) > UI-22: the attention and recent lists show number, summary and status, and each row opens its Ticket 116ms
+ ✓ src/tests/lab-04/RequesterDashboard.test.tsx > Lab 4: Requester dashboard (Issue #33) > UI-22: with nothing to show, both lists explain why 90ms
+ ✓ src/tests/lab-04/Navigation.test.tsx > UI-25: role navigation, landing page and dashboard drill-down (Issue #33) > a Requester lands on the Requester dashboard; the menu is Dashboard, Create Ticket, My Tickets with Dashboard marked 739ms
+ ✓ src/tests/lab-04/Accessibility.test.tsx > Lab 4: Zen Green style and keyboard behaviour (Issue #34) > A11Y-02: Escape with unsaved text asks first and keeps the editor when declined 76ms
+ ✓ src/tests/lab-03/Login.test.tsx > UI-01: Login Component Tests > should invoke onLoginSuccess when credentials are valid 142ms
+ ✓ src/tests/lab-03/Login.test.tsx > UI-01: Login Component Tests > should display error alert when authentication fails 124ms
+ ✓ src/tests/lab-03/ChangePassword.test.tsx > UI-02: ChangePassword Component Tests > should show error if new password is shorter than 8 characters 143ms
+ ✓ src/tests/lab-03/ChangePassword.test.tsx > UI-02: ChangePassword Component Tests > should invoke onPasswordChanged when new password is valid 82ms
+ ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > UI-04: validation messages appear under their fields, the summary gets focus, and nothing is sent 133ms
+ ✓ src/tests/lab-04/StaffDashboard.test.tsx > Lab 4: IT Staff dashboard (Issue #33) > UI-15: welcome line, five metric cards, recent Tickets and My Recent Actions render with their values 820ms
+ ✓ src/tests/lab-03/StaffTicketQueue.test.tsx > UI-03 (AC-08, AC-14): Staff Ticket Queue Component Tests > should display empty state when no tickets are returned 58ms
+ ✓ src/tests/lab-03/UserManagement.test.tsx > UI-05 (AC-17, AC-18, AC-19, AC-20, AC-22): User Management Component Tests > filters users by search query and role filter dropdown 201ms
+ ✓ src/tests/lab-03/StaffTicketQueue.test.tsx > UI-03 (AC-08, AC-14): Staff Ticket Queue Component Tests > should call onSelectTicket when clicking View button or row 285ms
+ ✓ src/tests/lab-03/AppShell.test.tsx > UI-06: Application shell, role navigation, and session handling > a user who must change the initial password sees no application screens 147ms
+ ✓ src/tests/RequesterTicketDetail.test.tsx > UI-04: RequesterTicketDetail View > should display ticket details, metadata, and back button when ticket is selected 1006ms
+ ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > UI-05: the follow-up note appears only when follow-up is checked and is then required 120ms
+ ✓ src/tests/lab-04/RequesterDashboard.test.tsx > Lab 4: Requester dashboard (Issue #33) > UI-23: every card opens My Tickets with the filter from api-spec section 4.1; quick actions are present 136ms
+ ✓ src/tests/lab-03/StaffTicketDetail.test.tsx > UI-04 (AC-09, AC-10, AC-11, AC-12, AC-13, AC-14): Staff Ticket Detail Component Tests > allows IT staff to claim ticket ownership 185ms
+ ✓ src/tests/lab-04/Navigation.test.tsx > UI-25: role navigation, landing page and dashboard drill-down (Issue #33) > a user who must change the initial password gets no dashboard and no dashboard request until it is saved 129ms
 stderr | src/tests/lab-03/AppShell.test.tsx > UI-06: Application shell, role navigation, and session handling > returns to the login screen with a notice when the session is rejected
 An update to App inside a test was not wrapped in act(...).
 
@@ -261,82 +265,83 @@ act(() => {
 
 This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
 
- ✓ src/tests/lab-04/RequesterDashboard.test.tsx > Lab 4: Requester dashboard (Issue #33) > UI-24: loading, 403 and 500 give the same feedback as the staff dashboard 361ms
- ✓ src/tests/lab-03/StaffTicketDetail.test.tsx > UI-04 (AC-09, AC-10, AC-11, AC-12, AC-13, AC-14): Staff Ticket Detail Component Tests > allows IT staff to change IT priority 287ms
- ✓ src/tests/lab-03/AppShell.test.tsx > UI-06: Application shell, role navigation, and session handling > voluntary Change Password can be opened and cancelled 333ms
- ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > UI-06: a double click sends one request with one clientRequestId and disables Save while busy 174ms
- ✓ src/tests/lab-03/AppShell.test.tsx > UI-06: Application shell, role navigation, and session handling > returns to the login screen with a notice when the session is rejected 182ms
- ✓ src/tests/lab-03/UserManagement.test.tsx > UI-05 (AC-17, AC-18, AC-19, AC-20, AC-22): User Management Component Tests > disables active status switch when editing self to enforce BR-19 201ms
- ✓ src/tests/lab-03/UserManagement.test.tsx > UI-05 (AC-17, AC-18, AC-19, AC-20, AC-22): User Management Component Tests > opens Reset Password modal and submits temporary password (AC-22, BR-21) 260ms
- ✓ src/tests/lab-04/Navigation.test.tsx > UI-25: role navigation, landing page and dashboard drill-down (Issue #33) > IT Staff land on the staff dashboard: Dashboard, Ticket Queue 412ms
- ✓ src/tests/lab-04/TicketWorkflow.test.tsx > Lab 4: Ticket workflow controls (Issue #32) > UI-10: shows only the permitted "Move to" buttons for each status, and none for terminal statuses 2263ms
- ✓ src/tests/lab-03/StaffTicketDetail.test.tsx > UI-04 (AC-09, AC-10, AC-11, AC-12, AC-13, AC-14): Staff Ticket Detail Component Tests > allows IT staff to transition ticket status 206ms
- ✓ src/tests/lab-04/TicketWorkflow.test.tsx > Lab 4: Ticket workflow controls (Issue #32) > UI-10: Move to Resolved stays enabled and a hint explains the resolution rule 114ms
- ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > UI-06: the default action time is left to the server, but a time the user changed is sent 238ms
- ✓ src/tests/lab-04/StaffDashboard.test.tsx > Lab 4: IT Staff dashboard (Issue #33) > UI-15: Refresh loads the numbers again 587ms
- ✓ src/tests/lab-04/Navigation.test.tsx > UI-25: role navigation, landing page and dashboard drill-down (Issue #33) > the Administrator lands on the staff dashboard: Dashboard, Ticket Queue, User Management 300ms
- ✓ src/tests/lab-03/StaffTicketDetail.test.tsx > UI-04 (AC-09, AC-10, AC-11, AC-12, AC-13, AC-14): Staff Ticket Detail Component Tests > displays public comments and allows submitting a new comment 224ms
- ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > UI-06: an edit that leaves the time alone does not resend it 152ms
- ✓ src/tests/lab-03/StaffTicketDetail.test.tsx > UI-04 (AC-09, AC-10, AC-11, AC-12, AC-13, AC-14): Staff Ticket Detail Component Tests > switches to Internal Notes tab and allows adding a confidential note 238ms
- ✓ src/tests/lab-03/StaffTicketDetail.test.tsx > UI-04 (AC-09, AC-10, AC-11, AC-12, AC-13, AC-14): Staff Ticket Detail Component Tests > displays Indicated Resolved alert banner when indicatedResolvedAt is set 47ms
- ✓ src/tests/lab-04/StaffDashboard.test.tsx > Lab 4: IT Staff dashboard (Issue #33) > UI-16: each card, breakdown row, ticket row and the quick action goes to its queue filter or Ticket 322ms
- ✓ src/tests/lab-04/TicketWorkflow.test.tsx > Lab 4: Ticket workflow controls (Issue #32) > UI-11: RESOLUTION_GATE_FAILED names the reasons with a link to Actions Taken and leaves the status alone 240ms
- ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > UI-07: a stale update shows the banner with Reload, keeps the text, and retries with the latest token 227ms
- ✓ src/tests/lab-04/StaffDashboard.test.tsx > Lab 4: IT Staff dashboard (Issue #33) > UI-17: while loading, skeletons are announced and no numbers are shown 154ms
- ✓ src/tests/lab-04/Navigation.test.tsx > UI-25: role navigation, landing page and dashboard drill-down (Issue #33) > the marked entry follows the page, uses aria-current, and the brand returns to the Dashboard 419ms
- ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > UI-08: a server or network failure on create shows an alert and keeps the entered text 115ms
- ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > UI-09: on a Closed or Cancelled Ticket Add and Edit are hidden with an explanation 66ms
- ✓ src/tests/lab-04/TicketWorkflow.test.tsx > Lab 4: Ticket workflow controls (Issue #32) > UI-12: a successful transition refreshes the summary status and announces it 267ms
- ✓ src/tests/lab-04/Navigation.test.tsx > UI-25: role navigation, landing page and dashboard drill-down (Issue #33) > a Requester card opens My Tickets with its filter: Open Tickets sends status=Active and the list shows it 165ms
- ✓ src/tests/lab-04/StaffDashboard.test.tsx > Lab 4: IT Staff dashboard (Issue #33) > UI-17: Refresh hides the old numbers while the new ones load (no stale numbers) 311ms
- ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > UI-26: the assignee list holds active staff only; an inactive current assignee is labelled and not selectable; server rejection shows under the field 131ms
- ✓ src/tests/lab-04/TicketWorkflow.test.tsx > Lab 4: Ticket workflow controls (Issue #32) > UI-12: the other sections of the Ticket survive a status change (the response carries no attachments) 182ms
- ✓ src/tests/lab-04/StaffDashboard.test.tsx > Lab 4: IT Staff dashboard (Issue #33) > UI-18: with all-zero data every card shows 0 and the lists explain they are empty 195ms
- ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > UI-27: lifecycle buttons match the status; Complete and Cancel need a Result; terminal actions show none 220ms
- ✓ src/tests/lab-04/TicketWorkflow.test.tsx > Lab 4: Ticket workflow controls (Issue #32) > UI-13: while a transition is in flight every status button is disabled and only one request is sent 228ms
- ✓ src/tests/lab-04/Navigation.test.tsx > UI-25: role navigation, landing page and dashboard drill-down (Issue #33) > Recently Updated and Recently Resolved send recent=...; the filter is explained and can be cleared 352ms
- ✓ src/tests/lab-04/StaffDashboard.test.tsx > Lab 4: IT Staff dashboard (Issue #33) > UI-19: 403 shows the forbidden message without numbers and a way back 35ms
- ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > UI-27: cancelling needs a reason 82ms
- ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > UI-28: staff can open a read-only per-action history with Before and After text 57ms
- ✓ src/tests/lab-04/StaffDashboard.test.tsx > Lab 4: IT Staff dashboard (Issue #33) > UI-19: 500 shows an error with Retry that loads again, without the raw server text 183ms
- ✓ src/tests/lab-04/StaffDashboard.test.tsx > Lab 4: IT Staff dashboard (Issue #33) > UI-19: a network failure also shows the error with Retry 46ms
- ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > UI-29: the actions list paginates with Previous/Next and "Showing x-y of N" 147ms
- ✓ src/tests/lab-04/TicketWorkflow.test.tsx > Lab 4: Ticket workflow controls (Issue #32) > UI-14: a 409 conflict shows a message with Reload, shows no status change, and Reload loads the latest Ticket 248ms
- ✓ src/tests/lab-04/Navigation.test.tsx > UI-25: role navigation, landing page and dashboard drill-down (Issue #33) > opening My Tickets from the menu after a drill-down shows the full list again 274ms
- ✓ src/tests/lab-04/StaffDashboard.test.tsx > Lab 4: IT Staff dashboard (Issue #33) > UI-20: the Accounts strip is shown to the Administrator and links to User Management 85ms
- ✓ src/tests/lab-04/StaffDashboard.test.tsx > Lab 4: IT Staff dashboard (Issue #33) > UI-20: IT Staff never see the Accounts strip, even if a response carried the counts 127ms
- ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > UI-29: the history list paginates too 77ms
- ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > UI-31: on a Resolved Ticket only Completed is offered; a 409 TICKET_RESOLVED shows an alert and keeps the text 92ms
- ✓ src/tests/lab-04/TicketWorkflow.test.tsx > Lab 4: Ticket workflow controls (Issue #32) > UI-14: owner and priority changes send the token and report a conflict the same way 227ms
- ✓ src/tests/lab-04/Navigation.test.tsx > UI-25: role navigation, landing page and dashboard drill-down (Issue #33) > a staff card opens the Ticket Queue with its filters applied to the controls and the request 197ms
- ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > unsaved edits and paging (UI-33..35) > UI-33: Close and switching editor ask before dropping typed text; cancelling keeps it, confirming closes 184ms
- ✓ src/tests/lab-04/Navigation.test.tsx > UI-25: role navigation, landing page and dashboard drill-down (Issue #33) > a breakdown row and the Urgent card open the queue with their priority and status 344ms
- ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > unsaved edits and paging (UI-33..35) > UI-33: no prompt when nothing was typed, and Add Action is guarded too 157ms
- ✓ src/tests/lab-04/TicketWorkflow.test.tsx > Lab 4: Ticket workflow controls (Issue #32) > UI-14: Reload after a conflict keeps an unsaved Action draft and never shows the loading screen 464ms
- ✓ src/tests/lab-04/Navigation.test.tsx > UI-25: role navigation, landing page and dashboard drill-down (Issue #33) > opening the queue from the menu clears the filters of an earlier drill-down 321ms
- ✓ src/tests/lab-04/Navigation.test.tsx > UI-25: role navigation, landing page and dashboard drill-down (Issue #33) > a Requester who opens the other role's dashboard URL sees the forbidden message and no numbers, with a way back 106ms
- ✓ src/tests/lab-04/TicketWorkflow.test.tsx > Lab 4: Ticket workflow controls (Issue #32) > UI-14: a failed Reload keeps the screen, the draft and the conflict message, and says why 342ms
- ✓ src/tests/lab-04/Navigation.test.tsx > UI-25: role navigation, landing page and dashboard drill-down (Issue #33) > opening a Ticket from the dashboard shows Back to Dashboard and returns there 175ms
- ✓ src/tests/lab-04/TicketWorkflow.test.tsx > Lab 4: Ticket workflow controls (Issue #32) > UI-11: the gate message goes away once an action is recorded, because the facts it described changed 265ms
- ✓ src/tests/lab-04/Navigation.test.tsx > UI-25: role navigation, landing page and dashboard drill-down (Issue #33) > clicking Ticket Queue in the menu while the queue is already open drops the Dashboard filters 207ms
- ✓ src/tests/lab-04/Navigation.test.tsx > UI-25: role navigation, landing page and dashboard drill-down (Issue #33) > clicking My Tickets in the menu also clears Search and Category, even without leaving the page 137ms
- ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > unsaved edits and paging (UI-33..35) > UI-34: the editor and text survive Reload latest when the action moved to another page 987ms
- ✓ src/tests/lab-04/TicketWorkflow.test.tsx > Lab 4: Ticket workflow controls (Issue #32) > unsaved Action text before a terminal transition (UI-30) > UI-30: Cancel Ticket with an unsaved Action draft asks first; declining keeps the Ticket and the text, confirming cancels 383ms
- ✓ src/tests/lab-04/Navigation.test.tsx > UI-25: role navigation, landing page and dashboard drill-down (Issue #33) > a REQUESTER who opens /tickets/9 before signing in lands in My Tickets, not on the Dashboard 162ms
- ✓ src/tests/lab-04/Navigation.test.tsx > UI-25: role navigation, landing page and dashboard drill-down (Issue #33) > a IT_STAFF who opens /tickets/9 before signing in lands in Ticket Queue, not on the Dashboard 191ms
- ✓ src/tests/lab-04/TicketWorkflow.test.tsx > Lab 4: Ticket workflow controls (Issue #32) > unsaved Action text before a terminal transition (UI-30) > UI-30: Resolved to Closed with an unsaved edit asks first; declining sends nothing 227ms
- ✓ src/tests/lab-04/TicketWorkflow.test.tsx > Lab 4: Ticket workflow controls (Issue #32) > unsaved Action text before a terminal transition (UI-30) > UI-30: no prompt for a transition that keeps the editor usable 231ms
- ✓ src/tests/lab-04/TicketWorkflow.test.tsx > Lab 4: Ticket workflow controls (Issue #32) > UI-30: Move to Cancelled opens a confirm panel that warns about open actions; Keep leaves everything, Confirm cancels 222ms
- ✓ src/tests/lab-04/TicketWorkflow.test.tsx > Lab 4: Ticket workflow controls (Issue #32) > UI-12: the Ticket details show when the Ticket was resolved, and drop it again after a reopen 169ms
- ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > unsaved edits and paging (UI-33..35) > UI-34: a failed reload keeps the editor, the text and the Reload latest button 945ms
- ✓ src/tests/lab-04/TicketWorkflow.test.tsx > Lab 4: Ticket workflow controls (Issue #32) > the Requester notice is not shown once the Ticket is Resolved, Closed or Cancelled 110ms
- ✓ src/tests/lab-04/TicketWorkflow.test.tsx > Lab 4: Ticket workflow controls (Issue #32) > shows the Requester indication as an informational notice that does not change the controls 73ms
- ✓ src/tests/lab-04/TicketWorkflow.test.tsx > Lab 4: Ticket workflow controls (Issue #32) > Ticket history timeline (UI-32) > UI-32: lists status, owner and priority events oldest first, read-only 82ms
- ✓ src/tests/lab-04/TicketWorkflow.test.tsx > Lab 4: Ticket workflow controls (Issue #32) > Ticket history timeline (UI-32) > UI-32: a Ticket without events says "No history recorded before Lab 4." 59ms
- ✓ src/tests/lab-04/TicketWorkflow.test.tsx > Lab 4: Ticket workflow controls (Issue #32) > Ticket history timeline (UI-32) > UI-32: a load failure is reported with Retry, and the rest of the screen keeps working 165ms
- ✓ src/tests/lab-04/TicketWorkflow.test.tsx > Lab 4: Ticket workflow controls (Issue #32) > Ticket history timeline (UI-32) > UI-32: paginates long histories 102ms
- ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > unsaved edits and paging (UI-33..35) > UI-35: changing page keeps an open editor and its text 793ms
- ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > unsaved edits and paging (UI-33..35) > UI-36: the conflict banner and Reload latest survive the editor moving to the detached block while another page is still loading 1035ms
+ ✓ src/tests/lab-03/UserManagement.test.tsx > UI-05 (AC-17, AC-18, AC-19, AC-20, AC-22): User Management Component Tests > opens Create User modal, fills form, and creates new account 522ms
+ ✓ src/tests/lab-03/AppShell.test.tsx > UI-06: Application shell, role navigation, and session handling > voluntary Change Password can be opened and cancelled 155ms
+ ✓ src/tests/lab-03/AppShell.test.tsx > UI-06: Application shell, role navigation, and session handling > returns to the login screen with a notice when the session is rejected 107ms
+ ✓ src/tests/lab-03/StaffTicketDetail.test.tsx > UI-04 (AC-09, AC-10, AC-11, AC-12, AC-13, AC-14): Staff Ticket Detail Component Tests > allows IT staff to change IT priority 204ms
+ ✓ src/tests/lab-04/RequesterDashboard.test.tsx > Lab 4: Requester dashboard (Issue #33) > UI-24: loading, 403 and 500 give the same feedback as the staff dashboard 223ms
+ ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > UI-06: a double click sends one request with one clientRequestId and disables Save while busy 96ms
+ ✓ src/tests/lab-04/Navigation.test.tsx > UI-25: role navigation, landing page and dashboard drill-down (Issue #33) > IT Staff land on the staff dashboard: Dashboard, Ticket Queue 210ms
+ ✓ src/tests/lab-03/UserManagement.test.tsx > UI-05 (AC-17, AC-18, AC-19, AC-20, AC-22): User Management Component Tests > disables active status switch when editing self to enforce BR-19 108ms
+ ✓ src/tests/lab-03/UserManagement.test.tsx > UI-05 (AC-17, AC-18, AC-19, AC-20, AC-22): User Management Component Tests > opens Reset Password modal and submits temporary password (AC-22, BR-21) 135ms
+ ✓ src/tests/lab-04/StaffDashboard.test.tsx > Lab 4: IT Staff dashboard (Issue #33) > UI-15: Refresh loads the numbers again 315ms
+ ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > UI-06: the default action time is left to the server, but a time the user changed is sent 129ms
+ ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > UI-06: an edit that leaves the time alone does not resend it 73ms
+ ✓ src/tests/lab-04/TicketWorkflow.test.tsx > Lab 4: Ticket workflow controls (Issue #32) > UI-10: shows only the permitted "Move to" buttons for each status, and none for terminal statuses 1187ms
+ ✓ src/tests/lab-04/TicketWorkflow.test.tsx > Lab 4: Ticket workflow controls (Issue #32) > UI-10: Move to Resolved stays enabled and a hint explains the resolution rule 53ms
+ ✓ src/tests/lab-03/StaffTicketDetail.test.tsx > UI-04 (AC-09, AC-10, AC-11, AC-12, AC-13, AC-14): Staff Ticket Detail Component Tests > allows IT staff to transition ticket status 102ms
+ ✓ src/tests/lab-04/Navigation.test.tsx > UI-25: role navigation, landing page and dashboard drill-down (Issue #33) > the Administrator lands on the staff dashboard: Dashboard, Ticket Queue, User Management 120ms
+ ✓ src/tests/lab-03/StaffTicketDetail.test.tsx > UI-04 (AC-09, AC-10, AC-11, AC-12, AC-13, AC-14): Staff Ticket Detail Component Tests > displays public comments and allows submitting a new comment 150ms
+ ✓ src/tests/lab-04/StaffDashboard.test.tsx > Lab 4: IT Staff dashboard (Issue #33) > UI-16: each card, breakdown row, ticket row and the quick action goes to its queue filter or Ticket 255ms
+ ✓ src/tests/lab-03/StaffTicketDetail.test.tsx > UI-04 (AC-09, AC-10, AC-11, AC-12, AC-13, AC-14): Staff Ticket Detail Component Tests > switches to Internal Notes tab and allows adding a confidential note 155ms
+ ✓ src/tests/lab-03/StaffTicketDetail.test.tsx > UI-04 (AC-09, AC-10, AC-11, AC-12, AC-13, AC-14): Staff Ticket Detail Component Tests > displays Indicated Resolved alert banner when indicatedResolvedAt is set 27ms
+ ✓ src/tests/lab-04/TicketWorkflow.test.tsx > Lab 4: Ticket workflow controls (Issue #32) > UI-11: RESOLUTION_GATE_FAILED names the reasons with a link to Actions Taken and leaves the status alone 160ms
+ ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > UI-07: a stale update shows the banner with Reload, keeps the text, and retries with the latest token 162ms
+ ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > UI-08: a server or network failure on create shows an alert and keeps the entered text 64ms
+ ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > UI-09: on a Closed or Cancelled Ticket Add and Edit are hidden with an explanation 30ms
+ ✓ src/tests/lab-04/Navigation.test.tsx > UI-25: role navigation, landing page and dashboard drill-down (Issue #33) > the marked entry follows the page, uses aria-current, and the brand returns to the Dashboard 273ms
+ ✓ src/tests/lab-04/StaffDashboard.test.tsx > Lab 4: IT Staff dashboard (Issue #33) > UI-17: while loading, skeletons are announced and no numbers are shown 97ms
+ ✓ src/tests/lab-04/TicketWorkflow.test.tsx > Lab 4: Ticket workflow controls (Issue #32) > UI-12: a successful transition refreshes the summary status and announces it 176ms
+ ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > UI-26: the assignee list holds active staff only; an inactive current assignee is labelled and not selectable; server rejection shows under the field 71ms
+ ✓ src/tests/lab-04/Navigation.test.tsx > UI-25: role navigation, landing page and dashboard drill-down (Issue #33) > a Requester card opens My Tickets with its filter: Open Tickets sends status=Active and the list shows it 105ms
+ ✓ src/tests/lab-04/StaffDashboard.test.tsx > Lab 4: IT Staff dashboard (Issue #33) > UI-17: Refresh hides the old numbers while the new ones load (no stale numbers) 166ms
+ ✓ src/tests/lab-04/TicketWorkflow.test.tsx > Lab 4: Ticket workflow controls (Issue #32) > UI-12: the other sections of the Ticket survive a status change (the response carries no attachments) 87ms
+ ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > UI-27: lifecycle buttons match the status; Complete and Cancel need a Result; terminal actions show none 136ms
+ ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > UI-27: cancelling needs a reason 56ms
+ ✓ src/tests/lab-04/StaffDashboard.test.tsx > Lab 4: IT Staff dashboard (Issue #33) > UI-18: with all-zero data every card shows 0 and the lists explain they are empty 121ms
+ ✓ src/tests/lab-04/StaffDashboard.test.tsx > Lab 4: IT Staff dashboard (Issue #33) > UI-19: 403 shows the forbidden message without numbers and a way back 27ms
+ ✓ src/tests/lab-04/Navigation.test.tsx > UI-25: role navigation, landing page and dashboard drill-down (Issue #33) > Recently Updated and Recently Resolved send recent=...; the filter is explained and can be cleared 197ms
+ ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > UI-28: staff can open a read-only per-action history with Before and After text 43ms
+ ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > UI-29: the actions list paginates with Previous/Next and "Showing x-y of N" 84ms
+ ✓ src/tests/lab-04/TicketWorkflow.test.tsx > Lab 4: Ticket workflow controls (Issue #32) > UI-13: while a transition is in flight every status button is disabled and only one request is sent 138ms
+ ✓ src/tests/lab-04/StaffDashboard.test.tsx > Lab 4: IT Staff dashboard (Issue #33) > UI-19: 500 shows an error with Retry that loads again, without the raw server text 89ms
+ ✓ src/tests/lab-04/StaffDashboard.test.tsx > Lab 4: IT Staff dashboard (Issue #33) > UI-19: a network failure also shows the error with Retry 20ms
+ ✓ src/tests/lab-04/StaffDashboard.test.tsx > Lab 4: IT Staff dashboard (Issue #33) > UI-20: the Accounts strip is shown to the Administrator and links to User Management 40ms
+ ✓ src/tests/lab-04/StaffDashboard.test.tsx > Lab 4: IT Staff dashboard (Issue #33) > UI-20: IT Staff never see the Accounts strip, even if a response carried the counts 63ms
+ ✓ src/tests/lab-04/Navigation.test.tsx > UI-25: role navigation, landing page and dashboard drill-down (Issue #33) > opening My Tickets from the menu after a drill-down shows the full list again 156ms
+ ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > UI-29: the history list paginates too 51ms
+ ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > UI-31: on a Resolved Ticket only Completed is offered; a 409 TICKET_RESOLVED shows an alert and keeps the text 54ms
+ ✓ src/tests/lab-04/TicketWorkflow.test.tsx > Lab 4: Ticket workflow controls (Issue #32) > UI-14: a 409 conflict shows a message with Reload, shows no status change, and Reload loads the latest Ticket 138ms
+ ✓ src/tests/lab-04/Navigation.test.tsx > UI-25: role navigation, landing page and dashboard drill-down (Issue #33) > a staff card opens the Ticket Queue with its filters applied to the controls and the request 99ms
+ ✓ src/tests/lab-04/TicketWorkflow.test.tsx > Lab 4: Ticket workflow controls (Issue #32) > UI-14: owner and priority changes send the token and report a conflict the same way 142ms
+ ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > unsaved edits and paging (UI-33..35) > UI-33: Close and switching editor ask before dropping typed text; cancelling keeps it, confirming closes 90ms
+ ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > unsaved edits and paging (UI-33..35) > UI-33: no prompt when nothing was typed, and Add Action is guarded too 67ms
+ ✓ src/tests/lab-04/Navigation.test.tsx > UI-25: role navigation, landing page and dashboard drill-down (Issue #33) > a breakdown row and the Urgent card open the queue with their priority and status 164ms
+ ✓ src/tests/lab-04/TicketWorkflow.test.tsx > Lab 4: Ticket workflow controls (Issue #32) > UI-14: Reload after a conflict keeps an unsaved Action draft and never shows the loading screen 232ms
+ ✓ src/tests/lab-04/Navigation.test.tsx > UI-25: role navigation, landing page and dashboard drill-down (Issue #33) > opening the queue from the menu clears the filters of an earlier drill-down 158ms
+ ✓ src/tests/lab-04/Navigation.test.tsx > UI-25: role navigation, landing page and dashboard drill-down (Issue #33) > a Requester who opens the other role's dashboard URL sees the forbidden message and no numbers, with a way back 59ms
+ ✓ src/tests/lab-04/TicketWorkflow.test.tsx > Lab 4: Ticket workflow controls (Issue #32) > UI-14: a failed Reload keeps the screen, the draft and the conflict message, and says why 159ms
+ ✓ src/tests/lab-04/Navigation.test.tsx > UI-25: role navigation, landing page and dashboard drill-down (Issue #33) > opening a Ticket from the dashboard shows Back to Dashboard and returns there 92ms
+ ✓ src/tests/lab-04/Navigation.test.tsx > UI-25: role navigation, landing page and dashboard drill-down (Issue #33) > clicking Ticket Queue in the menu while the queue is already open drops the Dashboard filters 95ms
+ ✓ src/tests/lab-04/Navigation.test.tsx > UI-25: role navigation, landing page and dashboard drill-down (Issue #33) > clicking My Tickets in the menu also clears Search and Category, even without leaving the page 58ms
+ ✓ src/tests/lab-04/TicketWorkflow.test.tsx > Lab 4: Ticket workflow controls (Issue #32) > UI-11: the gate message goes away once an action is recorded, because the facts it described changed 119ms
+ ✓ src/tests/lab-04/Navigation.test.tsx > UI-25: role navigation, landing page and dashboard drill-down (Issue #33) > a REQUESTER who opens /tickets/9 before signing in lands in My Tickets, not on the Dashboard 56ms
+ ✓ src/tests/lab-04/Navigation.test.tsx > UI-25: role navigation, landing page and dashboard drill-down (Issue #33) > a IT_STAFF who opens /tickets/9 before signing in lands in Ticket Queue, not on the Dashboard 85ms
+ ✓ src/tests/lab-04/TicketWorkflow.test.tsx > Lab 4: Ticket workflow controls (Issue #32) > unsaved Action text before a terminal transition (UI-30) > UI-30: Cancel Ticket with an unsaved Action draft asks first; declining keeps the Ticket and the text, confirming cancels 154ms
+ ✓ src/tests/lab-04/TicketWorkflow.test.tsx > Lab 4: Ticket workflow controls (Issue #32) > unsaved Action text before a terminal transition (UI-30) > UI-30: Resolved to Closed with an unsaved edit asks first; declining sends nothing 98ms
+ ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > unsaved edits and paging (UI-33..35) > UI-34: the editor and text survive Reload latest when the action moved to another page 458ms
+ ✓ src/tests/lab-04/TicketWorkflow.test.tsx > Lab 4: Ticket workflow controls (Issue #32) > unsaved Action text before a terminal transition (UI-30) > UI-30: no prompt for a transition that keeps the editor usable 85ms
+ ✓ src/tests/lab-04/TicketWorkflow.test.tsx > Lab 4: Ticket workflow controls (Issue #32) > UI-30: Move to Cancelled opens a confirm panel that warns about open actions; Keep leaves everything, Confirm cancels 101ms
+ ✓ src/tests/lab-04/TicketWorkflow.test.tsx > Lab 4: Ticket workflow controls (Issue #32) > UI-12: the Ticket details show when the Ticket was resolved, and drop it again after a reopen 66ms
+ ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > unsaved edits and paging (UI-33..35) > UI-34: a failed reload keeps the editor, the text and the Reload latest button 371ms
+ ✓ src/tests/lab-04/TicketWorkflow.test.tsx > Lab 4: Ticket workflow controls (Issue #32) > the Requester notice is not shown once the Ticket is Resolved, Closed or Cancelled 41ms
+ ✓ src/tests/lab-04/TicketWorkflow.test.tsx > Lab 4: Ticket workflow controls (Issue #32) > shows the Requester indication as an informational notice that does not change the controls 24ms
+ ✓ src/tests/lab-04/TicketWorkflow.test.tsx > Lab 4: Ticket workflow controls (Issue #32) > Ticket history timeline (UI-32) > UI-32: lists status, owner and priority events oldest first, read-only 24ms
+ ✓ src/tests/lab-04/TicketWorkflow.test.tsx > Lab 4: Ticket workflow controls (Issue #32) > Ticket history timeline (UI-32) > UI-32: a Ticket without events says "No history recorded before Lab 4." 30ms
+ ✓ src/tests/lab-04/TicketWorkflow.test.tsx > Lab 4: Ticket workflow controls (Issue #32) > Ticket history timeline (UI-32) > UI-32: a load failure is reported with Retry, and the rest of the screen keeps working 70ms
+ ✓ src/tests/lab-04/TicketWorkflow.test.tsx > Lab 4: Ticket workflow controls (Issue #32) > Ticket history timeline (UI-32) > UI-32: paginates long histories 36ms
+ ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > unsaved edits and paging (UI-33..35) > UI-35: changing page keeps an open editor and its text 273ms
+ ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > unsaved edits and paging (UI-33..35) > UI-36: the conflict banner and Reload latest survive the editor moving to the detached block while another page is still loading 352ms
 stderr | src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > Ticket status changes while an editor is open (UI-38, UI-39) > UI-38: when the Ticket becomes Closed or Cancelled under an unsaved draft, the draft stays visible but cannot be saved, and Close asks first
 An update to ActionsTaken inside a test was not wrapped in act(...).
 
@@ -359,7 +364,6 @@ act(() => {
 
 This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
 
- ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > unsaved edits and paging (UI-33..35) > UI-37: a save in flight stays locked when the editor moves to the detached block, and finishes normally 785ms
 stderr | src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > Ticket status changes while an editor is open (UI-38, UI-39) > UI-38: with nothing typed the editor simply goes away when the Ticket becomes terminal
 An update to ActionsTaken inside a test was not wrapped in act(...).
 
@@ -382,12 +386,13 @@ act(() => {
 
 This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
 
- ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > Ticket status changes while an editor is open (UI-38, UI-39) > UI-38: when the Ticket becomes Closed or Cancelled under an unsaved draft, the draft stays visible but cannot be saved, and Close asks first 110ms
- ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > Ticket status changes while an editor is open (UI-38, UI-39) > UI-38: with nothing typed the editor simply goes away when the Ticket becomes terminal 42ms
- ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > Ticket status changes while an editor is open (UI-38, UI-39) > UI-39: a new-action draft planned as Planned becomes Completed when the Ticket turns Resolved, and keeps its text 78ms
+ ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > unsaved edits and paging (UI-33..35) > UI-37: a save in flight stays locked when the editor moves to the detached block, and finishes normally 270ms
+ ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > Ticket status changes while an editor is open (UI-38, UI-39) > UI-38: when the Ticket becomes Closed or Cancelled under an unsaved draft, the draft stays visible but cannot be saved, and Close asks first 36ms
+ ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > Ticket status changes while an editor is open (UI-38, UI-39) > UI-38: with nothing typed the editor simply goes away when the Ticket becomes terminal 14ms
+ ✓ src/tests/lab-04/ActionsTaken.test.tsx > Lab 4: ActionsTaken component (Issue #31) > Ticket status changes while an editor is open (UI-38, UI-39) > UI-39: a new-action draft planned as Planned becomes Completed when the Ticket turns Resolved, and keeps its text 42ms
 
- Test Files  17 passed (17)
-      Tests  128 passed (128)
-   Start at  17:47:16
-   Duration  22.61s (transform 15.24s, setup 22.61s, import 21.29s, tests 48.66s, environment 169.27s)
+ Test Files  18 passed (18)
+      Tests  133 passed (133)
+   Start at  18:41:17
+   Duration  8.06s (transform 7.41s, setup 8.11s, import 11.98s, tests 25.68s, environment 44.38s)
 

@@ -1,305 +1,305 @@
 
  RUN  v4.1.10 C:/Users/Anapat/Downloads/Lab1_Starter_Scaffold/toktickit/server
 
- ✓ tests/lab-04/migration.test.ts > Lab 4: migration, backfill and recovery (Issue #31) > MIG-01: Lab 3 data is preserved, the Lab 4 objects exist, and the schema matches schema.prisma 4074ms
- ✓ tests/lab-04/migration.test.ts > Lab 4: migration, backfill and recovery (Issue #31) > MIG-03: resolvedAt is backfilled from updatedAt for Resolved/Closed Tickets; legacy Tickets have no actions 36ms
- ✓ tests/lab-04/migration.test.ts > Lab 4: migration, backfill and recovery (Issue #31) > MIG-04: Restrict foreign keys block deletes; TRUNCATE cleanup works but the helper refuses non-test databases 85ms
- ✓ tests/lab-04/migration.test.ts > Lab 4: migration, backfill and recovery (Issue #31) > MIG-02: a pre-upgrade pg_dump restores into a clean database with the Lab 3 schema, data and migration history, and the upgrade can be applied again 4835ms
- ✓ tests/lab-04/performance-smoke.api.test.ts > Lab 4: performance smoke (Issue #34) > fixture has the documented shape 13ms
+ ✓ tests/lab-04/migration.test.ts > Lab 4: migration, backfill and recovery (Issue #31) > MIG-01: Lab 3 data is preserved, the Lab 4 objects exist, and the schema matches schema.prisma 1634ms
+ ✓ tests/lab-04/migration.test.ts > Lab 4: migration, backfill and recovery (Issue #31) > MIG-03: resolvedAt is backfilled from updatedAt for Resolved/Closed Tickets; legacy Tickets have no actions 17ms
+ ✓ tests/lab-04/migration.test.ts > Lab 4: migration, backfill and recovery (Issue #31) > MIG-04: Restrict foreign keys block deletes; TRUNCATE cleanup works but the helper refuses non-test databases 39ms
+ ✓ tests/lab-04/migration.test.ts > Lab 4: migration, backfill and recovery (Issue #31) > MIG-02: a pre-upgrade pg_dump restores into a clean database with the Lab 3 schema, data and migration history, and the upgrade can be applied again 2054ms
+ ✓ tests/lab-04/performance-smoke.api.test.ts > Lab 4: performance smoke (Issue #34) > fixture has the documented shape 2ms
 stdout | tests/lab-04/performance-smoke.api.test.ts > Lab 4: performance smoke (Issue #34) > PERF-01: Requester dashboard p95 under 1 second
-[perf] GET /api/dashboard/requester: min 13.2 ms, median 17.6 ms, p95 23.1 ms, max 24.3 ms
+[perf] GET /api/dashboard/requester: min 4.4 ms, median 6.1 ms, p95 6.8 ms, max 7.3 ms
 
- ✓ tests/lab-04/performance-smoke.api.test.ts > Lab 4: performance smoke (Issue #34) > PERF-01: Requester dashboard p95 under 1 second 697ms
+ ✓ tests/lab-04/performance-smoke.api.test.ts > Lab 4: performance smoke (Issue #34) > PERF-01: Requester dashboard p95 under 1 second 231ms
 stdout | tests/lab-04/performance-smoke.api.test.ts > Lab 4: performance smoke (Issue #34) > PERF-01: IT Staff dashboard p95 under 1 second
-[perf] GET /api/dashboard/staff (IT Staff): min 18 ms, median 21.6 ms, p95 25.5 ms, max 27.6 ms
+[perf] GET /api/dashboard/staff (IT Staff): min 7.7 ms, median 8.6 ms, p95 10.5 ms, max 10.7 ms
 
- ✓ tests/lab-04/performance-smoke.api.test.ts > Lab 4: performance smoke (Issue #34) > PERF-01: IT Staff dashboard p95 under 1 second 794ms
+ ✓ tests/lab-04/performance-smoke.api.test.ts > Lab 4: performance smoke (Issue #34) > PERF-01: IT Staff dashboard p95 under 1 second 323ms
 stdout | tests/lab-04/performance-smoke.api.test.ts > Lab 4: performance smoke (Issue #34) > PERF-01: Administrator dashboard p95 under 1 second
-[perf] GET /api/dashboard/staff (Administrator): min 16.1 ms, median 25.3 ms, p95 31.6 ms, max 51.9 ms
+[perf] GET /api/dashboard/staff (Administrator): min 8.7 ms, median 9.6 ms, p95 10.5 ms, max 10.5 ms
 
- ✓ tests/lab-04/performance-smoke.api.test.ts > Lab 4: performance smoke (Issue #34) > PERF-01: Administrator dashboard p95 under 1 second 862ms
+ ✓ tests/lab-04/performance-smoke.api.test.ts > Lab 4: performance smoke (Issue #34) > PERF-01: Administrator dashboard p95 under 1 second 332ms
 stdout | tests/lab-04/performance-smoke.api.test.ts > Lab 4: performance smoke (Issue #34) > PERF-02: Actions list of the 2,000-action Ticket p95 under 1 second
-[perf] GET /api/tickets/:id/actions?limit=20: min 9.3 ms, median 13.4 ms, p95 19.3 ms, max 24.9 ms
+[perf] GET /api/tickets/:id/actions?limit=20: min 5.8 ms, median 7.1 ms, p95 9 ms, max 10 ms
 
- ✓ tests/lab-04/performance-smoke.api.test.ts > Lab 4: performance smoke (Issue #34) > PERF-02: Actions list of the 2,000-action Ticket p95 under 1 second 453ms
+ ✓ tests/lab-04/performance-smoke.api.test.ts > Lab 4: performance smoke (Issue #34) > PERF-02: Actions list of the 2,000-action Ticket p95 under 1 second 245ms
 stdout | tests/lab-04/performance-smoke.api.test.ts > Lab 4: performance smoke (Issue #34) > PERF-02: first page of the revisions of an action p95 under 1 second
-[perf] GET /api/staff/tickets/:id/actions/:actionId/revisions: min 7.5 ms, median 10.1 ms, p95 12.3 ms, max 13.8 ms
+[perf] GET /api/staff/tickets/:id/actions/:actionId/revisions: min 5.2 ms, median 5.9 ms, p95 6.8 ms, max 7.1 ms
 
- ✓ tests/lab-04/performance-smoke.api.test.ts > Lab 4: performance smoke (Issue #34) > PERF-02: first page of the revisions of an action p95 under 1 second 347ms
+ ✓ tests/lab-04/performance-smoke.api.test.ts > Lab 4: performance smoke (Issue #34) > PERF-02: first page of the revisions of an action p95 under 1 second 204ms
 stdout | tests/lab-04/performance-smoke.api.test.ts > Lab 4: performance smoke (Issue #34) > PERF-02: first page of the Ticket events history p95 under 1 second
-[perf] GET /api/tickets/:id/events: min 6.9 ms, median 8.7 ms, p95 12.1 ms, max 13.4 ms
+[perf] GET /api/tickets/:id/events: min 4.6 ms, median 5.6 ms, p95 7.1 ms, max 7.2 ms
 
- ✓ tests/lab-04/performance-smoke.api.test.ts > Lab 4: performance smoke (Issue #34) > PERF-02: first page of the Ticket events history p95 under 1 second 304ms
- ✓ tests/lab-04/seed.test.ts > Lab 4: seed data (Issue #31) > SEED-01: running the seed twice creates no duplicate users, Tickets, or actions 6402ms
- ✓ tests/lab-04/seed.test.ts > Lab 4: seed data (Issue #31) > SEED-02 / AC-39: the seed demonstrates zero, one and many actions, all statuses, assignees, revisions and follow-up 109ms
- ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > transition matrix (AC-10) > WF-01: every permitted transition succeeds for IT Staff and Administrator 1814ms
- ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > transition matrix (AC-10) > WF-02: every other transition, including out of Closed and Cancelled, is a 400 and changes nothing 1250ms
- ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > transition matrix (AC-10) > WF-02: an unknown status or an inherited property name is a 400 validation error, not a 500 176ms
- ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > transition matrix (AC-10) > WF-03: a Requester cannot change status, owner or priority (403) 57ms
- ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > resolution gate (AC-11, AC-40) > WF-04: Resolved is refused with RESOLUTION_GATE_FAILED and the reasons, and the status is unchanged 187ms
- ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > resolution gate (AC-11, AC-40) > WF-05: Resolved succeeds after a Completed action exists and every open action is completed or cancelled, and sets resolvedAt 96ms
- ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > resolution gate (AC-11, AC-40) > WF-05: Closed keeps resolvedAt 110ms
- ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > Requester indication is advisory (AC-12) > WF-06: indicating resolved sets indicatedResolvedAt and never the status 52ms
- ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > Requester indication is advisory (AC-12) > WF-06: two simultaneous indications: exactly one succeeds and the other is a 409 66ms
- ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > Requester indication is advisory (AC-12) > WF-06: an indication that waits behind a staff change re-checks the locked Ticket and is refused when it became Resolved 447ms
- ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > Requester indication is advisory (AC-12) > WF-06: the new token is based on the locked row, so a staff write made just before is not lost 235ms
- ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > Requester indication is advisory (AC-12) > WF-07: reopening a Resolved Ticket clears resolvedAt and indicatedResolvedAt, and the Requester may indicate again 146ms
- ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > stale updates (AC-13, BR-19, BR-20) > WF-08: a stale expectedUpdatedAt on status, owner and priority is a 409 STALE_UPDATE and changes nothing 135ms
- ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > stale updates (AC-13, BR-19, BR-20) > WF-09: two concurrent different status changes with the same token: one succeeds, the other is 409 77ms
- ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > stale updates (AC-13, BR-19, BR-20) > WF-12: status, owner and priority without a valid expectedUpdatedAt are a 400 naming expectedUpdatedAt 335ms
-(node:33328) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+ ✓ tests/lab-04/performance-smoke.api.test.ts > Lab 4: performance smoke (Issue #34) > PERF-02: first page of the Ticket events history p95 under 1 second 196ms
+ ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > transition matrix (AC-10) > WF-01: every permitted transition succeeds for IT Staff and Administrator 808ms
+ ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > transition matrix (AC-10) > WF-02: every other transition, including out of Closed and Cancelled, is a 400 and changes nothing 516ms
+ ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > transition matrix (AC-10) > WF-02: an unknown status or an inherited property name is a 400 validation error, not a 500 49ms
+ ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > transition matrix (AC-10) > WF-03: a Requester cannot change status, owner or priority (403) 20ms
+ ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > resolution gate (AC-11, AC-40) > WF-04: Resolved is refused with RESOLUTION_GATE_FAILED and the reasons, and the status is unchanged 56ms
+ ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > resolution gate (AC-11, AC-40) > WF-05: Resolved succeeds after a Completed action exists and every open action is completed or cancelled, and sets resolvedAt 31ms
+ ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > resolution gate (AC-11, AC-40) > WF-05: Closed keeps resolvedAt 32ms
+ ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > Requester indication is advisory (AC-12) > WF-06: indicating resolved sets indicatedResolvedAt and never the status 18ms
+ ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > Requester indication is advisory (AC-12) > WF-06: two simultaneous indications: exactly one succeeds and the other is a 409 22ms
+ ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > Requester indication is advisory (AC-12) > WF-06: an indication that waits behind a staff change re-checks the locked Ticket and is refused when it became Resolved 427ms
+ ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > Requester indication is advisory (AC-12) > WF-06: the new token is based on the locked row, so a staff write made just before is not lost 113ms
+ ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > Requester indication is advisory (AC-12) > WF-07: reopening a Resolved Ticket clears resolvedAt and indicatedResolvedAt, and the Requester may indicate again 102ms
+ ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > stale updates (AC-13, BR-19, BR-20) > WF-08: a stale expectedUpdatedAt on status, owner and priority is a 409 STALE_UPDATE and changes nothing 58ms
+ ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > stale updates (AC-13, BR-19, BR-20) > WF-09: two concurrent different status changes with the same token: one succeeds, the other is 409 28ms
+ ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > stale updates (AC-13, BR-19, BR-20) > WF-12: status, owner and priority without a valid expectedUpdatedAt are a 400 naming expectedUpdatedAt 140ms
+(node:45844) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
 (Use `node --trace-deprecation ...` to show where the warning was created)
- ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > stale updates (AC-13, BR-19, BR-20) > WF-13: 10 parallel status changes with the same token: exactly one 200, nine 409, exactly one event 170ms
- ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > stale updates (AC-13, BR-19, BR-20) > WF-13: 10 parallel Action Taken edits with the same token: exactly one 200, nine 409, exactly one revision added 276ms
- ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > stale updates (AC-13, BR-19, BR-20) > WF-14: a write that fails the stale check is rolled back with no change and no history row 59ms
- ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > owner and priority rules (AC-14) > WF-10: an inactive user, a Requester or an unknown user cannot be the owner 150ms
- ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > owner and priority rules (AC-14) > WF-16: claiming a New Ticket still moves it to Open and records an owner and a status event 63ms
- ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > owner and priority rules (AC-14) > WF-16: unassigning, reassigning and a repeated owner are handled as in Lab 3 144ms
- ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > owner and priority rules (AC-14) > WF-16: IT Priority changes keep the Requested Priority and reject invalid values 110ms
- ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > status=Active filter (AC-20, BR-28) > WF-11: the staff queue and My Tickets return exactly the five active statuses; invalid values are still 400 277ms
- ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > recent filter on My Tickets (AC-20) > WF-15: recent=updated and recent=resolved filter; any other value is 400; Lab 3 validation is unchanged 242ms
- ✓ tests/lab-03/auth.api.test.ts > Lab 3: Authentication APIs > POST /api/auth/login > API-01 (AC-01): should authenticate active user with valid credentials and return JWT token 402ms
- ✓ tests/lab-03/auth.api.test.ts > Lab 3: Authentication APIs > POST /api/auth/login > should accept the email case-insensitively 128ms
- ✓ tests/lab-03/auth.api.test.ts > Lab 3: Authentication APIs > POST /api/auth/login > API-02 (AC-02): should reject login with incorrect password 126ms
- ✓ tests/lab-03/auth.api.test.ts > Lab 3: Authentication APIs > POST /api/auth/login > API-02 (AC-02): should reject login for non-existent email with the same message 14ms
- ✓ tests/lab-03/auth.api.test.ts > Lab 3: Authentication APIs > POST /api/auth/login > should return 400 if email or password is missing or not a string 14ms
- ✓ tests/lab-03/auth.api.test.ts > Lab 3: Authentication APIs > POST /api/auth/login > API-03 (AC-03): should reject login for inactive user account 106ms
- ✓ tests/lab-03/auth.api.test.ts > Lab 3: Authentication APIs > POST /api/auth/login > does not reveal inactive status when the password is wrong 103ms
- ✓ tests/lab-03/auth.api.test.ts > Lab 3: Authentication APIs > GET /api/auth/me > should return authenticated user profile with valid token 129ms
- ✓ tests/lab-03/auth.api.test.ts > Lab 3: Authentication APIs > GET /api/auth/me > should reject request without authentication token 7ms
- ✓ tests/lab-03/auth.api.test.ts > Lab 3: Authentication APIs > GET /api/auth/me > should reject a tampered or malformed token 8ms
- ✓ tests/lab-03/auth.api.test.ts > Lab 3: Authentication APIs > GET /api/auth/me > should ignore the removed Lab 2 X-Requester-Id header (no identity without a token) 18ms
- ✓ tests/lab-03/auth.api.test.ts > Lab 3: Authentication APIs > POST /api/auth/change-password > API-04 (AC-04): should change password and clear mustChangePassword flag 733ms
- ✓ tests/lab-03/auth.api.test.ts > Lab 3: Authentication APIs > POST /api/auth/change-password > IT Staff can open the Ticket Queue right after a first-login password change 618ms
- ✓ tests/lab-03/auth.api.test.ts > Lab 3: Authentication APIs > POST /api/auth/change-password > rejects new password Abcdef1 (shorter than 8 characters) 346ms
- ✓ tests/lab-03/auth.api.test.ts > Lab 3: Authentication APIs > POST /api/auth/change-password > rejects new password abcdefgh (without a number) 340ms
- ✓ tests/lab-03/auth.api.test.ts > Lab 3: Authentication APIs > POST /api/auth/change-password > rejects new password 12345678 (without a letter) 342ms
- ✓ tests/lab-03/auth.api.test.ts > Lab 3: Authentication APIs > POST /api/auth/change-password > rejects new password A1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa (longer than 72 characters) 336ms
- ✓ tests/lab-03/auth.api.test.ts > Lab 3: Authentication APIs > POST /api/auth/change-password > rejects new password Initial123! (equal to the current password) 334ms
- ✓ tests/lab-03/auth.api.test.ts > Lab 3: Authentication APIs > POST /api/auth/change-password > accepts a new password of exactly 8 characters 555ms
- ✓ tests/lab-03/auth.api.test.ts > Lab 3: Authentication APIs > POST /api/auth/change-password > should reject password change if current password is incorrect 452ms
- ✓ tests/lab-03/auth.api.test.ts > Lab 3: Authentication APIs > POST /api/auth/logout > API-05 (AC-05): should invalidate the session so the same token returns 401 afterwards 164ms
- ✓ tests/lab-03/auth.api.test.ts > Lab 3: Authentication APIs > POST /api/auth/logout > should reject logout without a token 8ms
- ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > listing (AC-09, AUTHZ-01, AUTHZ-03, AUTHZ-04) > API-01: a Ticket without actions returns an empty list 89ms
-(node:15848) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+ ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > stale updates (AC-13, BR-19, BR-20) > WF-13: 10 parallel status changes with the same token: exactly one 200, nine 409, exactly one event 73ms
+ ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > stale updates (AC-13, BR-19, BR-20) > WF-13: 10 parallel Action Taken edits with the same token: exactly one 200, nine 409, exactly one revision added 115ms
+ ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > stale updates (AC-13, BR-19, BR-20) > WF-14: a write that fails the stale check is rolled back with no change and no history row 24ms
+ ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > owner and priority rules (AC-14) > WF-10: an inactive user, a Requester or an unknown user cannot be the owner 72ms
+ ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > owner and priority rules (AC-14) > WF-16: claiming a New Ticket still moves it to Open and records an owner and a status event 26ms
+ ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > owner and priority rules (AC-14) > WF-16: unassigning, reassigning and a repeated owner are handled as in Lab 3 57ms
+ ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > owner and priority rules (AC-14) > WF-16: IT Priority changes keep the Requested Priority and reject invalid values 37ms
+ ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > status=Active filter (AC-20, BR-28) > WF-11: the staff queue and My Tickets return exactly the five active statuses; invalid values are still 400 109ms
+ ✓ tests/lab-04/ticket-workflow.api.test.ts > Lab 4: Ticket workflow API (Issue #32) > recent filter on My Tickets (AC-20) > WF-15: recent=updated and recent=resolved filter; any other value is 400; Lab 3 validation is unchanged 98ms
+ ✓ tests/lab-04/seed.test.ts > Lab 4: seed data (Issue #31) > SEED-01: running the seed twice creates no duplicate users, Tickets, or actions 3201ms
+ ✓ tests/lab-04/seed.test.ts > Lab 4: seed data (Issue #31) > SEED-02 / AC-39: the seed demonstrates zero, one and many actions, all statuses, assignees, revisions and follow-up 41ms
+(node:16576) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
 (Use `node --trace-deprecation ...` to show where the warning was created)
- ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > listing (AC-09, AUTHZ-01, AUTHZ-03, AUTHZ-04) > API-02: ordered by actionAt desc then id desc, repeatably 288ms
- ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > listing (AC-09, AUTHZ-01, AUTHZ-03, AUTHZ-04) > AUTHZ-01: the owning Requester sees every field read-only 92ms
- ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > listing (AC-09, AUTHZ-01, AUTHZ-03, AUTHZ-04) > AUTHZ-03: another Requester gets the same 404 as a missing Ticket 42ms
- ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > listing (AC-09, AUTHZ-01, AUTHZ-03, AUTHZ-04) > AUTHZ-04: no token returns 401 on every action endpoint 36ms
- ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > listing (AC-09, AUTHZ-01, AUTHZ-03, AUTHZ-04) > API-24: pagination slices, totals, clamping and stable order 403ms
- ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > create (AC-01, AC-04, AC-05, AC-07) > API-03: saves under the right Ticket with the authenticated performer 60ms
- ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > create (AC-01, AC-04, AC-05, AC-07) > API-27: status "constructor" is a 400 validation error on POST and PATCH and writes nothing 133ms
- ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > create (AC-01, AC-04, AC-05, AC-07) > API-27: status "__proto__" is a 400 validation error on POST and PATCH and writes nothing 110ms
- ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > create (AC-01, AC-04, AC-05, AC-07) > API-27: status "toString" is a 400 validation error on POST and PATCH and writes nothing 113ms
- ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > create (AC-01, AC-04, AC-05, AC-07) > API-23: cancelling the Ticket cancels its Planned and In Progress actions with AUTO_CANCELLED revisions and leaves Completed ones alone 281ms
- ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > create (AC-01, AC-04, AC-05, AC-07) > API-04: a client-sent performedById is ignored 60ms
- ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > create (AC-01, AC-04, AC-05, AC-07) > API-05 / AC-05: a non-owner staff member can record an action and the owner is unchanged 70ms
- ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > create (AC-01, AC-04, AC-05, AC-07) > API-06: missing description, missing result on Completed, and over-length text name each field 38ms
- ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > create (AC-01, AC-04, AC-05, AC-07) > API-07: follow-up required without a note names followUpNote; the note is dropped when not required 81ms
- ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > create (AC-01, AC-04, AC-05, AC-07) > API-08: actionAt before the Ticket existed or in the future is rejected; a future Planned action is accepted 105ms
- ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > create (AC-01, AC-04, AC-05, AC-07) > API-13 / AC-07: create on a Closed or Cancelled Ticket is 409 TICKET_TERMINAL 78ms
- ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > create (AC-01, AC-04, AC-05, AC-07) > API-16: creating an action refreshes the Ticket updatedAt 69ms
- ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > create (AC-01, AC-04, AC-05, AC-07) > API-17: the assignee defaults to the creator and is stored apart from the performer 110ms
- ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > create (AC-01, AC-04, AC-05, AC-07) > API-18: an inactive user, a Requester, or an unknown id is rejected as assignee 115ms
- ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > create (AC-01, AC-04, AC-05, AC-07) > API-21: an action cannot be created as Cancelled 30ms
- ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > create (AC-01, AC-04, AC-05, AC-07) > API-25 / AC-40: no Planned or In Progress work on a Resolved Ticket; Completed is fine; reopening allows Planned 189ms
- ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > authorization (AC-03, AUTHZ-02, AUTHZ-05) > AUTHZ-02: a Requester cannot create or edit; nothing is saved 98ms
- ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > authorization (AC-03, AUTHZ-02, AUTHZ-05) > AUTHZ-05: an Administrator can create and edit 120ms
- ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > edit and conflicts (AC-06, AC-07, AC-31, AC-32) > API-09: edit with the current token keeps performer and createdAt and records the editor 132ms
- ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > edit and conflicts (AC-06, AC-07, AC-31, AC-32) > API-10: a stale token is 409 STALE_UPDATE and changes nothing 151ms
- ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > edit and conflicts (AC-06, AC-07, AC-31, AC-32) > API-11: an edit without expectedUpdatedAt is 400 113ms
- ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > edit and conflicts (AC-06, AC-07, AC-31, AC-32) > API-12: there is no way to delete an action 83ms
- ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > edit and conflicts (AC-06, AC-07, AC-31, AC-32) > API-13: edit on a Closed Ticket is 409 TICKET_TERMINAL 81ms
- ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > edit and conflicts (AC-06, AC-07, AC-31, AC-32) > API-19: an assignee who became inactive does not block unrelated edits but blocks start/complete until reassigned 227ms
- ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > edit and conflicts (AC-06, AC-07, AC-31, AC-32) > API-20 / API-21 / API-22: action transitions follow BR-30 and need a Result to complete or cancel 372ms
- ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > idempotency (AC-08, FR-14) > API-14: a repeated request with the same content replays the original, even when whitespace differs 154ms
- ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > idempotency (AC-08, FR-14) > API-15: two parallel creates with the same id leave exactly one row 93ms
- ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > idempotency (AC-08, FR-14) > API-26: reusing the id with different content or from a different user is 409 and creates nothing 128ms
- ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > concurrency (AC-13) > WF-13 (actions): 10 parallel edits with the same token produce one winner, nine conflicts and one revision 291ms
-(node:10124) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+ ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > listing (AC-09, AUTHZ-01, AUTHZ-03, AUTHZ-04) > API-01: a Ticket without actions returns an empty list 40ms
+ ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > listing (AC-09, AUTHZ-01, AUTHZ-03, AUTHZ-04) > API-02: ordered by actionAt desc then id desc, repeatably 91ms
+ ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > listing (AC-09, AUTHZ-01, AUTHZ-03, AUTHZ-04) > AUTHZ-01: the owning Requester sees every field read-only 35ms
+ ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > listing (AC-09, AUTHZ-01, AUTHZ-03, AUTHZ-04) > AUTHZ-03: another Requester gets the same 404 as a missing Ticket 14ms
+ ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > listing (AC-09, AUTHZ-01, AUTHZ-03, AUTHZ-04) > AUTHZ-04: no token returns 401 on every action endpoint 15ms
+ ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > listing (AC-09, AUTHZ-01, AUTHZ-03, AUTHZ-04) > API-24: pagination slices, totals, clamping and stable order 148ms
+ ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > create (AC-01, AC-04, AC-05, AC-07) > API-03: saves under the right Ticket with the authenticated performer 22ms
+ ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > create (AC-01, AC-04, AC-05, AC-07) > API-27: status "constructor" is a 400 validation error on POST and PATCH and writes nothing 43ms
+ ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > create (AC-01, AC-04, AC-05, AC-07) > API-27: status "__proto__" is a 400 validation error on POST and PATCH and writes nothing 37ms
+ ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > create (AC-01, AC-04, AC-05, AC-07) > API-27: status "toString" is a 400 validation error on POST and PATCH and writes nothing 37ms
+ ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > create (AC-01, AC-04, AC-05, AC-07) > API-23: cancelling the Ticket cancels its Planned and In Progress actions with AUTO_CANCELLED revisions and leaves Completed ones alone 91ms
+ ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > create (AC-01, AC-04, AC-05, AC-07) > API-04: a client-sent performedById is ignored 21ms
+ ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > create (AC-01, AC-04, AC-05, AC-07) > API-05 / AC-05: a non-owner staff member can record an action and the owner is unchanged 23ms
+ ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > create (AC-01, AC-04, AC-05, AC-07) > API-06: missing description, missing result on Completed, and over-length text name each field 13ms
+ ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > create (AC-01, AC-04, AC-05, AC-07) > API-07: follow-up required without a note names followUpNote; the note is dropped when not required 27ms
+ ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > create (AC-01, AC-04, AC-05, AC-07) > API-08: actionAt before the Ticket existed or in the future is rejected; a future Planned action is accepted 36ms
+ ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > create (AC-01, AC-04, AC-05, AC-07) > API-13 / AC-07: create on a Closed or Cancelled Ticket is 409 TICKET_TERMINAL 25ms
+ ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > create (AC-01, AC-04, AC-05, AC-07) > API-16: creating an action refreshes the Ticket updatedAt 21ms
+ ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > create (AC-01, AC-04, AC-05, AC-07) > API-17: the assignee defaults to the creator and is stored apart from the performer 34ms
+ ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > create (AC-01, AC-04, AC-05, AC-07) > API-18: an inactive user, a Requester, or an unknown id is rejected as assignee 29ms
+ ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > create (AC-01, AC-04, AC-05, AC-07) > API-21: an action cannot be created as Cancelled 9ms
+ ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > create (AC-01, AC-04, AC-05, AC-07) > API-25 / AC-40: no Planned or In Progress work on a Resolved Ticket; Completed is fine; reopening allows Planned 51ms
+ ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > authorization (AC-03, AUTHZ-02, AUTHZ-05) > AUTHZ-02: a Requester cannot create or edit; nothing is saved 28ms
+ ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > authorization (AC-03, AUTHZ-02, AUTHZ-05) > AUTHZ-05: an Administrator can create and edit 37ms
+ ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > edit and conflicts (AC-06, AC-07, AC-31, AC-32) > API-09: edit with the current token keeps performer and createdAt and records the editor 38ms
+ ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > edit and conflicts (AC-06, AC-07, AC-31, AC-32) > API-10: a stale token is 409 STALE_UPDATE and changes nothing 46ms
+ ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > edit and conflicts (AC-06, AC-07, AC-31, AC-32) > API-11: an edit without expectedUpdatedAt is 400 28ms
+ ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > edit and conflicts (AC-06, AC-07, AC-31, AC-32) > API-12: there is no way to delete an action 24ms
+ ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > edit and conflicts (AC-06, AC-07, AC-31, AC-32) > API-13: edit on a Closed Ticket is 409 TICKET_TERMINAL 30ms
+ ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > edit and conflicts (AC-06, AC-07, AC-31, AC-32) > API-19: an assignee who became inactive does not block unrelated edits but blocks start/complete until reassigned 68ms
+ ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > edit and conflicts (AC-06, AC-07, AC-31, AC-32) > API-20 / API-21 / API-22: action transitions follow BR-30 and need a Result to complete or cancel 112ms
+ ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > idempotency (AC-08, FR-14) > API-14: a repeated request with the same content replays the original, even when whitespace differs 45ms
+ ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > idempotency (AC-08, FR-14) > API-15: two parallel creates with the same id leave exactly one row 28ms
+ ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > idempotency (AC-08, FR-14) > API-26: reusing the id with different content or from a different user is 409 and creates nothing 39ms
+ ✓ tests/lab-04/actions-taken.api.test.ts > Lab 4: Actions Taken API (Issue #31) > concurrency (AC-13) > WF-13 (actions): 10 parallel edits with the same token produce one winner, nine conflicts and one revision 83ms
+ ✓ tests/lab-03/auth.api.test.ts > Lab 3: Authentication APIs > POST /api/auth/login > API-01 (AC-01): should authenticate active user with valid credentials and return JWT token 225ms
+ ✓ tests/lab-03/auth.api.test.ts > Lab 3: Authentication APIs > POST /api/auth/login > should accept the email case-insensitively 79ms
+ ✓ tests/lab-03/auth.api.test.ts > Lab 3: Authentication APIs > POST /api/auth/login > API-02 (AC-02): should reject login with incorrect password 75ms
+ ✓ tests/lab-03/auth.api.test.ts > Lab 3: Authentication APIs > POST /api/auth/login > API-02 (AC-02): should reject login for non-existent email with the same message 4ms
+ ✓ tests/lab-03/auth.api.test.ts > Lab 3: Authentication APIs > POST /api/auth/login > should return 400 if email or password is missing or not a string 6ms
+ ✓ tests/lab-03/auth.api.test.ts > Lab 3: Authentication APIs > POST /api/auth/login > API-03 (AC-03): should reject login for inactive user account 71ms
+ ✓ tests/lab-03/auth.api.test.ts > Lab 3: Authentication APIs > POST /api/auth/login > does not reveal inactive status when the password is wrong 71ms
+ ✓ tests/lab-03/auth.api.test.ts > Lab 3: Authentication APIs > GET /api/auth/me > should return authenticated user profile with valid token 78ms
+ ✓ tests/lab-03/auth.api.test.ts > Lab 3: Authentication APIs > GET /api/auth/me > should reject request without authentication token 2ms
+ ✓ tests/lab-03/auth.api.test.ts > Lab 3: Authentication APIs > GET /api/auth/me > should reject a tampered or malformed token 2ms
+ ✓ tests/lab-03/auth.api.test.ts > Lab 3: Authentication APIs > GET /api/auth/me > should ignore the removed Lab 2 X-Requester-Id header (no identity without a token) 5ms
+ ✓ tests/lab-03/auth.api.test.ts > Lab 3: Authentication APIs > POST /api/auth/change-password > API-04 (AC-04): should change password and clear mustChangePassword flag 452ms
+ ✓ tests/lab-03/auth.api.test.ts > Lab 3: Authentication APIs > POST /api/auth/change-password > IT Staff can open the Ticket Queue right after a first-login password change 400ms
+ ✓ tests/lab-03/auth.api.test.ts > Lab 3: Authentication APIs > POST /api/auth/change-password > rejects new password Abcdef1 (shorter than 8 characters) 244ms
+ ✓ tests/lab-03/auth.api.test.ts > Lab 3: Authentication APIs > POST /api/auth/change-password > rejects new password abcdefgh (without a number) 221ms
+ ✓ tests/lab-03/auth.api.test.ts > Lab 3: Authentication APIs > POST /api/auth/change-password > rejects new password 12345678 (without a letter) 216ms
+ ✓ tests/lab-03/auth.api.test.ts > Lab 3: Authentication APIs > POST /api/auth/change-password > rejects new password A1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa (longer than 72 characters) 225ms
+ ✓ tests/lab-03/auth.api.test.ts > Lab 3: Authentication APIs > POST /api/auth/change-password > rejects new password Initial123! (equal to the current password) 218ms
+ ✓ tests/lab-03/auth.api.test.ts > Lab 3: Authentication APIs > POST /api/auth/change-password > accepts a new password of exactly 8 characters 353ms
+ ✓ tests/lab-03/auth.api.test.ts > Lab 3: Authentication APIs > POST /api/auth/change-password > should reject password change if current password is incorrect 268ms
+ ✓ tests/lab-03/auth.api.test.ts > Lab 3: Authentication APIs > POST /api/auth/logout > API-05 (AC-05): should invalidate the session so the same token returns 401 afterwards 82ms
+ ✓ tests/lab-03/auth.api.test.ts > Lab 3: Authentication APIs > POST /api/auth/logout > should reject logout without a token 2ms
+ ✓ tests/lab-04/requester-dashboard.api.test.ts > Lab 4: Requester dashboard API (Issue #33) > DASH-01: IT Staff and Administrator get 403 and no data 21ms
+ ✓ tests/lab-04/requester-dashboard.api.test.ts > Lab 4: Requester dashboard API (Issue #33) > DASH-02: no token and a revoked token get 401 205ms
+ ✓ tests/lab-04/requester-dashboard.api.test.ts > Lab 4: Requester dashboard API (Issue #33) > DASH-02: a user who must still change the initial password gets no dashboard data 156ms
+ ✓ tests/lab-04/requester-dashboard.api.test.ts > Lab 4: Requester dashboard API (Issue #33) > DASH-03: Open, Waiting for You, Recently Updated and Recently Resolved equal independent SQL counts 191ms
+ ✓ tests/lab-04/requester-dashboard.api.test.ts > Lab 4: Requester dashboard API (Issue #33) > DASH-04: each Requester only sees their own Tickets and metrics 303ms
+ ✓ tests/lab-04/requester-dashboard.api.test.ts > Lab 4: Requester dashboard API (Issue #33) > DASH-05: a Requester with no Tickets sees zeros and empty lists 141ms
+ ✓ tests/lab-04/requester-dashboard.api.test.ts > Lab 4: Requester dashboard API (Issue #33) > DASH-06: a Ticket exactly at the window start counts, one millisecond earlier does not 158ms
+ ✓ tests/lab-04/requester-dashboard.api.test.ts > Lab 4: Requester dashboard API (Issue #33) > DASH-07: lists have at most 5 items and the metrics still count everything 168ms
+ ✓ tests/lab-04/requester-dashboard.api.test.ts > Lab 4: Requester dashboard API (Issue #33) > DASH-08: Recently Resolved uses resolvedAt, so later edits do not move a Ticket in or out 149ms
+ ✓ tests/lab-04/requester-dashboard.api.test.ts > Lab 4: Requester dashboard API (Issue #33) > DASH-09: GET /api/tickets?recent=updated lists exactly the Tickets counted by the card 163ms
+ ✓ tests/lab-04/requester-dashboard.api.test.ts > Lab 4: Requester dashboard API (Issue #33) > DASH-10: recent=resolved lists a Ticket resolved then closed in the window and skips old and reopened ones 172ms
+(node:53160) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
 (Use `node --trace-deprecation ...` to show where the warning was created)
- ✓ tests/lab-04/history.api.test.ts > Lab 4: Action Taken history is append-only (Issue #31, BR-33..BR-37) > HIST-01: creating an action appends revision 1 (CREATED) with a null before and a full after snapshot 148ms
- ✓ tests/lab-04/history.api.test.ts > Lab 4: Action Taken history is append-only (Issue #31, BR-33..BR-37) > HIST-02: edits by A and B, then a status change, keep every earlier value 253ms
- ✓ tests/lab-04/history.api.test.ts > Lab 4: Action Taken history is append-only (Issue #31, BR-33..BR-37) > HIST-03: a PATCH that changes nothing succeeds without a revision or a new token 92ms
- ✓ tests/lab-04/history.api.test.ts > Lab 4: Action Taken history is append-only (Issue #31, BR-33..BR-37) > HIST-06: no route can change or remove history 107ms
- ✓ tests/lab-04/history.api.test.ts > Lab 4: Action Taken history is append-only (Issue #31, BR-33..BR-37) > HIST-07: the database itself rejects UPDATE and DELETE on the history table 79ms
- ✓ tests/lab-04/history.api.test.ts > Lab 4: Action Taken history is append-only (Issue #31, BR-33..BR-37) > HIST-08: staff and admin read history; a Requester gets 403 and no data; no token gets 401 119ms
- ✓ tests/lab-04/history.api.test.ts > Lab 4: Action Taken history is append-only (Issue #31, BR-33..BR-37) > HIST-09: a stale or failing write leaves no revision behind 102ms
- ✓ tests/lab-04/history.api.test.ts > Lab 4: Action Taken history is append-only (Issue #31, BR-33..BR-37) > HIST-10: history lists paginate with totals, clamping and no overlap or gap 356ms
- ✓ tests/lab-04/history.api.test.ts > Lab 4: Action Taken history is append-only (Issue #31, BR-33..BR-37) > Ticket events (Issue #32, BR-35, BR-36) > HIST-04: status, owner and priority changes and a reopen each add one event with from, to, actor and time 355ms
- ✓ tests/lab-04/history.api.test.ts > Lab 4: Action Taken history is append-only (Issue #31, BR-33..BR-37) > Ticket events (Issue #32, BR-35, BR-36) > HIST-04: only IT Staff and Administrators read events (Requester 403), a missing Ticket is 404, a Ticket without events is empty 75ms
- ✓ tests/lab-04/history.api.test.ts > Lab 4: Action Taken history is append-only (Issue #31, BR-33..BR-37) > Ticket events (Issue #32, BR-35, BR-36) > HIST-05: events written in the same millisecond keep a stable order (time, then id) on repeated reads 87ms
- ✓ tests/lab-04/history.api.test.ts > Lab 4: Action Taken history is append-only (Issue #31, BR-33..BR-37) > Ticket events (Issue #32, BR-35, BR-36) > HIST-10: the events list is paginated and clamped like the other history lists 176ms
- ✓ tests/lab-04/requester-dashboard.api.test.ts > Lab 4: Requester dashboard API (Issue #33) > DASH-01: IT Staff and Administrator get 403 and no data 45ms
- ✓ tests/lab-04/requester-dashboard.api.test.ts > Lab 4: Requester dashboard API (Issue #33) > DASH-02: no token and a revoked token get 401 343ms
- ✓ tests/lab-04/requester-dashboard.api.test.ts > Lab 4: Requester dashboard API (Issue #33) > DASH-02: a user who must still change the initial password gets no dashboard data 225ms
- ✓ tests/lab-04/requester-dashboard.api.test.ts > Lab 4: Requester dashboard API (Issue #33) > DASH-03: Open, Waiting for You, Recently Updated and Recently Resolved equal independent SQL counts 368ms
- ✓ tests/lab-04/requester-dashboard.api.test.ts > Lab 4: Requester dashboard API (Issue #33) > DASH-04: each Requester only sees their own Tickets and metrics 518ms
- ✓ tests/lab-04/requester-dashboard.api.test.ts > Lab 4: Requester dashboard API (Issue #33) > DASH-05: a Requester with no Tickets sees zeros and empty lists 236ms
- ✓ tests/lab-04/requester-dashboard.api.test.ts > Lab 4: Requester dashboard API (Issue #33) > DASH-06: a Ticket exactly at the window start counts, one millisecond earlier does not 294ms
- ✓ tests/lab-04/requester-dashboard.api.test.ts > Lab 4: Requester dashboard API (Issue #33) > DASH-07: lists have at most 5 items and the metrics still count everything 344ms
- ✓ tests/lab-04/requester-dashboard.api.test.ts > Lab 4: Requester dashboard API (Issue #33) > DASH-08: Recently Resolved uses resolvedAt, so later edits do not move a Ticket in or out 296ms
- ✓ tests/lab-04/requester-dashboard.api.test.ts > Lab 4: Requester dashboard API (Issue #33) > DASH-09: GET /api/tickets?recent=updated lists exactly the Tickets counted by the card 321ms
- ✓ tests/lab-04/requester-dashboard.api.test.ts > Lab 4: Requester dashboard API (Issue #33) > DASH-10: recent=resolved lists a Ticket resolved then closed in the window and skips old and reopened ones 313ms
- ✓ tests/lab-04/staff-dashboard.api.test.ts > Lab 4: IT Staff dashboard API (Issue #33) > SDASH-01: a Requester gets 403 and no data; no token gets 401 32ms
- ✓ tests/lab-04/staff-dashboard.api.test.ts > Lab 4: IT Staff dashboard API (Issue #33) > SDASH-02: Unassigned, My Active, Urgent, Reopened and Resolved-awaiting-closure equal independent SQL counts 227ms
- ✓ tests/lab-04/staff-dashboard.api.test.ts > Lab 4: IT Staff dashboard API (Issue #33) > SDASH-03: byStatus has 8 keys, byPriority has 4 keys counting Active Tickets only 73ms
- ✓ tests/lab-04/staff-dashboard.api.test.ts > Lab 4: IT Staff dashboard API (Issue #33) > SDASH-04: myRecentActions holds only my actions (performed or assigned), newest first, at most 5, with a short description 166ms
- ✓ tests/lab-04/staff-dashboard.api.test.ts > Lab 4: IT Staff dashboard API (Issue #33) > SDASH-05: userCounts is present for the Administrator only and matches SQL 64ms
- ✓ tests/lab-04/staff-dashboard.api.test.ts > Lab 4: IT Staff dashboard API (Issue #33) > SDASH-06: with no Tickets and no actions every metric is 0 and every list is empty 83ms
- ✓ tests/lab-04/staff-dashboard.api.test.ts > Lab 4: IT Staff dashboard API (Issue #33) > SDASH-07: lists have at most 5 items; recentTickets are newest first with owner or null 43ms
- ✓ tests/lab-04/staff-dashboard.api.test.ts > Lab 4: IT Staff dashboard API (Issue #33) > SDASH-08: every card and breakdown row has a queue filter whose total equals the number shown 411ms
- ✓ tests/lab-03/users-admin.api.test.ts > Lab 3: Administrator User Management & Safety Rules APIs (Issue 5) > API-15 (AC-16, FR-12): Role-based access control for User Management > allows ADMINISTRATOR to access user management endpoint with 200 OK 34ms
- ✓ tests/lab-03/users-admin.api.test.ts > Lab 3: Administrator User Management & Safety Rules APIs (Issue 5) > API-15 (AC-16, FR-12): Role-based access control for User Management > rejects IT_STAFF with 403 Forbidden 13ms
- ✓ tests/lab-03/users-admin.api.test.ts > Lab 3: Administrator User Management & Safety Rules APIs (Issue 5) > API-15 (AC-16, FR-12): Role-based access control for User Management > rejects REQUESTER with 403 Forbidden 13ms
- ✓ tests/lab-03/users-admin.api.test.ts > Lab 3: Administrator User Management & Safety Rules APIs (Issue 5) > API-15 (AC-16, FR-12): Role-based access control for User Management > rejects unauthenticated request with 401 Unauthorized 7ms
- ✓ tests/lab-03/users-admin.api.test.ts > Lab 3: Administrator User Management & Safety Rules APIs (Issue 5) > API-16 (AC-17, AC-18): List, search, filter and create users > filters users by role and searches by keyword 46ms
- ✓ tests/lab-03/users-admin.api.test.ts > Lab 3: Administrator User Management & Safety Rules APIs (Issue 5) > API-16 (AC-17, AC-18): List, search, filter and create users > creates a new user with single role and initial password (201 Created) 136ms
- ✓ tests/lab-03/users-admin.api.test.ts > Lab 3: Administrator User Management & Safety Rules APIs (Issue 5) > API-16 (AC-17, AC-18): List, search, filter and create users > rejects duplicate email with 409 Conflict 19ms
- ✓ tests/lab-03/users-admin.api.test.ts > Lab 3: Administrator User Management & Safety Rules APIs (Issue 5) > API-16 (AC-17, AC-18): List, search, filter and create users > rejects user creation with missing required fields (400 Bad Request) 15ms
- ✓ tests/lab-03/users-admin.api.test.ts > Lab 3: Administrator User Management & Safety Rules APIs (Issue 5) > API-17 & API-18: User editing, soft deactivation, and self-deactivation prevention > updates user name and role successfully (200 OK) 26ms
- ✓ tests/lab-03/users-admin.api.test.ts > Lab 3: Administrator User Management & Safety Rules APIs (Issue 5) > API-17 & API-18: User editing, soft deactivation, and self-deactivation prevention > deactivates user with soft-deactivation (isActive=false, record preserved) 124ms
- ✓ tests/lab-03/users-admin.api.test.ts > Lab 3: Administrator User Management & Safety Rules APIs (Issue 5) > API-17 & API-18: User editing, soft deactivation, and self-deactivation prevention > prevents Administrator from deactivating their own account (BR-19, 400 Bad Request) 16ms
- ✓ tests/lab-03/users-admin.api.test.ts > Lab 3: Administrator User Management & Safety Rules APIs (Issue 5) > API-19 (AC-21, BR-20): Last active Administrator protection > strictly blocks deactivating or reassigning role of the last active Administrator 29ms
- ✓ tests/lab-03/users-admin.api.test.ts > Lab 3: Administrator User Management & Safety Rules APIs (Issue 5) > API-19 (AC-21, BR-20): Last active Administrator protection > allows modifying an admin role if another active Administrator exists 141ms
- ✓ tests/lab-03/users-admin.api.test.ts > Lab 3: Administrator User Management & Safety Rules APIs (Issue 5) > API-20 (AC-22, BR-21): Admin resets user initial password > resets initial password and enforces mustChangePassword=true 217ms
- ✓ tests/lab-03/users-admin.api.test.ts > Lab 3: Administrator User Management & Safety Rules APIs (Issue 5) > API-20 (AC-22, BR-21): Admin resets user initial password > rejects password reset with invalid/short password (400 Bad Request) 17ms
- ✓ tests/lab-03/users-admin.api.test.ts > Lab 3: Administrator User Management & Safety Rules APIs (Issue 5) > API-20 (AC-22, BR-21): Admin resets user initial password > applies the same password policy boundaries as change-password (7 chars rejected, 8 accepted) 145ms
- ✓ tests/lab-03/users-admin.api.test.ts > Lab 3: Administrator User Management & Safety Rules APIs (Issue 5) > API-20 (AC-22, BR-21): Admin resets user initial password > revokes the target user's existing sessions when a new initial password is set 381ms
- ✓ tests/lab-03/users-admin.api.test.ts > Lab 3: Administrator User Management & Safety Rules APIs (Issue 5) > Input validation > rejects an invalid email address when creating a user 13ms
- ✓ tests/lab-03/users-admin.api.test.ts > Lab 3: Administrator User Management & Safety Rules APIs (Issue 5) > Input validation > rejects an invalid role value 12ms
- ✓ tests/lab-03/users-admin.api.test.ts > Lab 3: Administrator User Management & Safety Rules APIs (Issue 5) > Input validation > a deactivated user's existing token stops working immediately 264ms
-(node:23404) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+ ✓ tests/lab-04/history.api.test.ts > Lab 4: Action Taken history is append-only (Issue #31, BR-33..BR-37) > HIST-01: creating an action appends revision 1 (CREATED) with a null before and a full after snapshot 71ms
+ ✓ tests/lab-04/history.api.test.ts > Lab 4: Action Taken history is append-only (Issue #31, BR-33..BR-37) > HIST-02: edits by A and B, then a status change, keep every earlier value 99ms
+ ✓ tests/lab-04/history.api.test.ts > Lab 4: Action Taken history is append-only (Issue #31, BR-33..BR-37) > HIST-03: a PATCH that changes nothing succeeds without a revision or a new token 38ms
+ ✓ tests/lab-04/history.api.test.ts > Lab 4: Action Taken history is append-only (Issue #31, BR-33..BR-37) > HIST-06: no route can change or remove history 46ms
+ ✓ tests/lab-04/history.api.test.ts > Lab 4: Action Taken history is append-only (Issue #31, BR-33..BR-37) > HIST-07: the database itself rejects UPDATE and DELETE on the history table 33ms
+ ✓ tests/lab-04/history.api.test.ts > Lab 4: Action Taken history is append-only (Issue #31, BR-33..BR-37) > HIST-08: staff and admin read history; a Requester gets 403 and no data; no token gets 401 46ms
+ ✓ tests/lab-04/history.api.test.ts > Lab 4: Action Taken history is append-only (Issue #31, BR-33..BR-37) > HIST-09: a stale or failing write leaves no revision behind 44ms
+ ✓ tests/lab-04/history.api.test.ts > Lab 4: Action Taken history is append-only (Issue #31, BR-33..BR-37) > HIST-10: history lists paginate with totals, clamping and no overlap or gap 142ms
+ ✓ tests/lab-04/history.api.test.ts > Lab 4: Action Taken history is append-only (Issue #31, BR-33..BR-37) > Ticket events (Issue #32, BR-35, BR-36) > HIST-04: status, owner and priority changes and a reopen each add one event with from, to, actor and time 120ms
+ ✓ tests/lab-04/history.api.test.ts > Lab 4: Action Taken history is append-only (Issue #31, BR-33..BR-37) > Ticket events (Issue #32, BR-35, BR-36) > HIST-04: only IT Staff and Administrators read events (Requester 403), a missing Ticket is 404, a Ticket without events is empty 26ms
+ ✓ tests/lab-04/history.api.test.ts > Lab 4: Action Taken history is append-only (Issue #31, BR-33..BR-37) > Ticket events (Issue #32, BR-35, BR-36) > HIST-05: events written in the same millisecond keep a stable order (time, then id) on repeated reads 26ms
+ ✓ tests/lab-04/history.api.test.ts > Lab 4: Action Taken history is append-only (Issue #31, BR-33..BR-37) > Ticket events (Issue #32, BR-35, BR-36) > HIST-10: the events list is paginated and clamped like the other history lists 89ms
+ ✓ tests/lab-03/users-admin.api.test.ts > Lab 3: Administrator User Management & Safety Rules APIs (Issue 5) > API-15 (AC-16, FR-12): Role-based access control for User Management > allows ADMINISTRATOR to access user management endpoint with 200 OK 16ms
+ ✓ tests/lab-03/users-admin.api.test.ts > Lab 3: Administrator User Management & Safety Rules APIs (Issue 5) > API-15 (AC-16, FR-12): Role-based access control for User Management > rejects IT_STAFF with 403 Forbidden 6ms
+ ✓ tests/lab-03/users-admin.api.test.ts > Lab 3: Administrator User Management & Safety Rules APIs (Issue 5) > API-15 (AC-16, FR-12): Role-based access control for User Management > rejects REQUESTER with 403 Forbidden 5ms
+ ✓ tests/lab-03/users-admin.api.test.ts > Lab 3: Administrator User Management & Safety Rules APIs (Issue 5) > API-15 (AC-16, FR-12): Role-based access control for User Management > rejects unauthenticated request with 401 Unauthorized 3ms
+ ✓ tests/lab-03/users-admin.api.test.ts > Lab 3: Administrator User Management & Safety Rules APIs (Issue 5) > API-16 (AC-17, AC-18): List, search, filter and create users > filters users by role and searches by keyword 16ms
+ ✓ tests/lab-03/users-admin.api.test.ts > Lab 3: Administrator User Management & Safety Rules APIs (Issue 5) > API-16 (AC-17, AC-18): List, search, filter and create users > creates a new user with single role and initial password (201 Created) 82ms
+ ✓ tests/lab-03/users-admin.api.test.ts > Lab 3: Administrator User Management & Safety Rules APIs (Issue 5) > API-16 (AC-17, AC-18): List, search, filter and create users > rejects duplicate email with 409 Conflict 5ms
+ ✓ tests/lab-03/users-admin.api.test.ts > Lab 3: Administrator User Management & Safety Rules APIs (Issue 5) > API-16 (AC-17, AC-18): List, search, filter and create users > rejects user creation with missing required fields (400 Bad Request) 5ms
+ ✓ tests/lab-03/users-admin.api.test.ts > Lab 3: Administrator User Management & Safety Rules APIs (Issue 5) > API-17 & API-18: User editing, soft deactivation, and self-deactivation prevention > updates user name and role successfully (200 OK) 11ms
+ ✓ tests/lab-03/users-admin.api.test.ts > Lab 3: Administrator User Management & Safety Rules APIs (Issue 5) > API-17 & API-18: User editing, soft deactivation, and self-deactivation prevention > deactivates user with soft-deactivation (isActive=false, record preserved) 75ms
+ ✓ tests/lab-03/users-admin.api.test.ts > Lab 3: Administrator User Management & Safety Rules APIs (Issue 5) > API-17 & API-18: User editing, soft deactivation, and self-deactivation prevention > prevents Administrator from deactivating their own account (BR-19, 400 Bad Request) 5ms
+ ✓ tests/lab-03/users-admin.api.test.ts > Lab 3: Administrator User Management & Safety Rules APIs (Issue 5) > API-19 (AC-21, BR-20): Last active Administrator protection > strictly blocks deactivating or reassigning role of the last active Administrator 12ms
+ ✓ tests/lab-03/users-admin.api.test.ts > Lab 3: Administrator User Management & Safety Rules APIs (Issue 5) > API-19 (AC-21, BR-20): Last active Administrator protection > allows modifying an admin role if another active Administrator exists 81ms
+ ✓ tests/lab-03/users-admin.api.test.ts > Lab 3: Administrator User Management & Safety Rules APIs (Issue 5) > API-20 (AC-22, BR-21): Admin resets user initial password > resets initial password and enforces mustChangePassword=true 142ms
+ ✓ tests/lab-03/users-admin.api.test.ts > Lab 3: Administrator User Management & Safety Rules APIs (Issue 5) > API-20 (AC-22, BR-21): Admin resets user initial password > rejects password reset with invalid/short password (400 Bad Request) 4ms
+ ✓ tests/lab-03/users-admin.api.test.ts > Lab 3: Administrator User Management & Safety Rules APIs (Issue 5) > API-20 (AC-22, BR-21): Admin resets user initial password > applies the same password policy boundaries as change-password (7 chars rejected, 8 accepted) 81ms
+ ✓ tests/lab-03/users-admin.api.test.ts > Lab 3: Administrator User Management & Safety Rules APIs (Issue 5) > API-20 (AC-22, BR-21): Admin resets user initial password > revokes the target user's existing sessions when a new initial password is set 219ms
+ ✓ tests/lab-03/users-admin.api.test.ts > Lab 3: Administrator User Management & Safety Rules APIs (Issue 5) > Input validation > rejects an invalid email address when creating a user 3ms
+ ✓ tests/lab-03/users-admin.api.test.ts > Lab 3: Administrator User Management & Safety Rules APIs (Issue 5) > Input validation > rejects an invalid role value 3ms
+ ✓ tests/lab-03/users-admin.api.test.ts > Lab 3: Administrator User Management & Safety Rules APIs (Issue 5) > Input validation > a deactivated user's existing token stops working immediately 148ms
+ ✓ tests/lab-04/staff-dashboard.api.test.ts > Lab 4: IT Staff dashboard API (Issue #33) > SDASH-01: a Requester gets 403 and no data; no token gets 401 12ms
+ ✓ tests/lab-04/staff-dashboard.api.test.ts > Lab 4: IT Staff dashboard API (Issue #33) > SDASH-02: Unassigned, My Active, Urgent, Reopened and Resolved-awaiting-closure equal independent SQL counts 83ms
+ ✓ tests/lab-04/staff-dashboard.api.test.ts > Lab 4: IT Staff dashboard API (Issue #33) > SDASH-03: byStatus has 8 keys, byPriority has 4 keys counting Active Tickets only 23ms
+ ✓ tests/lab-04/staff-dashboard.api.test.ts > Lab 4: IT Staff dashboard API (Issue #33) > SDASH-04: myRecentActions holds only my actions (performed or assigned), newest first, at most 5, with a short description 70ms
+ ✓ tests/lab-04/staff-dashboard.api.test.ts > Lab 4: IT Staff dashboard API (Issue #33) > SDASH-05: userCounts is present for the Administrator only and matches SQL 25ms
+ ✓ tests/lab-04/staff-dashboard.api.test.ts > Lab 4: IT Staff dashboard API (Issue #33) > SDASH-06: with no Tickets and no actions every metric is 0 and every list is empty 40ms
+ ✓ tests/lab-04/staff-dashboard.api.test.ts > Lab 4: IT Staff dashboard API (Issue #33) > SDASH-07: lists have at most 5 items; recentTickets are newest first with owner or null 16ms
+ ✓ tests/lab-04/staff-dashboard.api.test.ts > Lab 4: IT Staff dashboard API (Issue #33) > SDASH-08: every card and breakdown row has a queue filter whose total equals the number shown 159ms
+(node:24704) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
 (Use `node --trace-deprecation ...` to show where the warning was created)
- ✓ tests/lab-03/staff-ticket-detail.api.test.ts > Lab 3: Staff Ticket Detail & Operations APIs (Issue 4) > GET /api/staff/tickets/:id > should return full ticket detail for IT Staff with relations 62ms
- ✓ tests/lab-03/staff-ticket-detail.api.test.ts > Lab 3: Staff Ticket Detail & Operations APIs (Issue 4) > GET /api/staff/tickets/:id > should return 403 Forbidden when Requester accesses staff ticket detail 13ms
- ✓ tests/lab-03/staff-ticket-detail.api.test.ts > Lab 3: Staff Ticket Detail & Operations APIs (Issue 4) > GET /api/staff/tickets/:id > should return 404 for non-existent ticket ID 18ms
- ✓ tests/lab-03/staff-ticket-detail.api.test.ts > Lab 3: Staff Ticket Detail & Operations APIs (Issue 4) > API-09 (AC-10, FR-06): Claim / Reassign Ticket Owner > should auto-move ticket status from New to Open when claimed by staff (BR-12) 86ms
- ✓ tests/lab-03/staff-ticket-detail.api.test.ts > Lab 3: Staff Ticket Detail & Operations APIs (Issue 4) > API-09 (AC-10, FR-06): Claim / Reassign Ticket Owner > should allow reassigning owner to another active staff member or admin 68ms
- ✓ tests/lab-03/staff-ticket-detail.api.test.ts > Lab 3: Staff Ticket Detail & Operations APIs (Issue 4) > API-09 (AC-10, FR-06): Claim / Reassign Ticket Owner > should allow unassigning owner by setting ownerId to null 65ms
- ✓ tests/lab-03/staff-ticket-detail.api.test.ts > Lab 3: Staff Ticket Detail & Operations APIs (Issue 4) > API-09 (AC-10, FR-06): Claim / Reassign Ticket Owner > should reject assigning owner to non-staff user or inactive user with 400 Bad Request 46ms
- ✓ tests/lab-03/staff-ticket-detail.api.test.ts > Lab 3: Staff Ticket Detail & Operations APIs (Issue 4) > API-10 (AC-11, BR-11): Update IT Priority > should update IT Priority and leave Requested Priority immutable 61ms
- ✓ tests/lab-03/staff-ticket-detail.api.test.ts > Lab 3: Staff Ticket Detail & Operations APIs (Issue 4) > API-10 (AC-11, BR-11): Update IT Priority > should reject invalid priority value with 400 Bad Request 43ms
- ✓ tests/lab-03/staff-ticket-detail.api.test.ts > Lab 3: Staff Ticket Detail & Operations APIs (Issue 4) > API-11 (AC-12, BR-13): Permitted & Invalid Status Transitions > should permit valid transition Open -> In Progress 100ms
- ✓ tests/lab-03/staff-ticket-detail.api.test.ts > Lab 3: Staff Ticket Detail & Operations APIs (Issue 4) > API-11 (AC-12, BR-13): Permitted & Invalid Status Transitions > should permit valid transition In Progress -> Resolved 137ms
- ✓ tests/lab-03/staff-ticket-detail.api.test.ts > Lab 3: Staff Ticket Detail & Operations APIs (Issue 4) > API-11 (AC-12, BR-13): Permitted & Invalid Status Transitions > should reject invalid transition Resolved -> In Progress directly with 400 Bad Request 36ms
- ✓ tests/lab-03/staff-ticket-detail.api.test.ts > Lab 3: Staff Ticket Detail & Operations APIs (Issue 4) > API-11 (AC-12, BR-13): Permitted & Invalid Status Transitions > should permit valid transition Resolved -> Reopened 50ms
- ✓ tests/lab-03/staff-ticket-detail.api.test.ts > Lab 3: Staff Ticket Detail & Operations APIs (Issue 4) > API-14 (AC-15, BR-14): Requester Indicate Problem Resolved > should allow ticket owner to indicate problem appears resolved 30ms
- ✓ tests/lab-03/staff-ticket-detail.api.test.ts > Lab 3: Staff Ticket Detail & Operations APIs (Issue 4) > API-14 (AC-15, BR-14): Requester Indicate Problem Resolved > should reject a second indication with 409 Conflict 16ms
- ✓ tests/lab-03/staff-ticket-detail.api.test.ts > Lab 3: Staff Ticket Detail & Operations APIs (Issue 4) > API-14 (AC-15, BR-14): Requester Indicate Problem Resolved > should reject non-owner requester with 404 (existence not revealed) 21ms
- ✓ tests/lab-03/staff-ticket-detail.api.test.ts > Lab 3: Staff Ticket Detail & Operations APIs (Issue 4) > API-14 (AC-15, BR-14): Requester Indicate Problem Resolved > should reject IT Staff indicating resolved with 403 (staff resolve through status workflow) 10ms
- ✓ tests/lab-03/staff-ticket-detail.api.test.ts > Lab 3: Staff Ticket Detail & Operations APIs (Issue 4) > API-14 (AC-15, BR-14): Requester Indicate Problem Resolved > should not change the ticket status when the requester indicates resolution (BR-14) 20ms
- ✓ tests/lab-03/staff-queue.api.test.ts > Lab 3: Staff Ticket Queue APIs (Issue 3) > API-07 (AC-07): Staff Queue Role Access Guard > should return 401 Unauthorized if no token is provided 15ms
- ✓ tests/lab-03/staff-queue.api.test.ts > Lab 3: Staff Ticket Queue APIs (Issue 3) > API-07 (AC-07): Staff Queue Role Access Guard > should return 403 Forbidden when a Requester tries to access staff queue 21ms
- ✓ tests/lab-03/staff-queue.api.test.ts > Lab 3: Staff Ticket Queue APIs (Issue 3) > API-07 (AC-07): Staff Queue Role Access Guard > should return 403 Forbidden when a user with mustChangePassword=true accesses staff queue 12ms
- ✓ tests/lab-03/staff-queue.api.test.ts > Lab 3: Staff Ticket Queue APIs (Issue 3) > API-07 (AC-07): Staff Queue Role Access Guard > should return 200 OK and ticket list when IT Staff accesses staff queue 67ms
- ✓ tests/lab-03/staff-queue.api.test.ts > Lab 3: Staff Ticket Queue APIs (Issue 3) > API-07 (AC-07): Staff Queue Role Access Guard > should return 200 OK when Administrator accesses staff queue 21ms
- ✓ tests/lab-03/staff-queue.api.test.ts > Lab 3: Staff Ticket Queue APIs (Issue 3) > API-08 (AC-08, AC-09): Queue Query, Search, Filters & Pagination > should return tickets with proper structure including requester and owner 20ms
- ✓ tests/lab-03/staff-queue.api.test.ts > Lab 3: Staff Ticket Queue APIs (Issue 3) > API-08 (AC-08, AC-09): Queue Query, Search, Filters & Pagination > should filter queue by status 24ms
- ✓ tests/lab-03/staff-queue.api.test.ts > Lab 3: Staff Ticket Queue APIs (Issue 3) > API-08 (AC-08, AC-09): Queue Query, Search, Filters & Pagination > should filter queue by human-readable mapped status (In Progress) 26ms
- ✓ tests/lab-03/staff-queue.api.test.ts > Lab 3: Staff Ticket Queue APIs (Issue 3) > API-08 (AC-08, AC-09): Queue Query, Search, Filters & Pagination > should filter queue by priority 29ms
- ✓ tests/lab-03/staff-queue.api.test.ts > Lab 3: Staff Ticket Queue APIs (Issue 3) > API-08 (AC-08, AC-09): Queue Query, Search, Filters & Pagination > should filter queue by unassigned owner 23ms
- ✓ tests/lab-03/staff-queue.api.test.ts > Lab 3: Staff Ticket Queue APIs (Issue 3) > API-08 (AC-08, AC-09): Queue Query, Search, Filters & Pagination > should search tickets by keyword in summary or ticketNumber 31ms
- ✓ tests/lab-03/staff-queue.api.test.ts > Lab 3: Staff Ticket Queue APIs (Issue 3) > API-08 (AC-08, AC-09): Queue Query, Search, Filters & Pagination > should paginate queue with custom page and limit 29ms
- ✓ tests/lab-03/staff-queue.api.test.ts > Lab 3: Staff Ticket Queue APIs (Issue 3) > API-08 (AC-08, AC-09): Queue Query, Search, Filters & Pagination > should sort tickets by createdAt ascending and descending 54ms
- ✓ tests/lab-03/staff-queue.api.test.ts > Lab 3: Staff Ticket Queue APIs (Issue 3) > Invalid queue query parameters (400 instead of server errors) > rejects status=Pending 12ms
- ✓ tests/lab-03/staff-queue.api.test.ts > Lab 3: Staff Ticket Queue APIs (Issue 3) > Invalid queue query parameters (400 instead of server errors) > rejects priority=CRITICAL 15ms
- ✓ tests/lab-03/staff-queue.api.test.ts > Lab 3: Staff Ticket Queue APIs (Issue 3) > Invalid queue query parameters (400 instead of server errors) > rejects owner=somebody 12ms
- ✓ tests/lab-03/staff-queue.api.test.ts > Lab 3: Staff Ticket Queue APIs (Issue 3) > Invalid queue query parameters (400 instead of server errors) > rejects sortBy=passwordHash 13ms
- ✓ tests/lab-03/staff-queue.api.test.ts > Lab 3: Staff Ticket Queue APIs (Issue 3) > Invalid queue query parameters (400 instead of server errors) > rejects sortOrder=sideways 9ms
- ✓ tests/lab-03/staff-queue.api.test.ts > Lab 3: Staff Ticket Queue APIs (Issue 3) > Invalid queue query parameters (400 instead of server errors) > rejects an unauthenticated queue request with 401 5ms
- ✓ tests/lab-03/staff-queue.api.test.ts > Lab 3: Staff Ticket Queue APIs (Issue 3) > GET /api/staff/members > should return list of active staff and admin members 19ms
- ✓ tests/lab-04/scratch-db.unit.test.ts > Lab 4: scratch database safety (Issue #34) > a pre-existing database, even one with the scratch prefix, is never dropped by a forged or foreign handle 168ms
- ✓ tests/lab-04/scratch-db.unit.test.ts > Lab 4: scratch database safety (Issue #34) > each run gets a unique name, and only the handle it created can drop it, once 782ms
- ✓ tests/lab-04/scratch-db.unit.test.ts > Lab 4: scratch database safety (Issue #34) > creating over an existing name fails instead of replacing it 218ms
- ✓ tests/lab-04/scratch-db.unit.test.ts > Lab 4: scratch database safety (Issue #34) > a decoy can only be dropped once, by its creator 201ms
-(node:12160) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+ ✓ tests/lab-03/staff-ticket-detail.api.test.ts > Lab 3: Staff Ticket Detail & Operations APIs (Issue 4) > GET /api/staff/tickets/:id > should return full ticket detail for IT Staff with relations 24ms
+ ✓ tests/lab-03/staff-ticket-detail.api.test.ts > Lab 3: Staff Ticket Detail & Operations APIs (Issue 4) > GET /api/staff/tickets/:id > should return 403 Forbidden when Requester accesses staff ticket detail 6ms
+ ✓ tests/lab-03/staff-ticket-detail.api.test.ts > Lab 3: Staff Ticket Detail & Operations APIs (Issue 4) > GET /api/staff/tickets/:id > should return 404 for non-existent ticket ID 7ms
+ ✓ tests/lab-03/staff-ticket-detail.api.test.ts > Lab 3: Staff Ticket Detail & Operations APIs (Issue 4) > API-09 (AC-10, FR-06): Claim / Reassign Ticket Owner > should auto-move ticket status from New to Open when claimed by staff (BR-12) 34ms
+ ✓ tests/lab-03/staff-ticket-detail.api.test.ts > Lab 3: Staff Ticket Detail & Operations APIs (Issue 4) > API-09 (AC-10, FR-06): Claim / Reassign Ticket Owner > should allow reassigning owner to another active staff member or admin 27ms
+ ✓ tests/lab-03/staff-ticket-detail.api.test.ts > Lab 3: Staff Ticket Detail & Operations APIs (Issue 4) > API-09 (AC-10, FR-06): Claim / Reassign Ticket Owner > should allow unassigning owner by setting ownerId to null 27ms
+ ✓ tests/lab-03/staff-ticket-detail.api.test.ts > Lab 3: Staff Ticket Detail & Operations APIs (Issue 4) > API-09 (AC-10, FR-06): Claim / Reassign Ticket Owner > should reject assigning owner to non-staff user or inactive user with 400 Bad Request 18ms
+ ✓ tests/lab-03/staff-ticket-detail.api.test.ts > Lab 3: Staff Ticket Detail & Operations APIs (Issue 4) > API-10 (AC-11, BR-11): Update IT Priority > should update IT Priority and leave Requested Priority immutable 26ms
+ ✓ tests/lab-03/staff-ticket-detail.api.test.ts > Lab 3: Staff Ticket Detail & Operations APIs (Issue 4) > API-10 (AC-11, BR-11): Update IT Priority > should reject invalid priority value with 400 Bad Request 15ms
+ ✓ tests/lab-03/staff-ticket-detail.api.test.ts > Lab 3: Staff Ticket Detail & Operations APIs (Issue 4) > API-11 (AC-12, BR-13): Permitted & Invalid Status Transitions > should permit valid transition Open -> In Progress 40ms
+ ✓ tests/lab-03/staff-ticket-detail.api.test.ts > Lab 3: Staff Ticket Detail & Operations APIs (Issue 4) > API-11 (AC-12, BR-13): Permitted & Invalid Status Transitions > should permit valid transition In Progress -> Resolved 56ms
+ ✓ tests/lab-03/staff-ticket-detail.api.test.ts > Lab 3: Staff Ticket Detail & Operations APIs (Issue 4) > API-11 (AC-12, BR-13): Permitted & Invalid Status Transitions > should reject invalid transition Resolved -> In Progress directly with 400 Bad Request 14ms
+ ✓ tests/lab-03/staff-ticket-detail.api.test.ts > Lab 3: Staff Ticket Detail & Operations APIs (Issue 4) > API-11 (AC-12, BR-13): Permitted & Invalid Status Transitions > should permit valid transition Resolved -> Reopened 20ms
+ ✓ tests/lab-03/staff-ticket-detail.api.test.ts > Lab 3: Staff Ticket Detail & Operations APIs (Issue 4) > API-14 (AC-15, BR-14): Requester Indicate Problem Resolved > should allow ticket owner to indicate problem appears resolved 11ms
+ ✓ tests/lab-03/staff-ticket-detail.api.test.ts > Lab 3: Staff Ticket Detail & Operations APIs (Issue 4) > API-14 (AC-15, BR-14): Requester Indicate Problem Resolved > should reject a second indication with 409 Conflict 9ms
+ ✓ tests/lab-03/staff-ticket-detail.api.test.ts > Lab 3: Staff Ticket Detail & Operations APIs (Issue 4) > API-14 (AC-15, BR-14): Requester Indicate Problem Resolved > should reject non-owner requester with 404 (existence not revealed) 8ms
+ ✓ tests/lab-03/staff-ticket-detail.api.test.ts > Lab 3: Staff Ticket Detail & Operations APIs (Issue 4) > API-14 (AC-15, BR-14): Requester Indicate Problem Resolved > should reject IT Staff indicating resolved with 403 (staff resolve through status workflow) 4ms
+ ✓ tests/lab-03/staff-ticket-detail.api.test.ts > Lab 3: Staff Ticket Detail & Operations APIs (Issue 4) > API-14 (AC-15, BR-14): Requester Indicate Problem Resolved > should not change the ticket status when the requester indicates resolution (BR-14) 7ms
+ ✓ tests/lab-04/scratch-db.unit.test.ts > Lab 4: scratch database safety (Issue #34) > a pre-existing database, even one with the scratch prefix, is never dropped by a forged or foreign handle 184ms
+ ✓ tests/lab-04/scratch-db.unit.test.ts > Lab 4: scratch database safety (Issue #34) > each run gets a unique name, and only the handle it created can drop it, once 652ms
+ ✓ tests/lab-04/scratch-db.unit.test.ts > Lab 4: scratch database safety (Issue #34) > creating over an existing name fails instead of replacing it 172ms
+ ✓ tests/lab-04/scratch-db.unit.test.ts > Lab 4: scratch database safety (Issue #34) > a decoy can only be dropped once, by its creator 180ms
+ ✓ tests/lab-03/staff-queue.api.test.ts > Lab 3: Staff Ticket Queue APIs (Issue 3) > API-07 (AC-07): Staff Queue Role Access Guard > should return 401 Unauthorized if no token is provided 5ms
+ ✓ tests/lab-03/staff-queue.api.test.ts > Lab 3: Staff Ticket Queue APIs (Issue 3) > API-07 (AC-07): Staff Queue Role Access Guard > should return 403 Forbidden when a Requester tries to access staff queue 8ms
+ ✓ tests/lab-03/staff-queue.api.test.ts > Lab 3: Staff Ticket Queue APIs (Issue 3) > API-07 (AC-07): Staff Queue Role Access Guard > should return 403 Forbidden when a user with mustChangePassword=true accesses staff queue 5ms
+ ✓ tests/lab-03/staff-queue.api.test.ts > Lab 3: Staff Ticket Queue APIs (Issue 3) > API-07 (AC-07): Staff Queue Role Access Guard > should return 200 OK and ticket list when IT Staff accesses staff queue 91ms
+ ✓ tests/lab-03/staff-queue.api.test.ts > Lab 3: Staff Ticket Queue APIs (Issue 3) > API-07 (AC-07): Staff Queue Role Access Guard > should return 200 OK when Administrator accesses staff queue 9ms
+ ✓ tests/lab-03/staff-queue.api.test.ts > Lab 3: Staff Ticket Queue APIs (Issue 3) > API-08 (AC-08, AC-09): Queue Query, Search, Filters & Pagination > should return tickets with proper structure including requester and owner 9ms
+ ✓ tests/lab-03/staff-queue.api.test.ts > Lab 3: Staff Ticket Queue APIs (Issue 3) > API-08 (AC-08, AC-09): Queue Query, Search, Filters & Pagination > should filter queue by status 11ms
+ ✓ tests/lab-03/staff-queue.api.test.ts > Lab 3: Staff Ticket Queue APIs (Issue 3) > API-08 (AC-08, AC-09): Queue Query, Search, Filters & Pagination > should filter queue by human-readable mapped status (In Progress) 12ms
+ ✓ tests/lab-03/staff-queue.api.test.ts > Lab 3: Staff Ticket Queue APIs (Issue 3) > API-08 (AC-08, AC-09): Queue Query, Search, Filters & Pagination > should filter queue by priority 12ms
+ ✓ tests/lab-03/staff-queue.api.test.ts > Lab 3: Staff Ticket Queue APIs (Issue 3) > API-08 (AC-08, AC-09): Queue Query, Search, Filters & Pagination > should filter queue by unassigned owner 10ms
+ ✓ tests/lab-03/staff-queue.api.test.ts > Lab 3: Staff Ticket Queue APIs (Issue 3) > API-08 (AC-08, AC-09): Queue Query, Search, Filters & Pagination > should search tickets by keyword in summary or ticketNumber 13ms
+ ✓ tests/lab-03/staff-queue.api.test.ts > Lab 3: Staff Ticket Queue APIs (Issue 3) > API-08 (AC-08, AC-09): Queue Query, Search, Filters & Pagination > should paginate queue with custom page and limit 10ms
+ ✓ tests/lab-03/staff-queue.api.test.ts > Lab 3: Staff Ticket Queue APIs (Issue 3) > API-08 (AC-08, AC-09): Queue Query, Search, Filters & Pagination > should sort tickets by createdAt ascending and descending 17ms
+ ✓ tests/lab-03/staff-queue.api.test.ts > Lab 3: Staff Ticket Queue APIs (Issue 3) > Invalid queue query parameters (400 instead of server errors) > rejects status=Pending 4ms
+ ✓ tests/lab-03/staff-queue.api.test.ts > Lab 3: Staff Ticket Queue APIs (Issue 3) > Invalid queue query parameters (400 instead of server errors) > rejects priority=CRITICAL 3ms
+ ✓ tests/lab-03/staff-queue.api.test.ts > Lab 3: Staff Ticket Queue APIs (Issue 3) > Invalid queue query parameters (400 instead of server errors) > rejects owner=somebody 5ms
+ ✓ tests/lab-03/staff-queue.api.test.ts > Lab 3: Staff Ticket Queue APIs (Issue 3) > Invalid queue query parameters (400 instead of server errors) > rejects sortBy=passwordHash 4ms
+ ✓ tests/lab-03/staff-queue.api.test.ts > Lab 3: Staff Ticket Queue APIs (Issue 3) > Invalid queue query parameters (400 instead of server errors) > rejects sortOrder=sideways 3ms
+ ✓ tests/lab-03/staff-queue.api.test.ts > Lab 3: Staff Ticket Queue APIs (Issue 3) > Invalid queue query parameters (400 instead of server errors) > rejects an unauthenticated queue request with 401 2ms
+ ✓ tests/lab-03/staff-queue.api.test.ts > Lab 3: Staff Ticket Queue APIs (Issue 3) > GET /api/staff/members > should return list of active staff and admin members 10ms
+(node:33572) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
 (Use `node --trace-deprecation ...` to show where the warning was created)
- ✓ tests/lab-03/authorization.api.test.ts > Lab 3: Authorization & Identity Isolation > API-06 (AC-06): should tie ticket ownership strictly to authenticated user, ignoring client-supplied requesterId 519ms
- ✓ tests/lab-03/authorization.api.test.ts > Lab 3: Authorization & Identity Isolation > should reject unauthenticated request when no token or legacy header is provided 8ms
- ✓ tests/lab-03/authorization.api.test.ts > Lab 3: Authorization & Identity Isolation > should not accept a client-supplied X-Requester-Id or body requesterId as identity 8ms
- ✓ tests/lab-03/authorization.api.test.ts > Lab 3: Direct API authorization matrix (server-side, independent of UI) > get /api/tickets 54ms
- ✓ tests/lab-03/authorization.api.test.ts > Lab 3: Direct API authorization matrix (server-side, independent of UI) > get /api/staff/tickets 65ms
- ✓ tests/lab-03/authorization.api.test.ts > Lab 3: Direct API authorization matrix (server-side, independent of UI) > get /api/staff/members 40ms
- ✓ tests/lab-03/authorization.api.test.ts > Lab 3: Direct API authorization matrix (server-side, independent of UI) > get /api/admin/users 35ms
- ✓ tests/lab-03/authorization.api.test.ts > Lab 3: Direct API authorization matrix (server-side, independent of UI) > IT Staff cannot create tickets through the Requester API (403) 11ms
- ✓ tests/lab-03/authorization.api.test.ts > Lab 3: Direct API authorization matrix (server-side, independent of UI) > a Requester cannot change ticket owner, IT Priority, or status (403) 34ms
- ✓ tests/lab-03/authorization.api.test.ts > Lab 3: Direct API authorization matrix (server-side, independent of UI) > a Requester cannot create users or reset passwords (403) 19ms
- ✓ tests/lab-03/authorization.api.test.ts > Lab 3: Direct API authorization matrix (server-side, independent of UI) > unknown API routes return a JSON 404 6ms
-(node:23172) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+ ✓ tests/lab-03/comments-notes.api.test.ts > Lab 3: Public Comments & Internal Notes APIs (Issue 4) > API-12 (AC-13, BR-15): Public Comments Creation & Query > should allow ticket owner to post a public comment 17ms
+ ✓ tests/lab-03/comments-notes.api.test.ts > Lab 3: Public Comments & Internal Notes APIs (Issue 4) > API-12 (AC-13, BR-15): Public Comments Creation & Query > should allow IT Staff to post a public comment to the ticket 11ms
+ ✓ tests/lab-03/comments-notes.api.test.ts > Lab 3: Public Comments & Internal Notes APIs (Issue 4) > API-12 (AC-13, BR-15): Public Comments Creation & Query > should allow ticket owner, IT Staff, and Admin to view public comments 23ms
+ ✓ tests/lab-03/comments-notes.api.test.ts > Lab 3: Public Comments & Internal Notes APIs (Issue 4) > API-12 (AC-13, BR-15): Public Comments Creation & Query > should reject non-owner requester with 404 so the ticket existence is not revealed 11ms
+ ✓ tests/lab-03/comments-notes.api.test.ts > Lab 3: Public Comments & Internal Notes APIs (Issue 4) > API-12 (AC-13, BR-15): Public Comments Creation & Query > should reject unauthenticated access to comments with 401 2ms
+ ✓ tests/lab-03/comments-notes.api.test.ts > Lab 3: Public Comments & Internal Notes APIs (Issue 4) > API-12 (AC-13, BR-15): Public Comments Creation & Query > should reject comment content longer than 2000 characters 4ms
+ ✓ tests/lab-03/comments-notes.api.test.ts > Lab 3: Public Comments & Internal Notes APIs (Issue 4) > API-12 (AC-13, BR-15): Public Comments Creation & Query > should store comment content as plain text (rendered escaped by the client) 12ms
+ ✓ tests/lab-03/comments-notes.api.test.ts > Lab 3: Public Comments & Internal Notes APIs (Issue 4) > API-12 (AC-13, BR-15): Public Comments Creation & Query > should reject comment with empty content with 400 Bad Request 6ms
+ ✓ tests/lab-03/comments-notes.api.test.ts > Lab 3: Public Comments & Internal Notes APIs (Issue 4) > API-13 (AC-14, BR-16): Internal Notes Authorization Boundary > should allow IT Staff to post an internal note 11ms
+ ✓ tests/lab-03/comments-notes.api.test.ts > Lab 3: Public Comments & Internal Notes APIs (Issue 4) > API-13 (AC-14, BR-16): Internal Notes Authorization Boundary > should allow Administrator to post and read internal notes 19ms
+ ✓ tests/lab-03/comments-notes.api.test.ts > Lab 3: Public Comments & Internal Notes APIs (Issue 4) > API-13 (AC-14, BR-16): Internal Notes Authorization Boundary > should strictly reject Requester from accessing internal notes with 403 Forbidden 9ms
+(node:47268) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
 (Use `node --trace-deprecation ...` to show where the warning was created)
- ✓ tests/lab-03/comments-notes.api.test.ts > Lab 3: Public Comments & Internal Notes APIs (Issue 4) > API-12 (AC-13, BR-15): Public Comments Creation & Query > should allow ticket owner to post a public comment 40ms
- ✓ tests/lab-03/comments-notes.api.test.ts > Lab 3: Public Comments & Internal Notes APIs (Issue 4) > API-12 (AC-13, BR-15): Public Comments Creation & Query > should allow IT Staff to post a public comment to the ticket 27ms
- ✓ tests/lab-03/comments-notes.api.test.ts > Lab 3: Public Comments & Internal Notes APIs (Issue 4) > API-12 (AC-13, BR-15): Public Comments Creation & Query > should allow ticket owner, IT Staff, and Admin to view public comments 63ms
- ✓ tests/lab-03/comments-notes.api.test.ts > Lab 3: Public Comments & Internal Notes APIs (Issue 4) > API-12 (AC-13, BR-15): Public Comments Creation & Query > should reject non-owner requester with 404 so the ticket existence is not revealed 26ms
- ✓ tests/lab-03/comments-notes.api.test.ts > Lab 3: Public Comments & Internal Notes APIs (Issue 4) > API-12 (AC-13, BR-15): Public Comments Creation & Query > should reject unauthenticated access to comments with 401 6ms
- ✓ tests/lab-03/comments-notes.api.test.ts > Lab 3: Public Comments & Internal Notes APIs (Issue 4) > API-12 (AC-13, BR-15): Public Comments Creation & Query > should reject comment content longer than 2000 characters 13ms
- ✓ tests/lab-03/comments-notes.api.test.ts > Lab 3: Public Comments & Internal Notes APIs (Issue 4) > API-12 (AC-13, BR-15): Public Comments Creation & Query > should store comment content as plain text (rendered escaped by the client) 26ms
- ✓ tests/lab-03/comments-notes.api.test.ts > Lab 3: Public Comments & Internal Notes APIs (Issue 4) > API-12 (AC-13, BR-15): Public Comments Creation & Query > should reject comment with empty content with 400 Bad Request 15ms
- ✓ tests/lab-03/comments-notes.api.test.ts > Lab 3: Public Comments & Internal Notes APIs (Issue 4) > API-13 (AC-14, BR-16): Internal Notes Authorization Boundary > should allow IT Staff to post an internal note 28ms
- ✓ tests/lab-03/comments-notes.api.test.ts > Lab 3: Public Comments & Internal Notes APIs (Issue 4) > API-13 (AC-14, BR-16): Internal Notes Authorization Boundary > should allow Administrator to post and read internal notes 47ms
- ✓ tests/lab-03/comments-notes.api.test.ts > Lab 3: Public Comments & Internal Notes APIs (Issue 4) > API-13 (AC-14, BR-16): Internal Notes Authorization Boundary > should strictly reject Requester from accessing internal notes with 403 Forbidden 21ms
-(node:49692) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+ ✓ tests/lab-03/authorization.api.test.ts > Lab 3: Authorization & Identity Isolation > API-06 (AC-06): should tie ticket ownership strictly to authenticated user, ignoring client-supplied requesterId 323ms
+ ✓ tests/lab-03/authorization.api.test.ts > Lab 3: Authorization & Identity Isolation > should reject unauthenticated request when no token or legacy header is provided 4ms
+ ✓ tests/lab-03/authorization.api.test.ts > Lab 3: Authorization & Identity Isolation > should not accept a client-supplied X-Requester-Id or body requesterId as identity 3ms
+ ✓ tests/lab-03/authorization.api.test.ts > Lab 3: Direct API authorization matrix (server-side, independent of UI) > get /api/tickets 21ms
+ ✓ tests/lab-03/authorization.api.test.ts > Lab 3: Direct API authorization matrix (server-side, independent of UI) > get /api/staff/tickets 24ms
+ ✓ tests/lab-03/authorization.api.test.ts > Lab 3: Direct API authorization matrix (server-side, independent of UI) > get /api/staff/members 16ms
+ ✓ tests/lab-03/authorization.api.test.ts > Lab 3: Direct API authorization matrix (server-side, independent of UI) > get /api/admin/users 13ms
+ ✓ tests/lab-03/authorization.api.test.ts > Lab 3: Direct API authorization matrix (server-side, independent of UI) > IT Staff cannot create tickets through the Requester API (403) 5ms
+ ✓ tests/lab-03/authorization.api.test.ts > Lab 3: Direct API authorization matrix (server-side, independent of UI) > a Requester cannot change ticket owner, IT Priority, or status (403) 10ms
+ ✓ tests/lab-03/authorization.api.test.ts > Lab 3: Direct API authorization matrix (server-side, independent of UI) > a Requester cannot create users or reset passwords (403) 8ms
+ ✓ tests/lab-03/authorization.api.test.ts > Lab 3: Direct API authorization matrix (server-side, independent of UI) > unknown API routes return a JSON 404 2ms
+(node:35288) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
 (Use `node --trace-deprecation ...` to show where the warning was created)
- ✓ tests/lab-02/attachments.api.test.ts > Attachment APIs (Lab 2 continuity with authenticated identity) > owner can upload a valid attachment 3ms
- ✓ tests/lab-02/attachments.api.test.ts > Attachment APIs (Lab 2 continuity with authenticated identity) > API-02: should return 400 if attachment exceeds 5MB limit 65ms
- ✓ tests/lab-02/attachments.api.test.ts > Attachment APIs (Lab 2 continuity with authenticated identity) > should return 400 if file type is not allowed 21ms
- ✓ tests/lab-02/attachments.api.test.ts > Attachment APIs (Lab 2 continuity with authenticated identity) > rejects uploads, downloads, and removal without authentication (401) 26ms
- ✓ tests/lab-02/attachments.api.test.ts > Attachment APIs (Lab 2 continuity with authenticated identity) > another requester cannot download, remove, or upload (404, existence not revealed) 58ms
- ✓ tests/lab-02/attachments.api.test.ts > Attachment APIs (Lab 2 continuity with authenticated identity) > IT Staff can download attachments for Ticket Detail continuity 25ms
- ✓ tests/lab-02/attachments.api.test.ts > Attachment APIs (Lab 2 continuity with authenticated identity) > owner must give a reason to soft-remove an attachment 61ms
- ✓ tests/lab-04/safe-errors.api.test.ts > Lab 4: safe errors (Issue #34) > ERR-01: both dashboards 63ms
- ✓ tests/lab-04/safe-errors.api.test.ts > Lab 4: safe errors (Issue #34) > ERR-01: Actions Taken list, create and the history reads 65ms
- ✓ tests/lab-04/safe-errors.api.test.ts > Lab 4: safe errors (Issue #34) > ERR-01: status, owner and priority writes 63ms
-(node:35872) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+ ✓ tests/lab-02/attachments.api.test.ts > Attachment APIs (Lab 2 continuity with authenticated identity) > owner can upload a valid attachment 1ms
+ ✓ tests/lab-02/attachments.api.test.ts > Attachment APIs (Lab 2 continuity with authenticated identity) > API-02: should return 400 if attachment exceeds 5MB limit 31ms
+ ✓ tests/lab-02/attachments.api.test.ts > Attachment APIs (Lab 2 continuity with authenticated identity) > should return 400 if file type is not allowed 7ms
+ ✓ tests/lab-02/attachments.api.test.ts > Attachment APIs (Lab 2 continuity with authenticated identity) > rejects uploads, downloads, and removal without authentication (401) 8ms
+ ✓ tests/lab-02/attachments.api.test.ts > Attachment APIs (Lab 2 continuity with authenticated identity) > another requester cannot download, remove, or upload (404, existence not revealed) 20ms
+ ✓ tests/lab-02/attachments.api.test.ts > Attachment APIs (Lab 2 continuity with authenticated identity) > IT Staff can download attachments for Ticket Detail continuity 9ms
+ ✓ tests/lab-02/attachments.api.test.ts > Attachment APIs (Lab 2 continuity with authenticated identity) > owner must give a reason to soft-remove an attachment 34ms
+(node:37324) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
 (Use `node --trace-deprecation ...` to show where the warning was created)
- ✓ tests/lab-02/my-tickets.api.test.ts > GET /api/tickets (My Tickets API) > API-03: should return paginated list of tickets for the requester 63ms
- ✓ tests/lab-02/my-tickets.api.test.ts > GET /api/tickets (My Tickets API) > only returns tickets owned by the authenticated requester 51ms
- ✓ tests/lab-02/my-tickets.api.test.ts > GET /api/tickets (My Tickets API) > rejects an invalid sortBy parameter with 400 14ms
-(node:6148) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+ ✓ tests/lab-02/my-tickets.api.test.ts > GET /api/tickets (My Tickets API) > API-03: should return paginated list of tickets for the requester 24ms
+ ✓ tests/lab-02/my-tickets.api.test.ts > GET /api/tickets (My Tickets API) > only returns tickets owned by the authenticated requester 23ms
+ ✓ tests/lab-02/my-tickets.api.test.ts > GET /api/tickets (My Tickets API) > rejects an invalid sortBy parameter with 400 6ms
+ ✓ tests/lab-04/safe-errors.api.test.ts > Lab 4: safe errors (Issue #34) > ERR-01: both dashboards 31ms
+ ✓ tests/lab-04/safe-errors.api.test.ts > Lab 4: safe errors (Issue #34) > ERR-01: Actions Taken list, create and the history reads 26ms
+ ✓ tests/lab-04/safe-errors.api.test.ts > Lab 4: safe errors (Issue #34) > ERR-01: status, owner and priority writes 21ms
+(node:33516) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
 (Use `node --trace-deprecation ...` to show where the warning was created)
- ✓ tests/lab-02/ticket-detail.api.test.ts > GET /api/tickets/:id (Ticket Detail API) > API-04: should return 404 (not revealing existence) when another requester opens the ticket 47ms
- ✓ tests/lab-02/ticket-detail.api.test.ts > GET /api/tickets/:id (Ticket Detail API) > returns the same 404 for a ticket that does not exist 20ms
- ✓ tests/lab-02/ticket-detail.api.test.ts > GET /api/tickets/:id (Ticket Detail API) > should successfully return ticket data for the owner 25ms
-(node:24204) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+ ✓ tests/lab-02/ticket-detail.api.test.ts > GET /api/tickets/:id (Ticket Detail API) > API-04: should return 404 (not revealing existence) when another requester opens the ticket 21ms
+ ✓ tests/lab-02/ticket-detail.api.test.ts > GET /api/tickets/:id (Ticket Detail API) > returns the same 404 for a ticket that does not exist 6ms
+ ✓ tests/lab-02/ticket-detail.api.test.ts > GET /api/tickets/:id (Ticket Detail API) > should successfully return ticket data for the owner 8ms
+(node:33492) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
 (Use `node --trace-deprecation ...` to show where the warning was created)
- ✓ tests/lab-02/create-ticket.api.test.ts > POST /api/tickets (Create Ticket API) > API-01: should create a valid ticket and return 201 with ticketNumber 135ms
- ✓ tests/lab-02/create-ticket.api.test.ts > POST /api/tickets (Create Ticket API) > should return 400 if required fields are missing 13ms
- ✓ tests/lab-02/create-ticket.api.test.ts > POST /api/tickets (Create Ticket API) > should return 400 for an invalid requested priority 11ms
- ✓ tests/lab-02/create-ticket.api.test.ts > POST /api/tickets (Create Ticket API) > should return 401 when no authentication token is provided 11ms
- ✓ tests/lab-01/categories.test.ts > GET /api/categories > should return a list of categories with id and name 303ms
- ✓ tests/lab-01/health.test.ts > GET /api/health > returns 200 with status ok and the service name 37ms
- ✓ tests/lab-04/action-validation.unit.test.ts > Lab 4: Action Taken validation rules (UNIT-01..03) > UNIT-01: required fields, trimming and maximum lengths > trims text and turns blank optional text into null 4ms
+ ✓ tests/lab-02/create-ticket.api.test.ts > POST /api/tickets (Create Ticket API) > API-01: should create a valid ticket and return 201 with ticketNumber 72ms
+ ✓ tests/lab-02/create-ticket.api.test.ts > POST /api/tickets (Create Ticket API) > should return 400 if required fields are missing 7ms
+ ✓ tests/lab-02/create-ticket.api.test.ts > POST /api/tickets (Create Ticket API) > should return 400 for an invalid requested priority 6ms
+ ✓ tests/lab-02/create-ticket.api.test.ts > POST /api/tickets (Create Ticket API) > should return 401 when no authentication token is provided 4ms
+ ✓ tests/lab-01/categories.test.ts > GET /api/categories > should return a list of categories with id and name 171ms
+ ✓ tests/lab-01/health.test.ts > GET /api/health > returns 200 with status ok and the service name 17ms
+ ✓ tests/lab-04/action-validation.unit.test.ts > Lab 4: Action Taken validation rules (UNIT-01..03) > UNIT-01: required fields, trimming and maximum lengths > trims text and turns blank optional text into null 2ms
  ✓ tests/lab-04/action-validation.unit.test.ts > Lab 4: Action Taken validation rules (UNIT-01..03) > UNIT-01: required fields, trimming and maximum lengths > reports every invalid field by name 0ms
- ✓ tests/lab-04/action-validation.unit.test.ts > Lab 4: Action Taken validation rules (UNIT-01..03) > UNIT-01: required fields, trimming and maximum lengths > rejects the inherited property name constructor as a status 1ms
+ ✓ tests/lab-04/action-validation.unit.test.ts > Lab 4: Action Taken validation rules (UNIT-01..03) > UNIT-01: required fields, trimming and maximum lengths > rejects the inherited property name constructor as a status 0ms
  ✓ tests/lab-04/action-validation.unit.test.ts > Lab 4: Action Taken validation rules (UNIT-01..03) > UNIT-01: required fields, trimming and maximum lengths > rejects the inherited property name __proto__ as a status 0ms
  ✓ tests/lab-04/action-validation.unit.test.ts > Lab 4: Action Taken validation rules (UNIT-01..03) > UNIT-01: required fields, trimming and maximum lengths > rejects the inherited property name toString as a status 0ms
  ✓ tests/lab-04/action-validation.unit.test.ts > Lab 4: Action Taken validation rules (UNIT-01..03) > UNIT-01: required fields, trimming and maximum lengths > rejects the inherited property name hasOwnProperty as a status 0ms
  ✓ tests/lab-04/action-validation.unit.test.ts > Lab 4: Action Taken validation rules (UNIT-01..03) > UNIT-01: required fields, trimming and maximum lengths > rejects the inherited property name valueOf as a status 0ms
- ✓ tests/lab-04/action-validation.unit.test.ts > Lab 4: Action Taken validation rules (UNIT-01..03) > UNIT-01: required fields, trimming and maximum lengths > still accepts every real status label 1ms
- ✓ tests/lab-04/action-validation.unit.test.ts > Lab 4: Action Taken validation rules (UNIT-01..03) > UNIT-01: required fields, trimming and maximum lengths > accepts text exactly at the maximum length and rejects non-text values 2ms
- ✓ tests/lab-04/action-validation.unit.test.ts > Lab 4: Action Taken validation rules (UNIT-01..03) > UNIT-01: required fields, trimming and maximum lengths > requires a description, and a result for Completed and Cancelled actions only 1ms
+ ✓ tests/lab-04/action-validation.unit.test.ts > Lab 4: Action Taken validation rules (UNIT-01..03) > UNIT-01: required fields, trimming and maximum lengths > still accepts every real status label 0ms
+ ✓ tests/lab-04/action-validation.unit.test.ts > Lab 4: Action Taken validation rules (UNIT-01..03) > UNIT-01: required fields, trimming and maximum lengths > accepts text exactly at the maximum length and rejects non-text values 1ms
+ ✓ tests/lab-04/action-validation.unit.test.ts > Lab 4: Action Taken validation rules (UNIT-01..03) > UNIT-01: required fields, trimming and maximum lengths > requires a description, and a result for Completed and Cancelled actions only 0ms
  ✓ tests/lab-04/action-validation.unit.test.ts > Lab 4: Action Taken validation rules (UNIT-01..03) > UNIT-02: follow-up rule > requires a note when follow-up is required 0ms
  ✓ tests/lab-04/action-validation.unit.test.ts > Lab 4: Action Taken validation rules (UNIT-01..03) > UNIT-02: follow-up rule > accepts a note when follow-up is required and ignores a missing note when it is not 0ms
  ✓ tests/lab-04/action-validation.unit.test.ts > Lab 4: Action Taken validation rules (UNIT-01..03) > UNIT-03: actionAt bounds > rejects a time before the Ticket was created 0ms
  ✓ tests/lab-04/action-validation.unit.test.ts > Lab 4: Action Taken validation rules (UNIT-01..03) > UNIT-03: actionAt bounds > rejects more than 5 minutes in the future unless the action is only Planned 0ms
  ✓ tests/lab-04/action-validation.unit.test.ts > Lab 4: Action Taken validation rules (UNIT-01..03) > UNIT-03: actionAt bounds > accepts a time up to 5 minutes ahead and a time right at Ticket creation 0ms
  ✓ tests/lab-04/action-validation.unit.test.ts > Lab 4: Action Taken validation rules (UNIT-01..03) > UNIT-03: actionAt bounds > reads an invalid date as a validation error 0ms
- ✓ tests/lab-04/transition-matrix.unit.test.ts > Lab 4: Ticket status transition matrix (UNIT-04, AC-10) > allows exactly the permitted pairs out of all 8 x 8 4ms
- ✓ tests/lab-04/transition-matrix.unit.test.ts > Lab 4: Ticket status transition matrix (UNIT-04, AC-10) > never allows a status to stay the same, and Closed / Cancelled are terminal 1ms
- ✓ tests/lab-04/transition-matrix.unit.test.ts > Lab 4: Ticket status transition matrix (UNIT-04, AC-10) > reads status labels by own key only 1ms
- ✓ tests/lab-04/dashboard-window.unit.test.ts > Lab 4: dashboard window and helpers (Issue #33) > UNIT-05: windowStart is 00:00 Asia/Bangkok six days before today 5ms
- ✓ tests/lab-04/dashboard-window.unit.test.ts > Lab 4: dashboard window and helpers (Issue #33) > UNIT-05: around local midnight the Bangkok date decides, not the UTC date 1ms
+ ✓ tests/lab-04/dashboard-window.unit.test.ts > Lab 4: dashboard window and helpers (Issue #33) > UNIT-05: windowStart is 00:00 Asia/Bangkok six days before today 2ms
+ ✓ tests/lab-04/dashboard-window.unit.test.ts > Lab 4: dashboard window and helpers (Issue #33) > UNIT-05: around local midnight the Bangkok date decides, not the UTC date 0ms
  ✓ tests/lab-04/dashboard-window.unit.test.ts > Lab 4: dashboard window and helpers (Issue #33) > UNIT-05: crossing a month and a year boundary 0ms
- ✓ tests/lab-04/dashboard-window.unit.test.ts > Lab 4: dashboard window and helpers (Issue #33) > UNIT-06: the Active set is exactly New, Open, In Progress, Waiting for Requester and Reopened (BR-24) 2ms
- ✓ tests/lab-04/dashboard-window.unit.test.ts > Lab 4: dashboard window and helpers (Issue #33) > UNIT-06: effective priority is the IT Priority when set, otherwise the requested priority 1ms
- ✓ tests/lab-04/concurrency-token.unit.test.ts > Lab 4: concurrency token helper (UNIT-07, BR-20) > is strictly greater than the previous token even in the same millisecond 2ms
+ ✓ tests/lab-04/dashboard-window.unit.test.ts > Lab 4: dashboard window and helpers (Issue #33) > UNIT-06: the Active set is exactly New, Open, In Progress, Waiting for Requester and Reopened (BR-24) 1ms
+ ✓ tests/lab-04/dashboard-window.unit.test.ts > Lab 4: dashboard window and helpers (Issue #33) > UNIT-06: effective priority is the IT Priority when set, otherwise the requested priority 0ms
+ ✓ tests/lab-04/transition-matrix.unit.test.ts > Lab 4: Ticket status transition matrix (UNIT-04, AC-10) > allows exactly the permitted pairs out of all 8 x 8 2ms
+ ✓ tests/lab-04/transition-matrix.unit.test.ts > Lab 4: Ticket status transition matrix (UNIT-04, AC-10) > never allows a status to stay the same, and Closed / Cancelled are terminal 0ms
+ ✓ tests/lab-04/transition-matrix.unit.test.ts > Lab 4: Ticket status transition matrix (UNIT-04, AC-10) > reads status labels by own key only 0ms
+ ✓ tests/lab-04/concurrency-token.unit.test.ts > Lab 4: concurrency token helper (UNIT-07, BR-20) > is strictly greater than the previous token even in the same millisecond 1ms
  ✓ tests/lab-04/concurrency-token.unit.test.ts > Lab 4: concurrency token helper (UNIT-07, BR-20) > uses the current time when it is already later than previous + 1 ms 0ms
  ✓ tests/lab-04/concurrency-token.unit.test.ts > Lab 4: concurrency token helper (UNIT-07, BR-20) > still moves forward when the clock is behind the stored token 0ms
 
  Test Files  26 passed (26)
       Tests  258 passed (258)
-   Start at  17:45:21
-   Duration  111.34s (transform 1.31s, setup 0ms, import 16.01s, tests 78.11s, environment 4ms)
+   Start at  18:40:21
+   Duration  51.58s (transform 457ms, setup 0ms, import 6.14s, tests 38.03s, environment 2ms)
 
