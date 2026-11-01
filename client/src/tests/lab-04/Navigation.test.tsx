@@ -24,14 +24,14 @@ const staffData = {
 
 let requests: string[] = [];
 
-function mockSession(role: Role, options: { dashboardStatus?: number } = {}) {
+function mockSession(role: Role, options: { dashboardStatus?: number; mustChangePassword?: boolean } = {}) {
   requests = [];
   vi.spyOn(api, 'getAuthToken').mockReturnValue('mock-jwt-token');
   global.fetch = vi.fn(async (url: string) => {
     const u = url.toString();
     requests.push(u);
     const ok = (body: unknown) => ({ ok: true, status: 200, json: async () => body });
-    if (u.includes('/api/auth/me')) return ok({ id: 1, name: 'Test User', email: 'test@example.com', role, mustChangePassword: false });
+    if (u.includes('/api/auth/me')) return ok({ id: 1, name: 'Test User', email: 'test@example.com', role, mustChangePassword: options.mustChangePassword ?? false });
     if (u.includes('/api/dashboard/')) {
       if (options.dashboardStatus && options.dashboardStatus !== 200) return { ok: false, status: options.dashboardStatus, json: async () => ({ error: 'Forbidden' }) };
       return ok(u.includes('/requester') ? requesterData : staffData);
@@ -62,6 +62,15 @@ describe('UI-25: role navigation, landing page and dashboard drill-down (Issue #
     expect(current()).toEqual(['Dashboard']);
     expect(requests.some(u => u.includes('/api/dashboard/requester'))).toBe(true);
     expect(requests.some(u => u.includes('/api/dashboard/staff'))).toBe(false);
+  });
+
+  it('a user who must change the initial password gets no dashboard and no dashboard request until it is saved', async () => {
+    mockSession('REQUESTER', { mustChangePassword: true });
+    render(<App />);
+    expect(await screen.findByRole('dialog', { name: /Change Your Password/i })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 1, name: /Welcome back/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('navigation', { name: 'Main navigation' })).not.toBeInTheDocument();
+    expect(requests.some(u => u.includes('/api/dashboard/'))).toBe(false);
   });
 
   it('IT Staff land on the staff dashboard: Dashboard, Ticket Queue', async () => {

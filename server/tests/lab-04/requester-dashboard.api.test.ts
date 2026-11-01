@@ -74,6 +74,16 @@ describe('Lab 4: Requester dashboard API (Issue #33)', () => {
         expect((await dashboard(session.token)).status).toBe(401);
     });
 
+    it('DASH-02: a user who must still change the initial password gets no dashboard data', async () => {
+        const requester = await createRequester();
+        const session = await sessionOf(requester);
+        await prisma().user.update({ where: { id: requester.id }, data: { mustChangePassword: true } });
+        const res = await dashboard(session.token);
+        expect(res.status).toBe(403);
+        expect(res.body).toMatchObject({ mustChangePassword: true });
+        expect(res.body).not.toHaveProperty('metrics');
+    });
+
     it('DASH-03: Open, Waiting for You, Recently Updated and Recently Resolved equal independent SQL counts', async () => {
         const requester = await createRequester();
         const ws = await windowStartInDb();

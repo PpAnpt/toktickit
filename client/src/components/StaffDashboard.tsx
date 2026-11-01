@@ -58,7 +58,7 @@ const RecentTickets: React.FC<{ tickets: StaffDashboardData['recentTickets']; on
         {tickets.map(ticket => (
           <li key={ticket.id} className="list-group-item px-0">
             <div className="d-flex justify-content-between align-items-start gap-2 flex-wrap">
-              <DrillLink href={`/tickets/${ticket.id}`} onGo={() => onOpen(ticket.id)} className="fw-semibold text-decoration-none d-block text-truncate">
+              <DrillLink href={`/tickets/${ticket.id}`} onGo={() => onOpen(ticket.id)} className="fw-semibold text-decoration-none text-body d-block text-truncate">
                 <span style={{ color: '#006B3C' }}>{ticket.ticketNumber}</span> {ticket.summary}
               </DrillLink>
               <span className="d-flex gap-1"><StatusBadge status={ticket.status} /><PriorityBadge priority={ticket.itPriority} /></span>
@@ -83,7 +83,7 @@ const RecentActions: React.FC<{ actions: StaffDashboardData['myRecentActions']; 
         {actions.map(action => (
           <li key={action.id} className="list-group-item px-0">
             <div className="d-flex justify-content-between align-items-start gap-2 flex-wrap">
-              <DrillLink href={`/tickets/${action.ticketId}`} onGo={() => onOpen(action.ticketId)} className="fw-semibold text-decoration-none d-block text-truncate">
+              <DrillLink href={`/tickets/${action.ticketId}`} onGo={() => onOpen(action.ticketId)} className="fw-semibold text-decoration-none text-body d-block text-truncate">
                 <span style={{ color: '#006B3C' }}>{action.ticketNumber}</span> {action.description}
               </DrillLink>
               <span className="d-flex gap-1 align-items-center">

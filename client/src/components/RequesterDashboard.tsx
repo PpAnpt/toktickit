@@ -11,7 +11,7 @@ const TicketRow: React.FC<{ ticket: DashboardTicketItem; onOpen: (id: number) =>
       <DrillLink
         href={`/tickets/${ticket.id}`}
         onGo={() => onOpen(ticket.id)}
-        className="fw-semibold text-decoration-none d-block text-truncate"
+        className="fw-semibold text-decoration-none text-body d-block text-truncate"
       >
         <span style={{ color: '#006B3C' }}>{ticket.ticketNumber}</span> {ticket.summary}
       </DrillLink>

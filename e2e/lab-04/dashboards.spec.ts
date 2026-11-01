@@ -47,6 +47,12 @@ async function allTickets(request: APIRequestContext, token: string, query = '')
   return tickets;
 }
 
+/** Logging out revokes the token on the server: wait for the login form before moving on, or the next page load races with it */
+async function signOut(page: Page) {
+  await page.getByRole('button', { name: 'Logout' }).click();
+  await expect(page.locator('#email')).toBeVisible();
+}
+
 const nav = (page: Page) => page.getByRole('navigation', { name: 'Main navigation' });
 
 /** The number on a card, read from its accessible name "{label}: {value}. Open list." */
@@ -186,7 +192,7 @@ test.describe('E2E-11: Administrator dashboard (AC-18)', () => {
     await expect(page.locator('h3:has-text("User Management")')).toBeVisible();
 
     // The same dashboard for IT Staff has no such strip, and the API does not send the counts
-    await page.getByRole('button', { name: 'Logout' }).click();
+    await signOut(page);
     await expect(page.locator('#email')).toBeVisible();
     await signIn(page, 'sarah.connor@example.com');
     await expect(page.getByRole('link', { name: /^Unassigned:/ })).toBeVisible();
@@ -210,12 +216,12 @@ test.describe('E2E-12: role navigation, landing page and the other role\'s dashb
     await expect(nav(page).locator('[aria-current="page"]')).toContainText('My Tickets');
     await page.getByRole('link', { name: 'TokTickIT' }).click();
     await expect(page.getByRole('link', { name: /^Open Tickets:/ })).toBeVisible();
-    await page.getByRole('button', { name: 'Logout' }).click();
+    await signOut(page);
 
     await signIn(page, 'sarah.connor@example.com');
     await expect(page.getByRole('link', { name: /^Unassigned:/ })).toBeVisible();
     expect(await menu(page)).toEqual(['Dashboard', 'Ticket Queue']);
-    await page.getByRole('button', { name: 'Logout' }).click();
+    await signOut(page);
 
     await signIn(page, ADMIN.email, ADMIN.password);
     await expect(page.getByRole('link', { name: /^Unassigned:/ })).toBeVisible();
@@ -233,7 +239,7 @@ test.describe('E2E-12: role navigation, landing page and the other role\'s dashb
     await page.getByRole('button', { name: 'Go to my dashboard' }).click();
     await expect(page.getByRole('link', { name: /^Open Tickets:/ })).toBeVisible();
     await expect(page).toHaveURL(/\/$/);
-    await page.getByRole('button', { name: 'Logout' }).click();
+    await signOut(page);
 
     // IT Staff ask for the Requester dashboard
     await page.goto('/dashboard/requester');

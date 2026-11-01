@@ -165,7 +165,7 @@ No delete endpoint exists for Actions Taken, revisions, or Ticket events (BR-08,
 `POST /api/tickets/:id/indicate-resolved` keeps its Lab 3 request and response: it sets `indicatedResolvedAt` only and never changes the status (BR-18). It now runs like the other Ticket writes: the Ticket row is locked, ownership (`404` for another Requester), a final status (`400`) and an earlier indication (`409`) are checked on the locked row, and the new `updatedAt` token is computed from that row (BR-20). A Requester therefore cannot indicate after Staff resolved or closed the Ticket, and simultaneous requests give one `200` and the rest `409`.
 
 ### 3.4 Queue and My Tickets Filter
-`GET /api/staff/tickets` and `GET /api/tickets` accept `status=Active`, meaning `New`, `Open`, `In Progress`, `Waiting for Requester`, `Reopened` (BR-24, BR-28). `GET /api/tickets` (My Tickets, own Tickets only) also accepts `recent=updated` (`updatedAt >= windowStart`) and `recent=resolved` (status `Resolved` or `Closed` and `resolvedAt >= windowStart`); any other value is `400`. These filters call the same shared predicate and window function as the Requester dashboard metrics (BR-39), so list `total` equals the card value for the same snapshot. All other query validation from Lab 3 is unchanged.
+`GET /api/staff/tickets` and `GET /api/tickets` accept `status=Active`, meaning `New`, `Open`, `In Progress`, `Waiting for Requester`, `Reopened` (BR-24, BR-28). `GET /api/tickets` (My Tickets, own Tickets only) also accepts `recent=updated` (`updatedAt >= windowStart`) and `recent=resolved` (status `Resolved` or `Closed` and `resolvedAt >= windowStart`); any other value (including a repeated `recent` parameter) is `400`, and an empty value means no recent filter, as for the other optional filters. These filters call the same shared predicate and window function as the Requester dashboard metrics (BR-39), so list `total` equals the card value for the same snapshot. All other query validation from Lab 3 is unchanged.
 
 ---
 
@@ -239,7 +239,8 @@ Every Requester card therefore has an exact drill-down: the list `total` equals 
 Effective priority = `itPriority` if set, otherwise `requestedPriority`. `recentTickets` = any status, `updatedAt` desc, max 5. `myRecentActions` = actions where the current user is the performer or the assignee, `actionAt` desc then `id` desc, max 5, `description` truncated to 120 characters; each item also carries `status` and the assignee name, so assigned and open work is visible. `userCounts.inactive` counts all users with `isActive=false`.
 
 ### 4.3 Dashboard Errors
-`401` no/invalid token; `403` wrong role (body `{ "error": "Forbidden" }`, no data); `500` generic message. The UI shows retry for `500`.
+`401` no/invalid token; `403` wrong role (body `{ "error": "Forbidden" }`, no data); `500` generic message `{ "error": "Failed to load the dashboard." }`. The UI shows retry for `500`. Both dashboards sit behind the same guard as the other application routes, so a user who still has to change the initial password gets `403` as well.
+`myRecentActions[].status` uses the Actions Taken labels (`Planned`, `In Progress`, `Completed`, `Cancelled`); a `description` longer than 120 characters is shortened to 119 characters plus an ellipsis.
 
 ---
 
