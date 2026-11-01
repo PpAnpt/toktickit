@@ -288,7 +288,7 @@ Every AC-01..AC-40 maps to at least one planned test. AC-28 is also verified by 
 API-23 (cancelling a Ticket cancels its open Actions Taken, BR-32, AC-33) is owned by #32: the behaviour is part of the Ticket status endpoint, so it is implemented and tested together with the other status transitions. The Actions Taken API in #31 already provides the `AUTO_CANCELLED` revision type and the `Cancelled` status it relies on.
 
 ## 5. Final Status Evidence
-All three suites were run in full, with verbose output saved in `artifacts/lab-04/test-output/`, on the code of `lab4-staging` at merge commit `b4d34e6` plus the audit fixes of PR #42 (all five feature Pull Requests merged). The release Pull Request `lab4-staging` to `main` brings exactly this code to `main`; the same three commands are repeated on `main` after that merge (result recorded in the submission report).
+All three suites were run in full, with verbose output saved in `artifacts/lab-04/test-output/`, on the code of `lab4-staging` at merge commit `b4d34e6` plus the audit fixes of PR #42 (all five feature Pull Requests merged). The release Pull Request `lab4-staging` to `main` brings exactly this code to `main`; the same three commands were repeated on `main` at commit `97a84e0` after that merge with the same result (258, 133 and 34 passed, 0 failed; output in `artifacts/lab-04/test-output/main-server.txt`, `main-client.txt`, `main-e2e.txt`).
 
 | Suite | Command | Result | Full output |
 | :--- | :--- | :--- | :--- |

@@ -37,7 +37,13 @@ main
 | #32 | Ticket Workflow, Resolution Gate & Conflict Handling | Done |
 | #33 | Role Dashboards: Requester & IT Staff | Done |
 | #34 | Final Regression, Hardening & Polish | Done |
-| #35 | Release Documentation & Submission Evidence | Done when the release PR is merged |
+| #35 | Release Documentation & Submission Evidence | Done |
+
+Final board (all Lab 4 issues in Done; the filter also matches the Lab 1 issue #4):
+
+![Kanban, Lab 4 issues](../../artifacts/lab-04/screenshots/submission/kanban-lab4-table.png)
+
+Release PR `lab4-staging` → `main`: https://github.com/PpAnpt/toktickit/pull/43 (merged 2026-11-01, commit `97a84e0`). *Git graph of `main`: to be added by the author.*
 
 ## 1.4 Peer review record
 {{include docs/lab-04/reviewer.md}}
@@ -77,7 +83,7 @@ Complete output: `artifacts/lab-04/test-output/server.txt`, `client.txt`, `e2e.t
 
 {{include docs/lab-04/tests.md}}
 
-**Run on `main` after the release merge:** *(filled in after the merge: commit, and the three results above)*
+**Run on `main`:** commit `97a84e0` (merge of release PR #43, 2026-11-01): server **258 passed**, client **133 passed**, Playwright **34 passed**, 0 failures; complete output in `artifacts/lab-04/test-output/main-server.txt`, `main-client.txt` and `main-e2e.txt`.
 
 # Answer Part 4: AI Use with Reflection
 
