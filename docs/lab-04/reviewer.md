@@ -13,7 +13,7 @@ Every Lab 4 Pull Request went into `lab4-staging` and was **merged by the review
 - **PR 3 (#39)**: https://github.com/PpAnpt/toktickit/pull/39 — Ticket workflow, resolution gate and conflict handling (`feature/lab4-3-workflow`, Issue #32)
 - **PR 4 (#40)**: https://github.com/PpAnpt/toktickit/pull/40 — Requester and IT Staff dashboards (`feature/lab4-4-dashboards`, Issue #33)
 - **PR 5 (#41)**: https://github.com/PpAnpt/toktickit/pull/41 — Final hardening and regression (`feature/lab4-5-hardening`, Issue #34)
-- **PR 6**: release documentation (`feature/lab4-6-release`, Issue #35) — see section 5
+- **PR 6 (#42)**: https://github.com/PpAnpt/toktickit/pull/42 — release documentation (`feature/lab4-6-release`, Issue #35)
 - **Release PR**: `lab4-staging` → `main` — see section 5
 
 ## 3. Review Rounds and Responses
@@ -41,4 +41,4 @@ Each round lists what the reviewer found, what the author answered and what was 
 - After PR #38 the author added a pre-submit checklist: every write that touches a Ticket goes through the row lock; every status change asks which unsaved text it hides; every message has a place where it is cleared; async tests use deferred responses; destructive test helpers prove they created what they delete.
 
 ## 5. Release Pull Requests
-Filled in when they are opened (Issue #35): the release documentation PR into `lab4-staging`, and the release PR `lab4-staging` → `main`.
+PR #42 (documentation, into `lab4-staging`) is listed above and is reviewed like the others. The release PR `lab4-staging` → `main` is opened after #42 is merged; its link and result are added to the submission report.
