@@ -28,8 +28,9 @@ test.describe('E2E-02: IT Staff Ticket Lifecycle, Operations & Discussion Flow',
     await page.fill('#password', 'Password123!');
     await page.click('button[type="submit"]:has-text("Sign In")');
 
-    // 2. IT Staff lands on the Ticket Queue and has no Requester or Admin navigation
+    // 2. IT Staff has no Requester or Admin navigation and opens the Ticket Queue from the menu (they land on the Dashboard)
     await expect(page.getByTestId('role-badge')).toHaveText('IT Staff');
+    await page.getByRole('button', { name: /^Ticket Queue/ }).click();
     await expect(page.locator('text=IT Staff Ticket Queue')).toBeVisible();
     await expect(page.locator('button:has-text("User Management")')).toHaveCount(0);
     await expect(page.locator('button:has-text("Create Ticket")')).toHaveCount(0);

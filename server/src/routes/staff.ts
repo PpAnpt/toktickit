@@ -1,7 +1,11 @@
 import { Router, Response } from 'express';
 import { getPrisma } from '../prisma';
 import { authenticate, requireRole, requirePasswordChanged, AuthenticatedRequest } from '../middlewares/auth';
-import { TicketStatus, TicketPriority } from '../../generated/prisma/client';
+import { TicketPriority } from '../../generated/prisma/client';
+import { statusDisplay, statusFilter } from '../services/ticket-status';
+import { changeOwner, changePriority, changeStatus } from '../services/workflow';
+import { sendApiError } from './send-error';
+import { effectivePriorityWhere } from '../services/dashboard';
 
 const router = Router();
 
@@ -10,26 +14,8 @@ router.use(authenticate);
 router.use(requirePasswordChanged);
 router.use(requireRole('IT_STAFF', 'ADMINISTRATOR'));
 
-const statusQueryMap: Record<string, TicketStatus> = {
-    'New': TicketStatus.New,
-    'Open': TicketStatus.Open,
-    'In Progress': TicketStatus.InProgress,
-    'InProgress': TicketStatus.InProgress,
-    'Waiting for Requester': TicketStatus.WaitingForRequester,
-    'WaitingForRequester': TicketStatus.WaitingForRequester,
-    'Resolved': TicketStatus.Resolved,
-    'Closed': TicketStatus.Closed,
-    'Reopened': TicketStatus.Reopened,
-    'Cancelled': TicketStatus.Cancelled,
-};
-
 const PRIORITIES: TicketPriority[] = ['LOW', 'MEDIUM', 'HIGH', 'URGENT'];
 const QUEUE_SORT_FIELDS = ['createdAt', 'updatedAt', 'ticketNumber', 'status', 'priority'];
-
-const statusDisplayMap: Record<string, string> = {
-    InProgress: 'In Progress',
-    WaitingForRequester: 'Waiting for Requester',
-};
 
 /**
  * GET /api/staff/tickets
@@ -54,7 +40,8 @@ router.get('/tickets', async (req: AuthenticatedRequest, res: Response) => {
         if (sortOrderParam !== 'asc' && sortOrderParam !== 'desc') {
             return res.status(400).json({ error: 'Invalid sortOrder. Allowed values: asc, desc' });
         }
-        if (statusParam && statusParam !== 'All' && !statusQueryMap[statusParam]) {
+        const statusWhere = statusFilter(statusParam);
+        if (statusWhere.invalid) {
             return res.status(400).json({ error: 'Invalid status filter' });
         }
         if (priorityParam && priorityParam !== 'All' && !PRIORITIES.includes(priorityParam.toUpperCase() as TicketPriority)) {
@@ -81,20 +68,14 @@ router.get('/tickets', async (req: AuthenticatedRequest, res: Response) => {
             });
         }
 
-        // Status filter
-        if (statusParam && statusParam !== 'All') {
-            andConditions.push({ status: statusQueryMap[statusParam] });
+        // Status filter (a single status, or Active = the five active statuses)
+        if (statusWhere.where) {
+            andConditions.push({ status: statusWhere.where });
         }
 
         // Priority filter (checks effective IT Priority, or requestedPriority if itPriority is null)
         if (priorityParam && priorityParam !== 'All') {
-            const prio = priorityParam.toUpperCase() as TicketPriority;
-            andConditions.push({
-                OR: [
-                    { itPriority: prio },
-                    { itPriority: null, requestedPriority: prio },
-                ],
-            });
+            andConditions.push(effectivePriorityWhere(priorityParam.toUpperCase() as TicketPriority));
         }
 
         // Owner filter
@@ -137,7 +118,7 @@ router.get('/tickets', async (req: AuthenticatedRequest, res: Response) => {
             id: t.id,
             ticketNumber: t.ticketNumber,
             summary: t.summary,
-            status: statusDisplayMap[t.status] || t.status,
+            status: statusDisplay(t.status),
             requestedPriority: t.requestedPriority,
             itPriority: t.itPriority || t.requestedPriority,
             requester: t.requester,
@@ -191,17 +172,9 @@ router.get('/members', async (_req: AuthenticatedRequest, res: Response) => {
     }
 });
 
-// Permitted status transitions based on BR-13 Matrix
-const validTransitions: Record<TicketStatus, TicketStatus[]> = {
-    [TicketStatus.New]: [TicketStatus.Open, TicketStatus.Cancelled],
-    [TicketStatus.Open]: [TicketStatus.InProgress, TicketStatus.WaitingForRequester, TicketStatus.Resolved, TicketStatus.Cancelled],
-    [TicketStatus.InProgress]: [TicketStatus.WaitingForRequester, TicketStatus.Resolved, TicketStatus.Cancelled],
-    [TicketStatus.WaitingForRequester]: [TicketStatus.InProgress, TicketStatus.Resolved, TicketStatus.Cancelled],
-    [TicketStatus.Resolved]: [TicketStatus.Closed, TicketStatus.Reopened],
-    [TicketStatus.Reopened]: [TicketStatus.InProgress, TicketStatus.Resolved, TicketStatus.Cancelled],
-    [TicketStatus.Closed]: [],
-    [TicketStatus.Cancelled]: [],
-};
+function bodyObject(req: AuthenticatedRequest): Record<string, unknown> {
+    return req.body && typeof req.body === 'object' && !Array.isArray(req.body) ? (req.body as Record<string, unknown>) : {};
+}
 
 /**
  * GET /api/staff/tickets/:id
@@ -247,7 +220,7 @@ router.get('/tickets/:id', async (req: AuthenticatedRequest, res: Response) => {
 
         res.status(200).json({
             ...ticket,
-            status: statusDisplayMap[ticket.status] || ticket.status,
+            status: statusDisplay(ticket.status),
             itPriority: ticket.itPriority || ticket.requestedPriority,
         });
     } catch (error) {
@@ -258,176 +231,49 @@ router.get('/tickets/:id', async (req: AuthenticatedRequest, res: Response) => {
 
 /**
  * PATCH /api/staff/tickets/:id/owner
- * Claim or reassign ticket owner (BR-09, BR-12)
+ * Claim or reassign ticket owner (L3-BR-09, L3-BR-12). Requires expectedUpdatedAt (BR-19); records an owner event (BR-35).
  */
 router.patch('/tickets/:id/owner', async (req: AuthenticatedRequest, res: Response) => {
     try {
-        const prisma = getPrisma();
         const ticketId = Number(req.params.id);
-        if (isNaN(ticketId)) {
+        if (!Number.isInteger(ticketId) || ticketId <= 0) {
             return res.status(400).json({ error: 'Invalid ticket ID' });
         }
-
-        const ticket = await prisma.ticket.findUnique({
-            where: { id: ticketId },
-        });
-
-        if (!ticket) {
-            return res.status(404).json({ error: 'Ticket not found' });
-        }
-
-        const { ownerId } = req.body;
-
-        // If ownerId is provided, validate that user exists, is active, and is IT_STAFF or ADMIN
-        if (ownerId !== null && ownerId !== undefined) {
-            if (!Number.isInteger(Number(ownerId)) || Number(ownerId) <= 0) {
-                return res.status(400).json({ error: 'ownerId must be a valid user id or null' });
-            }
-            const targetUser = await prisma.user.findUnique({
-                where: { id: Number(ownerId) },
-            });
-
-            if (!targetUser || !targetUser.isActive || !['IT_STAFF', 'ADMINISTRATOR'].includes(targetUser.role)) {
-                return res.status(400).json({ error: 'Owner must be an active IT Staff or Administrator' });
-            }
-        }
-
-        // BR-12: Auto-move from New to Open when claimed or assigned
-        let newStatus = ticket.status;
-        if (ticket.status === TicketStatus.New && ownerId !== null && ownerId !== undefined) {
-            newStatus = TicketStatus.Open;
-        }
-
-        const updated = await prisma.ticket.update({
-            where: { id: ticketId },
-            data: {
-                ownerId: ownerId !== null && ownerId !== undefined ? Number(ownerId) : null,
-                status: newStatus,
-            },
-            include: {
-                owner: { select: { id: true, name: true, email: true, role: true } },
-                requester: { select: { id: true, name: true, email: true } },
-            },
-        });
-
-        res.status(200).json({
-            ...updated,
-            status: statusDisplayMap[updated.status] || updated.status,
-            itPriority: updated.itPriority || updated.requestedPriority,
-        });
+        res.status(200).json(await changeOwner(ticketId, req.user!, bodyObject(req)));
     } catch (error) {
-        console.error('Failed to update ticket owner:', error);
-        res.status(500).json({ error: 'Failed to update ticket owner' });
+        sendApiError(res, error, 'Failed to update ticket owner');
     }
 });
 
 /**
  * PATCH /api/staff/tickets/:id/priority
- * Modify IT Priority independently of original Requested Priority (BR-10, BR-11)
+ * Modify IT Priority independently of the Requested Priority (L3-BR-10, L3-BR-11). Requires expectedUpdatedAt (BR-19).
  */
 router.patch('/tickets/:id/priority', async (req: AuthenticatedRequest, res: Response) => {
     try {
-        const prisma = getPrisma();
         const ticketId = Number(req.params.id);
-        if (isNaN(ticketId)) {
+        if (!Number.isInteger(ticketId) || ticketId <= 0) {
             return res.status(400).json({ error: 'Invalid ticket ID' });
         }
-
-        const ticket = await prisma.ticket.findUnique({
-            where: { id: ticketId },
-        });
-
-        if (!ticket) {
-            return res.status(404).json({ error: 'Ticket not found' });
-        }
-
-        const { itPriority } = req.body;
-        const validPriorities: TicketPriority[] = ['LOW', 'MEDIUM', 'HIGH', 'URGENT'];
-
-        if (!itPriority || !validPriorities.includes(itPriority)) {
-            return res.status(400).json({
-                error: 'Valid itPriority (LOW, MEDIUM, HIGH, URGENT) is required',
-            });
-        }
-
-        const updated = await prisma.ticket.update({
-            where: { id: ticketId },
-            data: {
-                itPriority: itPriority as TicketPriority,
-            },
-            include: {
-                owner: { select: { id: true, name: true, email: true, role: true } },
-                requester: { select: { id: true, name: true, email: true } },
-            },
-        });
-
-        res.status(200).json({
-            ...updated,
-            status: statusDisplayMap[updated.status] || updated.status,
-            itPriority: updated.itPriority,
-        });
+        res.status(200).json(await changePriority(ticketId, req.user!, bodyObject(req)));
     } catch (error) {
-        console.error('Failed to update ticket priority:', error);
-        res.status(500).json({ error: 'Failed to update ticket priority' });
+        sendApiError(res, error, 'Failed to update ticket priority');
     }
 });
 
 /**
  * PATCH /api/staff/tickets/:id/status
- * Workflow Status Transition following BR-13 Matrix
+ * Final transition matrix, resolution gate and atomic stale-update check (BR-14..BR-20).
  */
 router.patch('/tickets/:id/status', async (req: AuthenticatedRequest, res: Response) => {
     try {
-        const prisma = getPrisma();
         const ticketId = Number(req.params.id);
-        if (isNaN(ticketId)) {
+        if (!Number.isInteger(ticketId) || ticketId <= 0) {
             return res.status(400).json({ error: 'Invalid ticket ID' });
         }
-
-        const ticket = await prisma.ticket.findUnique({
-            where: { id: ticketId },
-        });
-
-        if (!ticket) {
-            return res.status(404).json({ error: 'Ticket not found' });
-        }
-
-        const { status: targetStatusStr } = req.body;
-        if (!targetStatusStr) {
-            return res.status(400).json({ error: 'Status is required' });
-        }
-
-        const targetStatus = statusQueryMap[targetStatusStr] || (targetStatusStr as TicketStatus);
-        const currentStatus = ticket.status;
-
-        const permitted = validTransitions[currentStatus] || [];
-        if (!permitted.includes(targetStatus)) {
-            const currentDisplay = statusDisplayMap[currentStatus] || currentStatus;
-            const targetDisplay = statusDisplayMap[targetStatus] || targetStatusStr;
-            return res.status(400).json({
-                error: `Invalid status transition from '${currentDisplay}' to '${targetDisplay}'`,
-            });
-        }
-
-        const updated = await prisma.ticket.update({
-            where: { id: ticketId },
-            data: {
-                status: targetStatus,
-            },
-            include: {
-                owner: { select: { id: true, name: true, email: true, role: true } },
-                requester: { select: { id: true, name: true, email: true } },
-            },
-        });
-
-        res.status(200).json({
-            ...updated,
-            status: statusDisplayMap[updated.status] || updated.status,
-            itPriority: updated.itPriority || updated.requestedPriority,
-        });
+        res.status(200).json(await changeStatus(ticketId, req.user!, bodyObject(req)));
     } catch (error) {
-        console.error('Failed to update ticket status:', error);
-        res.status(500).json({ error: 'Failed to update ticket status' });
+        sendApiError(res, error, 'Failed to update ticket status');
     }
 });
 

@@ -332,6 +332,7 @@ export interface NoteItem {
 export interface StaffTicketDetail extends StaffTicket {
   description: string;
   indicatedResolvedAt?: string | null;
+  resolvedAt?: string | null;
   attachments?: Array<{
     id: number;
     originalFileName: string;
@@ -359,51 +360,58 @@ export async function fetchStaffTicketDetail(id: number): Promise<StaffTicketDet
 }
 
 /**
+ * Ticket status, owner and priority changes carry the Ticket's expectedUpdatedAt (Lab 4, BR-19). A stale token is a
+ * 409 STALE_UPDATE, a refused Resolved is a 400 RESOLUTION_GATE_FAILED; both arrive as an ActionApiError.
+ */
+async function ticketWrite(ticketId: number, path: string, body: Record<string, unknown>, expectedUpdatedAt: string): Promise<StaffTicketDetail> {
+  try {
+    const data = await actionRequest<StaffTicketDetail>(`/api/staff/tickets/${ticketId}/${path}`, jsonRequest('PATCH', { ...body, expectedUpdatedAt }));
+    const { _status, ...ticket } = data;
+    void _status;
+    return ticket as StaffTicketDetail;
+  } catch (err) {
+    if (err instanceof ActionApiError && err.status === 403) throw new ActionApiError(403, 'You do not have permission to change this Ticket.', err.code);
+    if (err instanceof ActionApiError && err.status === 404) throw new ActionApiError(404, 'This Ticket is no longer available.', err.code);
+    throw err;
+  }
+}
+
+/**
  * Claim or reassign ticket owner
  */
-export async function updateTicketOwner(id: number, ownerId: number | null): Promise<StaffTicketDetail> {
-  const res = await authFetch(`/api/staff/tickets/${id}/owner`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ownerId }),
-  });
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.error || 'Failed to update owner');
-  }
-  return res.json();
+export function updateTicketOwner(id: number, ownerId: number | null, expectedUpdatedAt: string): Promise<StaffTicketDetail> {
+  return ticketWrite(id, 'owner', { ownerId }, expectedUpdatedAt);
 }
 
 /**
  * Update IT Priority
  */
-export async function updateTicketPriority(id: number, itPriority: string): Promise<StaffTicketDetail> {
-  const res = await authFetch(`/api/staff/tickets/${id}/priority`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ itPriority }),
-  });
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.error || 'Failed to update IT priority');
-  }
-  return res.json();
+export function updateTicketPriority(id: number, itPriority: string, expectedUpdatedAt: string): Promise<StaffTicketDetail> {
+  return ticketWrite(id, 'priority', { itPriority }, expectedUpdatedAt);
 }
 
 /**
  * Update Ticket Status following workflow transition
  */
-export async function updateTicketStatus(id: number, status: string): Promise<StaffTicketDetail> {
-  const res = await authFetch(`/api/staff/tickets/${id}/status`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ status }),
-  });
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.error || 'Failed to update status');
-  }
-  return res.json();
+export function updateTicketStatus(id: number, status: string, expectedUpdatedAt: string): Promise<StaffTicketDetail> {
+  return ticketWrite(id, 'status', { status }, expectedUpdatedAt);
+}
+
+export interface TicketEventItem {
+  id: number;
+  type: 'STATUS_CHANGED' | 'OWNER_CHANGED' | 'PRIORITY_CHANGED';
+  from: string | null;
+  to: string | null;
+  actor: { id: number; name: string };
+  createdAt: string;
+}
+export interface TicketEventsPage { events: TicketEventItem[]; total: number; page: number; limit: number }
+
+/** Status, owner and priority history of a Ticket, oldest first (staff only) */
+export async function fetchTicketEvents(ticketId: number, page = 1, limit = 50): Promise<TicketEventsPage> {
+  const data = await actionRequest<Partial<TicketEventsPage>>(`/api/staff/tickets/${ticketId}/events?page=${page}&limit=${limit}`);
+  const events = Array.isArray(data.events) ? data.events : [];
+  return { events, total: data.total ?? events.length, page: data.page ?? page, limit: data.limit ?? limit };
 }
 
 /**
@@ -565,5 +573,204 @@ export async function resetAdminUserPassword(id: number, initialPassword: string
   return res.json();
 }
 
+// ─── Lab 4: Actions Taken ────────────────────────────────────
 
+export type ActionStatus = 'Planned' | 'In Progress' | 'Completed' | 'Cancelled';
 
+export interface ActionPerson {
+  id: number;
+  name: string;
+  role: string;
+}
+
+export interface ActionTakenItem {
+  id: number;
+  ticketId: number;
+  actionAt: string;
+  description: string;
+  result: string | null;
+  performedBy: ActionPerson;
+  assignee: ActionPerson;
+  status: ActionStatus;
+  followUpRequired: boolean;
+  followUpNote: string | null;
+  attachmentNotes: string | null;
+  createdAt: string;
+  updatedAt: string;
+  updatedBy: { id: number; name: string } | null;
+}
+
+export interface ActionsPage {
+  actions: ActionTakenItem[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface ActionRevisionItem {
+  revisionNo: number;
+  type: 'CREATED' | 'EDITED' | 'STATUS_CHANGED' | 'ASSIGNEE_CHANGED' | 'AUTO_CANCELLED';
+  actor: { id: number; name: string };
+  createdAt: string;
+  changedFields: string[];
+  before: Record<string, unknown> | null;
+  after: Record<string, unknown>;
+}
+
+export interface ActionInput {
+  actionAt?: string;
+  description?: string;
+  result?: string | null;
+  assigneeId?: number;
+  status?: ActionStatus;
+  followUpRequired?: boolean;
+  followUpNote?: string | null;
+  attachmentNotes?: string | null;
+  clientRequestId?: string;
+  expectedUpdatedAt?: string;
+}
+
+/** Error from the Actions Taken API; keeps the field messages so forms can show them under each field. */
+export class ActionApiError extends Error {
+  status: number;
+  code?: string;
+  details: Record<string, string>;
+  currentUpdatedAt?: string;
+  /** RESOLUTION_GATE_FAILED: NO_COMPLETED_ACTION and/or OPEN_ACTIONS, with the number of open actions */
+  reasons: string[];
+  openActions?: number;
+  constructor(
+    status: number, message: string, code?: string, details: Record<string, string> = {}, currentUpdatedAt?: string,
+    extra: { reasons?: string[]; openActions?: number } = {},
+  ) {
+    super(message);
+    this.status = status;
+    this.code = code;
+    this.details = details;
+    this.currentUpdatedAt = currentUpdatedAt;
+    this.reasons = extra.reasons ?? [];
+    this.openActions = extra.openActions;
+  }
+}
+
+// Messages for failures the server does not describe in words we want to show (no raw server text, FR-16)
+const ACTION_ERROR_MESSAGES: Record<number, string> = {
+  401: 'Your session has expired. Please sign in again.',
+  403: 'You do not have permission to change Actions Taken.',
+  404: 'This Ticket or action is no longer available.',
+};
+
+async function actionRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T & { _status: number }> {
+  let res: Response;
+  try {
+    res = await authFetch(endpoint, options);
+  } catch {
+    throw new ActionApiError(0, 'Could not reach the server. Check your connection and try again.');
+  }
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const message = res.status >= 500
+      ? 'Something went wrong on the server. Please try again.'
+      : res.status === 400 || res.status === 409
+        ? (data.error || 'The request could not be completed.')
+        : (ACTION_ERROR_MESSAGES[res.status] || data.error || 'The request could not be completed.');
+    throw new ActionApiError(res.status, message, data.code, data.details ?? {}, data.currentUpdatedAt, {
+      reasons: Array.isArray(data.reasons) ? data.reasons : [],
+      openActions: typeof data.openActions === 'number' ? data.openActions : undefined,
+    });
+  }
+  return { ...data, _status: res.status };
+}
+
+const jsonRequest = (method: string, body: unknown): RequestInit => ({
+  method,
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(body),
+});
+
+export async function fetchActionsTaken(ticketId: number, page = 1, limit = 20): Promise<ActionsPage> {
+  const data = await actionRequest<Partial<ActionsPage>>(`/api/tickets/${ticketId}/actions?page=${page}&limit=${limit}`);
+  // A malformed body is treated as an empty list instead of breaking the Ticket Detail screen
+  const actions = Array.isArray(data.actions) ? data.actions : [];
+  return { actions, total: data.total ?? actions.length, page: data.page ?? page, limit: data.limit ?? limit };
+}
+
+export async function createActionTaken(ticketId: number, input: ActionInput): Promise<{ action: ActionTakenItem; replayed: boolean }> {
+  const data = await actionRequest<{ action: ActionTakenItem; replayed?: boolean }>(
+    `/api/staff/tickets/${ticketId}/actions`, jsonRequest('POST', input));
+  return { action: data.action, replayed: Boolean(data.replayed) };
+}
+
+export async function updateActionTaken(ticketId: number, actionId: number, input: ActionInput): Promise<ActionTakenItem> {
+  const data = await actionRequest<{ action: ActionTakenItem }>(
+    `/api/staff/tickets/${ticketId}/actions/${actionId}`, jsonRequest('PATCH', input));
+  return data.action;
+}
+
+export async function fetchActionRevisions(ticketId: number, actionId: number, page = 1, limit = 50): Promise<{ revisions: ActionRevisionItem[]; total: number; page: number; limit: number }> {
+  return actionRequest(`/api/staff/tickets/${ticketId}/actions/${actionId}/revisions?page=${page}&limit=${limit}`);
+}
+
+// ---------------------------------------------------------------------------
+// Dashboards (Lab 4, api-spec section 4): every number is calculated by the server
+// ---------------------------------------------------------------------------
+
+export interface DashboardTicketItem {
+  id: number;
+  ticketNumber: string;
+  summary: string;
+  status: string;
+  updatedAt: string;
+}
+
+export interface RequesterDashboardData {
+  generatedAt: string;
+  windowStart: string;
+  metrics: { openTickets: number; waitingForRequester: number; recentlyUpdated: number; recentlyResolved: number };
+  attention: DashboardTicketItem[];
+  recentTickets: DashboardTicketItem[];
+}
+
+export interface StaffDashboardData {
+  generatedAt: string;
+  windowStart: string;
+  metrics: { unassigned: number; myActive: number; urgent: number; reopened: number; resolvedAwaitingClosure: number };
+  byStatus: Record<string, number>;
+  byPriority: Record<string, number>;
+  recentTickets: (DashboardTicketItem & { itPriority: string; owner: { id: number; name: string } | null })[];
+  myRecentActions: {
+    id: number;
+    ticketId: number;
+    ticketNumber: string;
+    actionAt: string;
+    description: string;
+    status: string;
+    assignee: { id: number; name: string };
+    followUpRequired: boolean;
+  }[];
+  userCounts?: { requesters: number; itStaff: number; administrators: number; inactive: number };
+}
+
+async function dashboardRequest<T>(endpoint: string): Promise<T> {
+  const { _status, ...data } = await actionRequest<T>(endpoint);
+  void _status;
+  return data as T;
+}
+
+/** A 403 arrives as an ApiError with status 403 so the screen can show the forbidden state without data */
+/** A body without the expected shape is an error state, never a half-rendered or crashing screen */
+function requireMetrics<T extends { metrics?: unknown }>(data: T): T {
+  if (!data || typeof data.metrics !== 'object' || data.metrics === null) {
+    throw new ActionApiError(0, 'The dashboard response was not understood.');
+  }
+  return data;
+}
+
+export const fetchRequesterDashboard = async (): Promise<RequesterDashboardData> => {
+  const data = requireMetrics(await dashboardRequest<RequesterDashboardData>('/api/dashboard/requester'));
+  return { ...data, attention: data.attention ?? [], recentTickets: data.recentTickets ?? [] };
+};
+export const fetchStaffDashboard = async (): Promise<StaffDashboardData> => {
+  const data = requireMetrics(await dashboardRequest<StaffDashboardData>('/api/dashboard/staff'));
+  return { ...data, byStatus: data.byStatus ?? {}, byPriority: data.byPriority ?? {}, recentTickets: data.recentTickets ?? [], myRecentActions: data.myRecentActions ?? [] };
+};

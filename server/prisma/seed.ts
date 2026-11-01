@@ -2,6 +2,7 @@ import 'dotenv/config'
 import bcrypt from 'bcryptjs'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { PrismaClient, TicketPriority, TicketStatus } from '../generated/prisma/client'
+import { seedLab4 } from './seed-lab4'
 
 const adapter = new PrismaPg({
     connectionString: process.env.DATABASE_URL
@@ -228,6 +229,22 @@ async function main() {
             status: 'Open', requestedPriority: 'LOW', itPriority: 'LOW', requester: 'emily.watson', owner: null,
             category: 'Software', system: 'Printer', daysAgo: 3,
         },
+        // Lab 4: tickets resolved and closed inside the last 7 days, so the Requester dashboard card
+        // 'Recently Resolved' is non-zero (David Lee) while Emily Watson keeps a zero there
+        {
+            ticketNumber: 'TKT-2025-000115', summary: 'Shared drive shows an access denied message',
+            description: 'The team folder on the shared drive refuses access since the permission review.',
+            status: 'Resolved', requestedPriority: 'MEDIUM', itPriority: 'MEDIUM', requester: 'david.lee', owner: 'james.gordon',
+            category: 'Account and Access', system: 'Corporate Laptop', daysAgo: 3,
+            comments: [{ author: 'james.gordon', content: 'Your group membership was restored. Please sign out and in again.' }],
+        },
+        {
+            ticketNumber: 'TKT-2025-000116', summary: 'Projector remote control needs new batteries',
+            description: 'The remote of the projector in room 1105 does not respond.',
+            status: 'Closed', requestedPriority: 'LOW', itPriority: 'LOW', requester: 'david.lee', owner: 'sarah.connor',
+            category: 'Hardware', system: 'Corporate Laptop', daysAgo: 4,
+            comments: [{ author: 'sarah.connor', content: 'New batteries were fitted and the remote works again.' }],
+        },
     ]
 
     const users = await prisma.user.findMany()
@@ -261,6 +278,8 @@ async function main() {
                 categoryId: categoryId(t.category),
                 relatedSystemId: systemId(t.system),
                 createdAt,
+                // Lab 4: a Resolved or Closed seed Ticket needs a resolution time for the dashboards
+                resolvedAt: t.status === 'Resolved' || t.status === 'Closed' ? new Date(createdAt.getTime() + 2 * 24 * 60 * 60 * 1000) : null,
                 indicatedResolvedAt: t.indicatedResolved ? new Date(createdAt.getTime() + 2 * 24 * 60 * 60 * 1000) : null,
                 comments: {
                     create: (t.comments ?? []).map((c, i) => ({
@@ -281,6 +300,9 @@ async function main() {
         created++
     }
     console.log(`✅ Seeded ${created} new Tickets (${tickets.length} defined) with Public Comments and Internal Notes.`)
+
+    const actionsCreated = await seedLab4(prisma, userId)
+    console.log(`✅ Seeded ${actionsCreated} new Actions Taken with their revisions.`)
 
     console.log('🎉 Seeding finished successfully!')
 }

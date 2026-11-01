@@ -1,0 +1,55 @@
+{
+  "environment": "win32 10.0.26300 | Intel(R) Core(TM) i7-14700HX | 16 GB RAM | Node v24.14.0 | PostgreSQL 18.6 (Debian 18.6-1.pgdg13+2)",
+  "fixture": {
+    "users": 100,
+    "tickets": 5000,
+    "actions": 20000,
+    "revisions": 20000,
+    "events": 10000
+  },
+  "limitMs": 1000,
+  "results": [
+    {
+      "endpoint": "GET /api/dashboard/requester",
+      "min": 4.4,
+      "median": 6.1,
+      "p95": 6.8,
+      "max": 7.3
+    },
+    {
+      "endpoint": "GET /api/dashboard/staff (IT Staff)",
+      "min": 7.7,
+      "median": 8.6,
+      "p95": 10.5,
+      "max": 10.7
+    },
+    {
+      "endpoint": "GET /api/dashboard/staff (Administrator)",
+      "min": 8.7,
+      "median": 9.6,
+      "p95": 10.5,
+      "max": 10.5
+    },
+    {
+      "endpoint": "GET /api/tickets/:id/actions?limit=20",
+      "min": 5.8,
+      "median": 7.1,
+      "p95": 9,
+      "max": 10
+    },
+    {
+      "endpoint": "GET /api/staff/tickets/:id/actions/:actionId/revisions",
+      "min": 5.2,
+      "median": 5.9,
+      "p95": 6.8,
+      "max": 7.1
+    },
+    {
+      "endpoint": "GET /api/tickets/:id/events",
+      "min": 4.6,
+      "median": 5.6,
+      "p95": 7.1,
+      "max": 7.2
+    }
+  ]
+}

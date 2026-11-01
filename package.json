@@ -9,7 +9,8 @@
   "scripts": {
     "test:e2e": "playwright test",
     "screenshots": "playwright test --config scripts/screenshots.config.ts",
-    "report": "node scripts/build-report-pdf.mjs"
+    "report": "node scripts/build-report-pdf.mjs",
+    "report:lab4": "node scripts/build-report-lab4.mjs"
   },
   "repository": {
     "type": "git",

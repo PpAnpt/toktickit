@@ -29,6 +29,10 @@ Thumbs.db
 
 # Generated submission PDF (npm run report); attach it to the submission instead of committing
 docs/lab-03/lab-03-report.pdf
+docs/lab-04/lab-04-report.pdf
+
+# Claude Code local settings
+.claude/settings.local.json
 
 # Generated report PDFs and fetched PR data (regenerate with npm run report / fetch-pr-info.ts)
 docs/lab-*/report_*.pdf

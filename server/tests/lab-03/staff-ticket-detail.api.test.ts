@@ -13,6 +13,10 @@ describe('Lab 3: Staff Ticket Detail & Operations APIs (Issue 4)', () => {
     let testTicketId: number;
     let newTicketId: number;
 
+    // Lab 4 (BR-19): status, owner and priority changes carry the Ticket's current updatedAt
+    const ticketToken = async (id: number): Promise<string> =>
+        (await request(app).get(`/api/staff/tickets/${id}`).set('Authorization', `Bearer ${staffToken}`)).body.updatedAt;
+
     beforeAll(async () => {
         // Log in as David Lee (Requester 1)
         const reqRes = await request(app)
@@ -106,7 +110,7 @@ describe('Lab 3: Staff Ticket Detail & Operations APIs (Issue 4)', () => {
             const res = await request(app)
                 .patch(`/api/staff/tickets/${newTicketId}/owner`)
                 .set('Authorization', `Bearer ${staffToken}`)
-                .send({ ownerId: staffUserId });
+                .send({ ownerId: staffUserId, expectedUpdatedAt: await ticketToken(newTicketId) });
 
             expect(res.status).toBe(200);
             expect(res.body.ownerId).toBe(staffUserId);
@@ -118,7 +122,7 @@ describe('Lab 3: Staff Ticket Detail & Operations APIs (Issue 4)', () => {
             const res = await request(app)
                 .patch(`/api/staff/tickets/${testTicketId}/owner`)
                 .set('Authorization', `Bearer ${staffToken}`)
-                .send({ ownerId: adminUserId });
+                .send({ ownerId: adminUserId, expectedUpdatedAt: await ticketToken(testTicketId) });
 
             expect(res.status).toBe(200);
             expect(res.body.ownerId).toBe(adminUserId);
@@ -128,7 +132,7 @@ describe('Lab 3: Staff Ticket Detail & Operations APIs (Issue 4)', () => {
             const res = await request(app)
                 .patch(`/api/staff/tickets/${testTicketId}/owner`)
                 .set('Authorization', `Bearer ${staffToken}`)
-                .send({ ownerId: null });
+                .send({ ownerId: null, expectedUpdatedAt: await ticketToken(testTicketId) });
 
             expect(res.status).toBe(200);
             expect(res.body.ownerId).toBeNull();
@@ -139,7 +143,7 @@ describe('Lab 3: Staff Ticket Detail & Operations APIs (Issue 4)', () => {
             const res1 = await request(app)
                 .patch(`/api/staff/tickets/${testTicketId}/owner`)
                 .set('Authorization', `Bearer ${staffToken}`)
-                .send({ ownerId: requesterUserId });
+                .send({ ownerId: requesterUserId, expectedUpdatedAt: await ticketToken(testTicketId) });
 
             expect(res1.status).toBe(400);
             expect(res1.body.error).toMatch(/active IT Staff or Administrator/i);
@@ -151,7 +155,7 @@ describe('Lab 3: Staff Ticket Detail & Operations APIs (Issue 4)', () => {
             const res = await request(app)
                 .patch(`/api/staff/tickets/${testTicketId}/priority`)
                 .set('Authorization', `Bearer ${staffToken}`)
-                .send({ itPriority: 'URGENT' });
+                .send({ itPriority: 'URGENT', expectedUpdatedAt: await ticketToken(testTicketId) });
 
             expect(res.status).toBe(200);
             expect(res.body.itPriority).toBe('URGENT');
@@ -162,7 +166,7 @@ describe('Lab 3: Staff Ticket Detail & Operations APIs (Issue 4)', () => {
             const res = await request(app)
                 .patch(`/api/staff/tickets/${testTicketId}/priority`)
                 .set('Authorization', `Bearer ${staffToken}`)
-                .send({ itPriority: 'SUPER_URGENT' });
+                .send({ itPriority: 'SUPER_URGENT', expectedUpdatedAt: await ticketToken(testTicketId) });
 
             expect(res.status).toBe(400);
         });
@@ -174,22 +178,29 @@ describe('Lab 3: Staff Ticket Detail & Operations APIs (Issue 4)', () => {
             await request(app)
                 .patch(`/api/staff/tickets/${testTicketId}/owner`)
                 .set('Authorization', `Bearer ${staffToken}`)
-                .send({ ownerId: 5 });
+                .send({ ownerId: 5, expectedUpdatedAt: await ticketToken(testTicketId) });
 
             const res = await request(app)
                 .patch(`/api/staff/tickets/${testTicketId}/status`)
                 .set('Authorization', `Bearer ${staffToken}`)
-                .send({ status: 'In Progress' });
+                .send({ status: 'In Progress', expectedUpdatedAt: await ticketToken(testTicketId) });
 
             expect(res.status).toBe(200);
             expect(res.body.status).toMatch(/In Progress|InProgress/);
         });
 
         it('should permit valid transition In Progress -> Resolved', async () => {
+            // Lab 4 resolution gate (BR-16): a Ticket needs a Completed Action Taken before it can be Resolved
+            const action = await request(app)
+                .post(`/api/staff/tickets/${testTicketId}/actions`)
+                .set('Authorization', `Bearer ${staffToken}`)
+                .send({ description: 'Checked the monitor and the dock', result: 'Cable replaced; display stable' });
+            expect(action.status).toBe(201);
+
             const res = await request(app)
                 .patch(`/api/staff/tickets/${testTicketId}/status`)
                 .set('Authorization', `Bearer ${staffToken}`)
-                .send({ status: 'Resolved' });
+                .send({ status: 'Resolved', expectedUpdatedAt: await ticketToken(testTicketId) });
 
             expect(res.status).toBe(200);
             expect(res.body.status).toBe('Resolved');
@@ -199,7 +210,7 @@ describe('Lab 3: Staff Ticket Detail & Operations APIs (Issue 4)', () => {
             const res = await request(app)
                 .patch(`/api/staff/tickets/${testTicketId}/status`)
                 .set('Authorization', `Bearer ${staffToken}`)
-                .send({ status: 'In Progress' }); // Resolved can only transition to Closed or Reopened
+                .send({ status: 'In Progress', expectedUpdatedAt: await ticketToken(testTicketId) }); // Resolved can only transition to Closed or Reopened
 
             expect(res.status).toBe(400);
             expect(res.body.error).toMatch(/Invalid status transition/i);
@@ -209,7 +220,7 @@ describe('Lab 3: Staff Ticket Detail & Operations APIs (Issue 4)', () => {
             const res = await request(app)
                 .patch(`/api/staff/tickets/${testTicketId}/status`)
                 .set('Authorization', `Bearer ${staffToken}`)
-                .send({ status: 'Reopened' });
+                .send({ status: 'Reopened', expectedUpdatedAt: await ticketToken(testTicketId) });
 
             expect(res.status).toBe(200);
             expect(res.body.status).toBe('Reopened');

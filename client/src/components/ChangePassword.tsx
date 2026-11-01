@@ -56,7 +56,10 @@ export const ChangePassword: React.FC<ChangePasswordProps> = ({ onPasswordChange
   };
 
   return (
-    <div role="dialog" aria-modal="true" aria-labelledby="change-password-title" style={{
+    <div role="dialog" aria-modal="true" aria-labelledby="change-password-title"
+      // The voluntary dialog closes with Escape (not while saving); the mandatory first-login one cannot be dismissed
+      onKeyDown={event => { if (event.key === 'Escape' && onCancel && !isLoading) { event.stopPropagation(); onCancel(); } }}
+      style={{
       position: 'fixed',
       top: 0,
       left: 0,
@@ -131,7 +134,7 @@ export const ChangePassword: React.FC<ChangePasswordProps> = ({ onPasswordChange
               {isMandatory ? 'Current Initial Password' : 'Current Password'} <span style={{ color: '#B30000' }}>*</span>
             </label>
             <input
-              id="currentPassword"
+              id="currentPassword" autoFocus
               type="password"
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}

@@ -1,0 +1,155 @@
+# Lab 4 UI Specification: Dashboards, Actions Taken, and Final Polish
+
+Lab 4 keeps the Zen Green design language of `docs/lab-03/ui-spec.md` (colour tokens, role/priority/status badges, form controls, breakpoints). This document only defines what Lab 4 adds or changes. Requirement IDs refer to `docs/lab-04/specification.md`.
+
+## 1. New and Changed Design Tokens
+
+| Element | Style | Non-color cue |
+| :--- | :--- | :--- |
+| Metric card | White surface `#FFFFFF`, `1px solid #E2E8F0`, 12px radius, large value (2rem, `#006B3C`), muted label (`#5C7164`) | The label text always states the metric; the value is never the only information |
+| Attention card (value > 0 for Waiting for You, Unassigned, Urgent, Reopened) | Left border 4px `#D97706`, pale amber background `#FFFBEB` | A text hint such as "Needs attention" under the value |
+| Follow-up badge | Amber `#FEF3C7` / text `#B45309` | Text "Follow-up needed" with a flag icon; "No follow-up" is plain muted text |
+| Action Taken card | White card, left border 3px `#0B7A46` | Performer name, role badge, and time are always shown |
+| Action status badge | `Planned` slate `#F1F5F9`/`#475569`, `In Progress` amber `#FEF3C7`/`#B45309`, `Completed` green `#EAF6EF`/`#006B3C`, `Cancelled` gray `#E5E7EB`/`#4B5563` with strikethrough-free text | The status word is always printed in the badge |
+| Action edited marker | Muted text "Edited by {name} on {time}" | Text, not color |
+| History entry (revision or Ticket event) | Muted card with time, actor, and a "from -> to" line; `before`/`after` shown as plain text in two labelled blocks | Labels "Before" and "After" |
+| Conflict / stale banner | Information blue `#2563EB` text on `#EFF6FF`, role `alert` | Text "This Ticket changed since you opened it" and a Reload button |
+| Resolution gate message | Error red `#B30000`, role `alert`, shown next to the status buttons | Text "Record at least one Action Taken before resolving this Ticket" |
+
+All new interactive elements keep the Lab 3 focus ring (2px `#0B7A46` outline, 2px offset) and a minimum 40px touch height. The ring also replaces Bootstrap's own faint ring on buttons and form controls. **Escape** closes an open Add/Edit form (with the usual discard prompt when text is unsaved) and returns the focus to the control that opened it. Clickable Ticket cards in My Tickets are keyboard operable (Tab, Enter or Space).
+
+## 2. Application Shell and Navigation (FR-13, AC-29)
+
+| Role | Navigation (in order) | Landing page after login |
+| :--- | :--- | :--- |
+| Requester | Dashboard, Create Ticket, My Tickets | Requester Dashboard |
+| IT Staff | Dashboard, Ticket Queue | IT Staff Dashboard |
+| Administrator | Dashboard, Ticket Queue, User Management | IT Staff Dashboard with user counts |
+
+- The current page link has an underline and `aria-current="page"`, not just a color change.
+- The brand "TokTickIT" also links to the role's Dashboard.
+- Opening a page from the menu always shows it unfiltered: My Tickets and the Ticket Queue forget the filters of an earlier dashboard drill-down. A deep link to a Ticket (`/tickets/:id`) opens that Ticket and marks My Tickets (Requester) or Ticket Queue (staff) as the current page, not the Dashboard.
+- A direct URL `/dashboard/requester` or `/dashboard/staff` asks for that dashboard after login. The server decides: the wrong role gets the forbidden state of section 3 (no numbers), and its button returns to the user's own dashboard at `/`.
+- Header content (name, role badge, Change Password, Logout) is unchanged from Lab 3.
+- Mandatory first-login Change Password still replaces the whole application (no dashboard data is loaded until it is saved).
+
+## 3. Shared Dashboard Patterns
+
+- **Welcome line**: "Welcome back, {first name}!" as the page `h1`.
+- **Metric card grid**: 5 cards (staff) or 4 cards (Requester). Each card is a link (`<a>`) whose accessible name reads "{label}: {value}. Open list." The whole card is the drill-down target (see `api-spec.md` section 4 for destinations).
+- **Loading**: skeleton cards with `aria-busy="true"` on the grid and a visually hidden "Loading dashboard" status. Skeletons occupy the final layout size so nothing jumps.
+- **Empty (value 0)**: the card still shows `0`; a list with no items shows a short sentence (for example "No Tickets are waiting for you.") with an icon, not a blank box.
+- **Forbidden (403)**: the page shows "You do not have access to this dashboard." with a button to the user's own dashboard; no counts are rendered.
+- **Error (500 / network)**: an inline alert "The dashboard could not be loaded." with a Retry button; the rest of the shell stays usable.
+- **Stale data**: a "Last updated {time}" line and a Refresh button; metrics are fetched on page load and on Refresh (no polling).
+- **Truncation**: Ticket summaries truncate with an ellipsis at one line on mobile, and the full text is available via the Ticket Detail link (no clipped, unreachable content).
+
+## 4. Screen Specifications
+
+### 4.1 Requester Dashboard
+- **Layout (Desktop)**: welcome line; row of 4 metric cards (Open Tickets, Waiting for You, Recently Updated, Recently Resolved); two columns below: "Needs your attention" (left) and "Recent Tickets" (right); quick-action buttons Create Ticket and View My Tickets pinned under the cards.
+- **Lists**: up to 5 rows each, showing Ticket number, summary, status badge, and "Updated {relative time}"; every row links to the Requester Ticket Detail.
+- **Windows**: "Recently" cards show "Last 7 days" as a sub-label (BR-23). Their drill-down links open My Tickets with `recent=updated` / `recent=resolved`, so the list shows exactly the counted Tickets (including one resolved and then closed in the window).
+- **Privacy**: only the signed-in Requester's data is shown (BR-25).
+
+### 4.2 IT Staff Dashboard
+- **Layout (Desktop)**: welcome line; row of 5 metric cards (Unassigned, My Active Tickets, Urgent, Reopened, Resolved - Awaiting Closure); a "By status" breakdown (8 rows with counts and a proportional bar plus the number) next to a "By priority" breakdown (4 rows); below that "Recent Tickets" and "My Recent Actions" side by side.
+- **Breakdown rows** are links to the queue with the matching filter; each row shows the label and the count as text (the bar is decorative, `aria-hidden`).
+- **Recent Tickets**: up to 5 rows with number, summary, status badge, IT Priority badge, owner (or "Unassigned"), updated time; each links to the Staff Ticket Detail.
+- **My Recent Actions**: up to 5 rows (actions I performed or am assigned to) with Ticket number, action time, shortened description, action status badge, assignee name, and a follow-up badge when needed; each links to the Staff Ticket Detail of that Ticket.
+- **Administrator extra**: a compact "Accounts" strip with counts of Requesters, IT Staff, Administrators, and Inactive users, each linking to User Management (filtered by role where supported).
+- **Quick Actions**: "Open Ticket Queue" button.
+
+### 4.2a Drill-down destinations (FR-12, AC-20)
+
+A card, breakdown row, or quick action sets the filters of the destination and opens it; nothing is counted in the browser.
+
+| Source | Destination and filters |
+| :--- | :--- |
+| Requester: Open Tickets | My Tickets, Status "Active (not Resolved, Closed or Cancelled)" |
+| Requester: Waiting for You | My Tickets, Status "Waiting for Requester" |
+| Requester: Recently Updated / Recently Resolved | My Tickets with `recent=updated` / `recent=resolved`; an info line "Showing Tickets updated (resolved) in the last 7 days." with a **Clear filter** button explains the filter |
+| Requester: Create Ticket / View My Tickets | Create Ticket / My Tickets (unfiltered) |
+| Staff: Unassigned, My Active Tickets, Urgent, Reopened, Resolved - Awaiting Closure | Ticket Queue with the filters of `api-spec.md` 4.2, shown in the Owner, Priority, and Status selects |
+| Staff: a By status / By priority row | Ticket Queue with that Status, or that Priority and Status "Active" |
+| Staff: Open Ticket Queue | Ticket Queue (unfiltered) |
+| Administrator: an Accounts link | User Management |
+| A Ticket row (Recent Tickets, Needs your attention, My Recent Actions) | The Ticket Detail; its back button reads **Back to Dashboard** and returns there |
+
+My Tickets shows the number of Tickets of the current query ("12 Tickets") above the list, so a card value can be compared with the list it opens. The Ticket Queue already shows "Total in Queue".
+
+### 4.3 Actions Taken Area on Ticket Detail
+
+Placed on the **Staff Ticket Detail** as a section titled "Actions Taken ({count})" below the issue details and above the discussion tabs, and on the **Requester Ticket Detail** as the same section without controls.
+
+- **List**: newest first (`actionAt` desc, then `id` desc), paginated (20 per page) with "Previous / Next" controls and "Showing x-y of N". Each action card shows:
+  - Heading row: Action Date/Time, the status badge, and the performer (name plus role badge).
+  - "Assigned to" (name plus role badge), "Action" (description), "Result", follow-up badge with the Follow-up Note when needed, and "Attachment Notes" when present (label "Look for:").
+  - Footer: "Recorded {created time}"; if changed, "Edited by {name} on {time}".
+  - IT Staff/Administrator only: **Edit**, lifecycle buttons that match the status (`Planned`: Start, Complete, Cancel; `In Progress`: Complete, Cancel; terminal statuses: none), a **Reassign** control, and a **History** disclosure. Controls are hidden on `Closed`/`Cancelled` Tickets, where a short note explains why.
+- **Empty state**: "No actions have been recorded yet." For staff it adds the hint "Complete at least one action before resolving this Ticket."
+- **Create mode** (IT Staff/Administrator, Ticket not `Closed` or `Cancelled`): an "Add Action" button opens an inline panel (a dialog on Mobile) with the fields below. Assignee defaults to the current user; the status select offers Planned, In Progress, and Completed. On a `Resolved` Ticket it offers Completed only, with the hint "Reopen the Ticket to plan new work." (BR-41).
+- **View/Edit mode**: the card is read-only text by default (tinted read-only style from Lab 3); **Edit** switches that card to the same form, prefilled, with Save and Cancel. Only one card is editable at a time. Unsaved edits are protected by a confirm prompt when leaving the editor (Close, or opening another editor); changing page of the list keeps the editor open, and after a conflict the editor, its text, a pending save and the conflict banner stay on screen and keep working even if the Action moved to another page. Start / Complete / Cancel on a card open a small confirm panel; Complete and Cancel ask for the required Result (the cancellation reason).
+- **Assignee control**: a select listing active IT Staff and Administrators only (from the existing staff members list). An inactive current assignee is shown as "{name} (inactive)" and cannot be re-selected; if the server still rejects an assignee, the message appears under the field.
+- **History (staff only)**: the per-action **History** disclosure lists revisions oldest first with type, actor, time, changed fields, and Before/After text. A **Ticket history** section lists status, owner, and priority events oldest first. Both are paginated, read-only (no edit or delete controls), and show "No history recorded before Lab 4." for older Tickets. Requesters never see history.
+
+| Field | Control | Required | Validation message (shown directly under the field) |
+| :--- | :--- | :---: | :--- |
+| Action Date/Time | `datetime-local`, default now | Yes | "Action time cannot be in the future." (not for Planned) / "Action time cannot be before the Ticket was created." |
+| Action Description | Textarea, 2,000-char counter | Yes | "Describe what was done." |
+| Status | Select: Planned, In Progress, Completed (Cancelled only through the Cancel button; Completed only on a Resolved Ticket) | Yes | "Choose a valid status." |
+| Result | Textarea, 1,000-char counter | Conditional (required for Completed and Cancelled) | "Enter the result of this action." / "Enter the reason for cancelling." |
+| Assignee | Select of active IT Staff and Administrators | Yes (default current user) | "Choose an active IT Staff or Administrator." |
+| Performed by | Read-only text (current user; not editable) | Auto | n/a |
+| Follow-Up Required? | Checkbox | No | n/a |
+| Follow-up Note | Textarea, shown and required only when the checkbox is checked | Conditional | "Follow-up note is required when follow-up is needed." |
+| Attachment Notes | Textarea, 500-char counter, helper text "Which file or image should the reader look for?" | No | n/a |
+
+- **Submission behavior**: the Save button shows a spinner and is disabled while the request is in flight (FR-14); a `clientRequestId` is generated once per open form so a retry cannot duplicate the action (AC-08, AC-27).
+- **Failures**: validation errors (400) appear under each field and in a summary at the top that receives focus; a conflict (409 `STALE_UPDATE`) shows the stale banner with a Reload button and keeps the user's text in the form; a 403/404/500 shows a clear alert and also keeps the entered data (FR-16, AC-26).
+- **Success**: a status message "Action saved." (`role="status"`), the list refreshes, and the new/edited card receives focus.
+- **Requester view**: identical cards, no Add/Edit buttons, no form.
+
+### 4.4 Ticket Workflow Controls and Summary (FR-06, FR-07, AC-15)
+- The status area on the Staff Ticket Detail shows only **permitted** "Move to ..." buttons for the current status (specification section 5 matrix); terminal statuses show the existing explanation text and no buttons.
+- "Move to Resolved" is always shown where the matrix allows it. The button stays enabled (the server is the authority) and a hint above it reads "Resolving requires one completed action and no open actions." When the server returns `RESOLUTION_GATE_FAILED`, the gate message names the reasons ("No completed action" and/or "N actions are still planned or in progress") next to the buttons with a link to the Actions Taken section.
+- "Move to Cancelled" opens a confirm panel warning that open actions will be cancelled automatically (BR-32).
+- After a successful change the Ticket summary (status badge in the header, status field, `resolvedAt`) refreshes without a full page reload, and a status message announces "Status changed to {status}."
+- While a transition is in flight, all status buttons are disabled to prevent double submission.
+- `Closed` and `Cancelled` lock Actions Taken, so before sending either transition the screen asks for confirmation when an Action editor holds unsaved text; declining sends nothing and keeps the text. If the Ticket becomes terminal for another reason (another user), a draft that holds text stays on screen with the notice that it can no longer be saved, and Close asks before discarding it.
+- A requester's resolution indication is shown as an informational notice "Requester says the problem appears resolved. Review the actions and update the Ticket." It does not alter the status controls. The notice is only shown while the Ticket is still open for a decision; once it is `Resolved`, `Closed`, or `Cancelled` it is no longer shown (the stored indication is kept until a reopen clears it). The Ticket details list a **Resolved** date once `resolvedAt` is set and drop it after a reopen.
+
+### 4.5 Final Polish Items (FR-15, FR-16)
+- Remove temporary, duplicate, or inconsistent UI elements left from earlier labs (for example duplicate headings and unused buttons) and replace placeholder text.
+- Use one wording and layout for loading, empty, error, forbidden, conflict, and not-found messages on every screen.
+- Dialogs use `role="dialog"`, `aria-modal="true"`, a labelled title, focus trapping, Escape to close, and return focus to the opener.
+- Each page has a single `h1`; form inputs have visible labels; icons that carry meaning have text alternatives; status never relies on color alone.
+- No console errors or warnings on any screen; no broken links.
+
+## 5. Responsive Layout
+
+| Viewport | Width | Dashboard | Actions Taken |
+| :--- | :--- | :--- | :--- |
+| **Desktop** | `>= 992px` | Metric cards in one row (4 or 5); two-column lists | Cards in the left column under the issue details; inline Add/Edit panel |
+| **Tablet** | `768px - 991px` | Cards wrap to 2 or 3 per row; lists stack | Full-width cards; inline panel |
+| **Mobile** | `< 768px` | One column; each card full width; breakdowns collapse to simple lists | Full-width cards; Add/Edit opens as a full-width dialog; buttons stack |
+
+No page-level horizontal scrolling at 1280px, 768px, or 375px. Evidence is stored in `artifacts/lab-04/screenshots/{staff-dashboard,requester-dashboard,actions-taken}/` and regenerated with `npm run screenshots`.
+
+## 6. Visual and Accessibility Checklist (completed for Lab 4 Part 9 evidence)
+Every item was checked against the finished application on 2026-11-01 and is backed by the automated test or screenshot named after it. Nothing is ticked on appearance alone.
+
+- [x] **Design consistency**: Zen Green tokens, badges, buttons and cards are reused on all new screens (screenshots in `artifacts/lab-04/screenshots/`; STY-01..03).
+- [x] **Dashboards**: metric cards show label, value and a drill-down link named "label: value. Open list." with loading, empty, forbidden and error states (UI-15..24, E2E-09..12).
+- [x] **Actions Taken**: list, create, edit, assign, start/complete/cancel and the read-only Requester view are visually distinct; the follow-up and status badges use text (UI-01..09, 26..29, STY-01; screenshots in `actions-taken/`).
+- [x] **History**: revision and Ticket event history is read-only with Before/After labels, hidden from Requesters and paginated (UI-28, UI-32, HIST-06..08).
+- [x] **Editable vs read-only**: editable fields are form controls; Performed by and recorded times are plain text, never a field (STY-03).
+- [x] **Validation placement**: errors appear directly under the field and in a focused summary (UI-04, UI-05, STY-02; the Follow-up Note error is under its own field).
+- [x] **Keyboard focus**: a 2px #0B7A46 ring on every control including Bootstrap buttons; the Add/Edit form works from the keyboard and Escape closes it with the focus returned (A11Y-01, A11Y-02); every modal dialog (create, edit and reset user, attachment removal, Change Password) is a named `role="dialog"` with `aria-modal`, takes the focus when it opens, keeps Tab inside, closes with Escape (not while saving) and returns the focus (MOD-01..04, RSP-04).
+- [x] **Clipping and overlap**: no clipped or overlapping content and every status button and form is inside the viewport at 1280, 768 and 375 px (RSP-01..04).
+- [x] **Horizontal overflow**: none on any screen at the three widths: both dashboards, Ticket Detail with the Add form and the gate message, Create Ticket, My Tickets, Ticket Queue, User Management and the dialogs (RSP-01..04).
+- [x] **Status cues**: statuses, priorities, follow-up and the conflict and gate messages carry text or a symbol, not only a colour (STY-01, STY-02, UI-12, UI-14).
+- [x] **Navigation**: the active page is marked with `aria-current`; each role sees only its entries; every role lands on its Dashboard (UI-25, E2E-12).
+- [x] **Console and links**: no console error, page error or failed request while using each role's main pages, no broken relative link in the README and `docs/lab-04`, no placeholder text (the console sweep in `responsive-accessibility.spec.ts`).
+
+**Not measured:** colour contrast was judged from the design tokens and screenshots, not with an automated contrast tool; screen-reader output was not listened to, only the roles, names and states that a screen reader reads were tested.
