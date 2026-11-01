@@ -56,6 +56,7 @@ async function signIn(page: Page, email: string) {
 
 async function openTicketAsStaff(page: Page, email: string, ticketNumber: string) {
   await signIn(page, email);
+  await page.getByRole('button', { name: /^Ticket Queue/ }).click();
   // Let the first page of the queue load before searching, so the initial load cannot overwrite the search
   await expect(page.locator('table tbody tr').first()).toBeVisible();
   await page.fill('input[placeholder*="Search ticket #, summary, requester"]', ticketNumber);

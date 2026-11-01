@@ -7,6 +7,7 @@ import staffRoutes from "./routes/staff";
 import ticketRoutes from "./routes/tickets";
 import ticketInteractionsRoutes from "./routes/ticket-interactions";
 import adminRoutes from "./routes/admin";
+import dashboardRoutes from "./routes/dashboard";
 import { readRouter as actionReadRoutes, staffRouter as actionStaffRoutes } from "./routes/actions";
 
 // The Express app is exported separately from app.listen() (see index.ts) so
@@ -54,6 +55,7 @@ app.use("/api/tickets", actionReadRoutes);
 app.use("/api/tickets", ticketInteractionsRoutes);
 app.use("/api/tickets", ticketRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 // Unknown API routes return a safe JSON 404
 app.use("/api", (_req: Request, res: Response) => {

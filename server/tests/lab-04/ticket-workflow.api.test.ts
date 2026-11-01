@@ -414,4 +414,45 @@ describe('Lab 4: Ticket workflow API (Issue #32)', () => {
             }
         });
     });
+
+    describe('recent filter on My Tickets (AC-20)', () => {
+        const DAY = 24 * 60 * 60 * 1000;
+
+        it('WF-15: recent=updated and recent=resolved filter; any other value is 400; Lab 3 validation is unchanged', async () => {
+            const fresh = await createTicket({ status: 'Open', updatedAt: new Date(), summary: 'recent-filter fresh' });
+            const stale = await createTicket({ status: 'Open', updatedAt: new Date(Date.now() - 30 * DAY), summary: 'recent-filter stale' });
+            const closed = await createTicket({ status: 'Closed', updatedAt: new Date(Date.now() - 30 * DAY), resolvedAt: new Date(), summary: 'recent-filter closed' });
+            const idsOf = (res: { body: { data: { id: number }[] } }) => res.body.data.map(t => t.id);
+
+            const updated = await request(app).get('/api/tickets?recent=updated&limit=50').set(bearer(david.token));
+            expect(updated.status).toBe(200);
+            expect(idsOf(updated)).toContain(fresh.id);
+            expect(idsOf(updated)).not.toContain(stale.id);
+            expect(idsOf(updated)).not.toContain(closed.id);
+
+            const resolved = await request(app).get('/api/tickets?recent=resolved&limit=50').set(bearer(david.token));
+            expect(resolved.status).toBe(200);
+            expect(idsOf(resolved)).toContain(closed.id);
+            expect(idsOf(resolved)).not.toContain(fresh.id);
+
+            // It combines with the other filters (here the Active status removes the Closed Ticket)
+            const both = await request(app).get('/api/tickets?recent=resolved&status=Active&limit=50').set(bearer(david.token));
+            expect(idsOf(both)).not.toContain(closed.id);
+
+            // An empty value means no recent filter, like the other optional filters
+            const empty = await request(app).get('/api/tickets?recent=&limit=50').set(bearer(david.token));
+            expect(empty.status).toBe(200);
+            expect(idsOf(empty)).toEqual(expect.arrayContaining([fresh.id, stale.id, closed.id]));
+
+            for (const bad of ['today', 'Updated', 'all', 'constructor', '__proto__', 'toString', 'updated,resolved']) {
+                expect((await request(app).get(`/api/tickets?recent=${encodeURIComponent(bad)}`).set(bearer(david.token))).status, bad).toBe(400);
+            }
+            // Repeating the parameter is not a valid value either
+            expect((await request(app).get('/api/tickets?recent=updated&recent=resolved').set(bearer(david.token))).status).toBe(400);
+
+            // Existing Lab 3 validation still answers 400 / the same roles still apply
+            expect((await request(app).get('/api/tickets?sortBy=passwordHash').set(bearer(david.token))).status).toBe(400);
+            expect((await request(app).get('/api/tickets?recent=updated').set(bearer(sarah.token))).status).toBe(403);
+        });
+    });
 });

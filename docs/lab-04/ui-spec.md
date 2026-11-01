@@ -28,6 +28,8 @@ All new interactive elements keep the Lab 3 focus ring (2px `#0B7A46` outline, 2
 
 - The current page link has an underline and `aria-current="page"`, not just a color change.
 - The brand "TokTickIT" also links to the role's Dashboard.
+- Opening a page from the menu always shows it unfiltered: My Tickets and the Ticket Queue forget the filters of an earlier dashboard drill-down. A deep link to a Ticket (`/tickets/:id`) opens that Ticket and marks My Tickets (Requester) or Ticket Queue (staff) as the current page, not the Dashboard.
+- A direct URL `/dashboard/requester` or `/dashboard/staff` asks for that dashboard after login. The server decides: the wrong role gets the forbidden state of section 3 (no numbers), and its button returns to the user's own dashboard at `/`.
 - Header content (name, role badge, Change Password, Logout) is unchanged from Lab 3.
 - Mandatory first-login Change Password still replaces the whole application (no dashboard data is loaded until it is saved).
 
@@ -57,6 +59,24 @@ All new interactive elements keep the Lab 3 focus ring (2px `#0B7A46` outline, 2
 - **My Recent Actions**: up to 5 rows (actions I performed or am assigned to) with Ticket number, action time, shortened description, action status badge, assignee name, and a follow-up badge when needed; each links to the Staff Ticket Detail of that Ticket.
 - **Administrator extra**: a compact "Accounts" strip with counts of Requesters, IT Staff, Administrators, and Inactive users, each linking to User Management (filtered by role where supported).
 - **Quick Actions**: "Open Ticket Queue" button.
+
+### 4.2a Drill-down destinations (FR-12, AC-20)
+
+A card, breakdown row, or quick action sets the filters of the destination and opens it; nothing is counted in the browser.
+
+| Source | Destination and filters |
+| :--- | :--- |
+| Requester: Open Tickets | My Tickets, Status "Active (not Resolved, Closed or Cancelled)" |
+| Requester: Waiting for You | My Tickets, Status "Waiting for Requester" |
+| Requester: Recently Updated / Recently Resolved | My Tickets with `recent=updated` / `recent=resolved`; an info line "Showing Tickets updated (resolved) in the last 7 days." with a **Clear filter** button explains the filter |
+| Requester: Create Ticket / View My Tickets | Create Ticket / My Tickets (unfiltered) |
+| Staff: Unassigned, My Active Tickets, Urgent, Reopened, Resolved - Awaiting Closure | Ticket Queue with the filters of `api-spec.md` 4.2, shown in the Owner, Priority, and Status selects |
+| Staff: a By status / By priority row | Ticket Queue with that Status, or that Priority and Status "Active" |
+| Staff: Open Ticket Queue | Ticket Queue (unfiltered) |
+| Administrator: an Accounts link | User Management |
+| A Ticket row (Recent Tickets, Needs your attention, My Recent Actions) | The Ticket Detail; its back button reads **Back to Dashboard** and returns there |
+
+My Tickets shows the number of Tickets of the current query ("12 Tickets") above the list, so a card value can be compared with the list it opens. The Ticket Queue already shows "Total in Queue".
 
 ### 4.3 Actions Taken Area on Ticket Detail
 

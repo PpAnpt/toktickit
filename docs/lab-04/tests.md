@@ -83,12 +83,12 @@ Run commands: `npm --prefix server test`, `npm --prefix client test`, `npm run t
 | WF-13 | Workflow | AC-13 | 10 parallel Action Taken edits (and 10 parallel status changes) carrying the same `expectedUpdatedAt` | Exactly one `200`, nine `409`; exactly one revision/event added; final row equals the winner's data | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
 | WF-14 | Workflow | AC-13 | A write that fails the stale check inside the transaction | Rolled back: no change and no history row (atomic check and write) | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
 | WF-16 | Regression | AC-25 | The Lab 3 status, owner, and priority tests, updated to send `expectedUpdatedAt` | All still pass with the same expected statuses and bodies apart from the new `updatedAt` | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
-| WF-15 | Workflow | AC-20 | `GET /api/tickets?recent=` with `updated`, `resolved`, and an invalid value | Valid values filter; invalid value `400`; Lab 3 query validation unchanged | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
+| WF-15 | Workflow | AC-20 | `GET /api/tickets?recent=` with `updated`, `resolved`, an empty value, and invalid values (including `constructor`, `__proto__`, a repeated parameter) | Valid values filter and combine with `status`; empty means no filter; invalid value `400`; Lab 3 query validation and the Requester-only rule unchanged | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
 
 ### 2.4 Requester Dashboard
 | Test ID | Type | Requirement / AC | What It Tests | Expected Result | Automated Test File | Final |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| DASH-01 | Authorization | AC-16 | IT Staff and Administrator call the Requester dashboard | `403`, no data | `server/tests/lab-04/requester-dashboard.api.test.ts` | Planned |
+| DASH-01 | Authorization | AC-16 | IT Staff and Administrator call the Requester dashboard | `403` with body `{ "error": "Forbidden" }`, no data | `server/tests/lab-04/requester-dashboard.api.test.ts` | Planned |
 | DASH-02 | Authorization | AC-16 | No token or revoked token | `401` | `server/tests/lab-04/requester-dashboard.api.test.ts` | Planned |
 | DASH-03 | API | AC-17 | Metrics equal independent database queries (open, waiting, recently updated) | Counts match | `server/tests/lab-04/requester-dashboard.api.test.ts` | Planned |
 | DASH-04 | API | AC-02, AC-22 | Two Requesters with different Tickets | Each response contains only that Requester's metrics and Tickets | `server/tests/lab-04/requester-dashboard.api.test.ts` | Planned |
@@ -143,7 +143,7 @@ Run commands: `npm --prefix server test`, `npm --prefix client test`, `npm run t
 | UI-14 | UI | AC-26 | `409` on a transition | Conflict message with Reload; no status change shown; Reload keeps the screen mounted, so an unsaved Action draft survives, and a failed Reload keeps the message and says why | `client/src/tests/lab-04/TicketWorkflow.test.tsx` | Planned |
 | UI-15 | UI | AC-18 | Staff dashboard cards and lists | Labels, values, recent Tickets, and My Recent Actions render | `client/src/tests/lab-04/StaffDashboard.test.tsx` | Planned |
 | UI-16 | UI | AC-20 | Staff drill-down links | Each card/row links to the queue filter in `api-spec.md` | `client/src/tests/lab-04/StaffDashboard.test.tsx` | Planned |
-| UI-17 | UI | AC-28 | Loading state | Skeletons with `aria-busy`; no stale numbers | `client/src/tests/lab-04/StaffDashboard.test.tsx` | Planned |
+| UI-17 | UI | AC-28 | Loading state | Skeletons with `aria-busy` and a "Loading dashboard" status; no numbers while loading, and Refresh hides the old numbers until the new ones arrive | `client/src/tests/lab-04/StaffDashboard.test.tsx` | Planned |
 | UI-18 | UI | AC-19 | All-zero data | Zeros shown; explicit empty sentences in lists | `client/src/tests/lab-04/StaffDashboard.test.tsx` | Planned |
 | UI-19 | UI | AC-26 | `403` and `500` | Forbidden message without counts; error with Retry | `client/src/tests/lab-04/StaffDashboard.test.tsx` | Planned |
 | UI-20 | UI | AC-18 | Administrator accounts strip | Shown only for Administrators | `client/src/tests/lab-04/StaffDashboard.test.tsx` | Planned |
@@ -151,7 +151,7 @@ Run commands: `npm --prefix server test`, `npm --prefix client test`, `npm run t
 | UI-22 | UI | AC-19 | Attention and recent lists | Rows link to Ticket Detail; empty sentences when none | `client/src/tests/lab-04/RequesterDashboard.test.tsx` | Planned |
 | UI-23 | UI | AC-20 | Requester drill-down links | Links match `api-spec.md`; quick actions present | `client/src/tests/lab-04/RequesterDashboard.test.tsx` | Planned |
 | UI-24 | UI | AC-26 | Loading, `403`, `500` | Same feedback pattern as the staff dashboard | `client/src/tests/lab-04/RequesterDashboard.test.tsx` | Planned |
-| UI-25 | UI | AC-29 | Navigation per role | Dashboard plus the role's entries; active entry has `aria-current`; landing is Dashboard | `client/src/tests/lab-04/Navigation.test.tsx` | Planned |
+| UI-25 | UI | AC-29 | Navigation per role | Dashboard plus the role's entries in order; active entry has `aria-current`; landing is Dashboard; the brand returns home; a card opens My Tickets / the queue with its filters (request and controls); the menu opens them unfiltered; the other role's dashboard URL shows the forbidden state; a Ticket opened from the dashboard returns with Back to Dashboard; clicking Ticket Queue or My Tickets again while already on that page clears Dashboard filters, Search and Category; a /tickets/:id deep link opened before sign-in marks My Tickets / Ticket Queue and says Back to My Tickets / Back to Queue | `client/src/tests/lab-04/Navigation.test.tsx` | Planned |
 
 ### 2.8 UI Style, Responsive, and Accessibility
 | Test ID | Type | Requirement / AC | What It Tests | Expected Result | Automated Test File | Final |
@@ -176,7 +176,7 @@ Run commands: `npm --prefix server test`, `npm --prefix client test`, `npm run t
 | E2E-06 | E2E | AC-11, AC-15 | Resolve a Ticket without an action, then add one and resolve | Blocked with gate message, then succeeds; summary updates | `e2e/lab-04/ticket-resolution.spec.ts` | Planned |
 | E2E-07 | E2E | AC-12 | Requester indicates resolved; staff reviews, resolves, closes | Status changes only by staff; indication is advisory | `e2e/lab-04/ticket-resolution.spec.ts` | Planned |
 | E2E-08 | E2E | AC-12, AC-13 | Staff reopens a Resolved Ticket; concurrent stale change | Reopen clears indication; stale change shows conflict | `e2e/lab-04/ticket-resolution.spec.ts` | Planned |
-| E2E-09 | E2E | AC-17, AC-20 | Requester dashboard values, drill-down to My Tickets for every card (including Recently Resolved with a resolved-then-closed Ticket) | Values match seed; every list total equals its card | `e2e/lab-04/dashboards.spec.ts` | Planned |
+| E2E-09 | E2E | AC-17, AC-20 | Requester dashboard values, drill-down to My Tickets for every card (including Recently Resolved with a resolved-then-closed Ticket) | Values match the Ticket list API and the seed (a Ticket resolved then closed inside the window is counted, an old one is not); every list total equals its card; a Requester with zero cards (Jennifer Anderson) sees zeros and explanations | `e2e/lab-04/dashboards.spec.ts` | Planned |
 | E2E-10 | E2E | AC-18, AC-20 | Staff dashboard values and drill-down to the queue | Values match seed; queue totals match | `e2e/lab-04/dashboards.spec.ts` | Planned |
 | E2E-11 | E2E | AC-18 | Administrator dashboard | Accounts strip shown; staff user does not see it | `e2e/lab-04/dashboards.spec.ts` | Planned |
 | E2E-12 | E2E | AC-16, AC-29 | Role navigation, landing page, and direct URL to the other role's dashboard | Correct entries and landing; forbidden message without data | `e2e/lab-04/dashboards.spec.ts` | Planned |

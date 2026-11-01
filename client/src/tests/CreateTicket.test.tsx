@@ -29,6 +29,8 @@ describe('UI-01: CreateTicket UI', () => {
         render(<App />);
 
         // Wait for authenticated app to load (Create Ticket tab)
+        // Every role lands on the Dashboard now: open the Create Ticket page first
+        fireEvent.click(await screen.findByRole('button', { name: /^Create Ticket/i }));
         await screen.findByText(/Create New Support Ticket/i);
 
         // Submit without filling in required fields

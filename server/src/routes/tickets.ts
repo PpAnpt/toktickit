@@ -6,6 +6,7 @@ import { getPrisma } from '../prisma';
 import { requireAppAccess, requireRole, AuthenticatedRequest } from '../middlewares/auth';
 import { TicketStatus, TicketPriority } from '../../generated/prisma/client';
 import { statusDisplay, statusFilter } from '../services/ticket-status';
+import { recentFilter } from '../services/dashboard';
 
 const router = Router();
 
@@ -250,6 +251,15 @@ router.get('/', requesterOnly, async (req: AuthenticatedRequest, res: Response) 
     }
     if (statusWhere.where) {
       whereCondition.status = statusWhere.where;
+    }
+
+    // recent=updated|resolved: the same window and predicates as the Requester dashboard cards (BR-39)
+    const recent = recentFilter(req.query.recent);
+    if (recent.invalid) {
+      return res.status(400).json({ error: 'Invalid recent filter. Allowed values: updated, resolved' });
+    }
+    if (recent.where) {
+      whereCondition.AND = [recent.where];
     }
 
     if (search) {

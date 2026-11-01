@@ -710,3 +710,67 @@ export async function updateActionTaken(ticketId: number, actionId: number, inpu
 export async function fetchActionRevisions(ticketId: number, actionId: number, page = 1, limit = 50): Promise<{ revisions: ActionRevisionItem[]; total: number; page: number; limit: number }> {
   return actionRequest(`/api/staff/tickets/${ticketId}/actions/${actionId}/revisions?page=${page}&limit=${limit}`);
 }
+
+// ---------------------------------------------------------------------------
+// Dashboards (Lab 4, api-spec section 4): every number is calculated by the server
+// ---------------------------------------------------------------------------
+
+export interface DashboardTicketItem {
+  id: number;
+  ticketNumber: string;
+  summary: string;
+  status: string;
+  updatedAt: string;
+}
+
+export interface RequesterDashboardData {
+  generatedAt: string;
+  windowStart: string;
+  metrics: { openTickets: number; waitingForRequester: number; recentlyUpdated: number; recentlyResolved: number };
+  attention: DashboardTicketItem[];
+  recentTickets: DashboardTicketItem[];
+}
+
+export interface StaffDashboardData {
+  generatedAt: string;
+  windowStart: string;
+  metrics: { unassigned: number; myActive: number; urgent: number; reopened: number; resolvedAwaitingClosure: number };
+  byStatus: Record<string, number>;
+  byPriority: Record<string, number>;
+  recentTickets: (DashboardTicketItem & { itPriority: string; owner: { id: number; name: string } | null })[];
+  myRecentActions: {
+    id: number;
+    ticketId: number;
+    ticketNumber: string;
+    actionAt: string;
+    description: string;
+    status: string;
+    assignee: { id: number; name: string };
+    followUpRequired: boolean;
+  }[];
+  userCounts?: { requesters: number; itStaff: number; administrators: number; inactive: number };
+}
+
+async function dashboardRequest<T>(endpoint: string): Promise<T> {
+  const { _status, ...data } = await actionRequest<T>(endpoint);
+  void _status;
+  return data as T;
+}
+
+/** A 403 arrives as an ApiError with status 403 so the screen can show the forbidden state without data */
+/** A body without the expected shape is an error state, never a half-rendered or crashing screen */
+function requireMetrics<T extends { metrics?: unknown }>(data: T): T {
+  if (!data || typeof data.metrics !== 'object' || data.metrics === null) {
+    throw new ActionApiError(0, 'The dashboard response was not understood.');
+  }
+  return data;
+}
+
+export const fetchRequesterDashboard = async (): Promise<RequesterDashboardData> => {
+  const data = requireMetrics(await dashboardRequest<RequesterDashboardData>('/api/dashboard/requester'));
+  return { ...data, attention: data.attention ?? [], recentTickets: data.recentTickets ?? [] };
+};
+export const fetchStaffDashboard = async (): Promise<StaffDashboardData> => {
+  const data = requireMetrics(await dashboardRequest<StaffDashboardData>('/api/dashboard/staff'));
+  return { ...data, byStatus: data.byStatus ?? {}, byPriority: data.byPriority ?? {}, recentTickets: data.recentTickets ?? [], myRecentActions: data.myRecentActions ?? [] };
+};

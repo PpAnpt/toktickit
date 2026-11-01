@@ -2,7 +2,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
 import { Login } from './components/Login';
 import { ChangePassword } from './components/ChangePassword';
-import { StaffTicketQueue } from './components/StaffTicketQueue';
+import { StaffTicketQueue, type QueueFilters } from './components/StaffTicketQueue';
+import { RequesterDashboard } from './components/RequesterDashboard';
+import { StaffDashboard } from './components/StaffDashboard';
+import type { DashboardTarget } from './components/dashboard/shared';
 import { StaffTicketDetail } from './components/StaffTicketDetail';
 import { UserManagement } from './components/UserManagement';
 import { PublicComments } from './components/PublicComments';
@@ -26,12 +29,15 @@ import {
   SESSION_EXPIRED_EVENT,
 } from './api';
 
-type Tab = 'create' | 'my-tickets' | 'staff-queue' | 'user-management';
+type Tab = 'dashboard' | 'create' | 'my-tickets' | 'staff-queue' | 'user-management';
 
-function defaultTabFor(role: UserProfile['role']): Tab {
-  if (role === 'ADMINISTRATOR') return 'user-management';
-  if (role === 'IT_STAFF') return 'staff-queue';
-  return 'create';
+/** Every role lands on its Dashboard after login (FR-13, AC-29) */
+const defaultTab: Tab = 'dashboard';
+
+/** A deep link to a Ticket opens the list the Ticket belongs to, not the Dashboard */
+function tabForLocation(role: UserProfile['role']): Tab {
+  if (/\/tickets\/\d+/.test(window.location.pathname)) return role === 'REQUESTER' ? 'my-tickets' : 'staff-queue';
+  return defaultTab;
 }
 
 interface AttachmentItem {
@@ -70,6 +76,15 @@ function App() {
   const [profileMessage, setProfileMessage] = useState('');
   const [currentTab, setCurrentTab] = useState<Tab>('create');
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
+  // Which dashboard a direct URL asked for (/dashboard/requester or /dashboard/staff); null means the user's own
+  const [requestedDashboard, setRequestedDashboard] = useState<'requester' | 'staff' | null>(() => {
+    const match = window.location.pathname.match(/^\/dashboard\/(requester|staff)\/?$/);
+    return match ? (match[1] as 'requester' | 'staff') : null;
+  });
+  // Filters a dashboard link opens the Ticket Queue with; cleared when the user opens the queue from the menu
+  const [queueFilters, setQueueFilters] = useState<QueueFilters>({});
+  // Changing the key remounts the queue, so its own filter state starts again from queueFilters (also when it is already open)
+  const [queueKey, setQueueKey] = useState(0);
 
   const isRequester = currentUser?.role === 'REQUESTER';
   const isStaffOrAdmin = currentUser?.role === 'IT_STAFF' || currentUser?.role === 'ADMINISTRATOR';
@@ -83,7 +98,7 @@ function App() {
       .then(user => {
         setCurrentUser(user);
         setIsLoggedIn(true);
-        setCurrentTab(defaultTabFor(user.role));
+        setCurrentTab(tabForLocation(user.role));
       })
       .catch(() => {
         setIsLoggedIn(false);
@@ -96,7 +111,8 @@ function App() {
     setLoginNotice('');
     setCurrentUser(user);
     setIsLoggedIn(true);
-    setCurrentTab(defaultTabFor(user.role));
+    // Same rule as restoring a session: a Ticket deep link opened before sign-in belongs to its list, not the Dashboard
+    setCurrentTab(tabForLocation(user.role));
   };
 
   const handlePasswordChanged = async () => {
@@ -121,6 +137,9 @@ function App() {
     setSearch('');
     setFilterCategory('');
     setFilterStatus('');
+    setFilterRecent('');
+    setQueueFilters({});
+    setRequestedDashboard(null);
     setCurrentPage(1);
     setTicketDetail(null);
     setSuccessMessage(null);
@@ -129,6 +148,47 @@ function App() {
     setDetailError('');
     setDetailFeedback(null);
     window.history.pushState(null, '', '/');
+  };
+
+  /** Back to the user's own Dashboard (brand link, menu entry, and the forbidden state) */
+  const goToDashboard = () => {
+    setRequestedDashboard(null);
+    setSelectedTicketId(null);
+    setCurrentTab('dashboard');
+    window.history.pushState(null, '', '/');
+  };
+
+  const openTicketFromDashboard = (ticketId: number) => {
+    setSelectedTicketId(ticketId);
+    window.history.pushState(null, '', `/tickets/${ticketId}`);
+  };
+
+  /** A dashboard card, breakdown row or quick action opens the matching list with its filter (AC-20) */
+  const handleDashboardNavigate = (target: DashboardTarget) => {
+    setSelectedTicketId(null);
+    setRequestedDashboard(null);
+    window.history.pushState(null, '', '/');
+    switch (target.view) {
+      case 'my-tickets':
+        setSearch('');
+        setFilterCategory('');
+        setFilterStatus(target.status ?? '');
+        setFilterRecent(target.recent ?? '');
+        setCurrentPage(1);
+        setCurrentTab('my-tickets');
+        break;
+      case 'queue':
+        setQueueFilters({ status: target.status, priority: target.priority, owner: target.owner });
+        setQueueKey(k => k + 1);
+        setCurrentTab('staff-queue');
+        break;
+      case 'create':
+        setCurrentTab('create');
+        break;
+      case 'users':
+        setCurrentTab('user-management');
+        break;
+    }
   };
 
   const handleLogout = async () => {
@@ -170,6 +230,8 @@ function App() {
   const [search, setSearch] = useState('');
   const [filterCategory, setFilterCategory] = useState<number | ''>('');
   const [filterStatus, setFilterStatus] = useState('');
+  // recent=updated|resolved from a Requester dashboard card (last 7 days, Asia/Bangkok)
+  const [filterRecent, setFilterRecent] = useState<'' | 'updated' | 'resolved'>('');
   const [sortBy, setSortBy] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [currentPage, setCurrentPage] = useState(1);
@@ -221,6 +283,7 @@ function App() {
       if (search) params.append('search', search);
       if (filterCategory) params.append('categoryId', String(filterCategory));
       if (filterStatus) params.append('status', filterStatus);
+      if (filterRecent) params.append('recent', filterRecent);
 
       const data = await fetchMyTickets<TicketItem>(params);
       setTickets(data.data || []);
@@ -231,7 +294,7 @@ function App() {
     } finally {
       setIsLoadingTickets(false);
     }
-  }, [hasAppAccess, isRequester, currentPage, search, filterCategory, filterStatus, sortBy, sortOrder]);
+  }, [hasAppAccess, isRequester, currentPage, search, filterCategory, filterStatus, filterRecent, sortBy, sortOrder]);
 
   // Reload the ticket list when signing in, switching tabs, or closing a ticket detail
   useEffect(() => {
@@ -271,6 +334,8 @@ function App() {
       if (match) {
         setSelectedTicketId(Number(match[1]));
       }
+      const dashboard = window.location.pathname.match(/^\/dashboard\/(requester|staff)\/?$/);
+      setRequestedDashboard(dashboard ? (dashboard[1] as 'requester' | 'staff') : null);
     };
 
     handleLocationChange();
@@ -469,6 +534,28 @@ function App() {
   }
 
   // --- 3. Main application after login ---
+  // The entry that is marked as the current page; a Requester's Ticket Detail belongs to My Tickets unless opened from the Dashboard
+  const activeTab: Tab = isRequester && selectedTicketId !== null && currentTab !== 'dashboard' ? 'my-tickets' : currentTab;
+  const navItems: { tab: Tab; label: string; badge?: number; onSelect: () => void }[] = [
+    { tab: 'dashboard', label: 'Dashboard', onSelect: goToDashboard },
+    ...(isRequester ? [
+      { tab: 'create' as Tab, label: 'Create Ticket', onSelect: () => { setCurrentTab('create'); setSelectedTicketId(null); } },
+      {
+        tab: 'my-tickets' as Tab,
+        label: 'My Tickets',
+        badge: totalItems,
+        // Opening the list from the menu is an unfiltered list, not the last Dashboard drill-down
+        onSelect: () => { setSearch(''); setFilterCategory(''); setFilterStatus(''); setFilterRecent(''); setCurrentPage(1); setCurrentTab('my-tickets'); setSelectedTicketId(null); },
+      },
+    ] : []),
+    ...(isStaffOrAdmin ? [
+      { tab: 'staff-queue' as Tab, label: 'Ticket Queue', onSelect: () => { setQueueFilters({}); setQueueKey(k => k + 1); setCurrentTab('staff-queue'); setSelectedTicketId(null); } },
+    ] : []),
+    ...(currentUser.role === 'ADMINISTRATOR' ? [
+      { tab: 'user-management' as Tab, label: 'User Management', onSelect: () => { setCurrentTab('user-management'); setSelectedTicketId(null); } },
+    ] : []),
+  ];
+
   return (
     <div style={{ backgroundColor: '#F5F7F6', minHeight: '100vh', paddingBottom: '40px' }}>
       {showChangePassword && (
@@ -482,7 +569,7 @@ function App() {
       {/* Zen Green Navigation Bar */}
       <nav className="navbar navbar-light shadow-sm">
         <div className="container flex-wrap gap-2">
-          <span className="navbar-brand fw-bold fs-4">TokTickIT</span>
+          <a href="/" className="navbar-brand fw-bold fs-4" onClick={event => { event.preventDefault(); goToDashboard(); }}>TokTickIT</a>
           <div className="d-flex align-items-center flex-wrap gap-2 ms-auto">
             <div className="text-dark text-end" style={{ minWidth: 0 }}>
               <div className="fw-semibold d-flex align-items-center justify-content-end flex-wrap gap-1">
@@ -515,45 +602,45 @@ function App() {
           </div>
         )}
 
-        {/* Role-based navigation: only destinations the current role may use */}
+        {/* Role-based navigation: Dashboard plus only the destinations the current role may use (AC-29) */}
         <nav className="d-flex flex-wrap border-bottom mb-4" style={{ borderColor: '#0B7A46' }} aria-label="Main navigation">
-          {currentUser.role === 'ADMINISTRATOR' && (
-            <button
-              className={`btn btn-link text-decoration-none pb-2 px-3 fw-bold ${currentTab === 'user-management' && selectedTicketId === null ? 'border-bottom border-3' : 'text-secondary'}`}
-              style={{ color: currentTab === 'user-management' && selectedTicketId === null ? '#006B3C' : '#6c757d', borderColor: '#006B3C', borderRadius: 0 }}
-              onClick={() => { setCurrentTab('user-management'); setSelectedTicketId(null); }}
-            >
-              User Management
-            </button>
-          )}
-          {isStaffOrAdmin && (
-            <button
-              className={`btn btn-link text-decoration-none pb-2 px-3 fw-bold ${currentTab === 'staff-queue' ? 'border-bottom border-3' : 'text-secondary'}`}
-              style={{ color: currentTab === 'staff-queue' ? '#006B3C' : '#6c757d', borderColor: '#006B3C', borderRadius: 0 }}
-              onClick={() => { setCurrentTab('staff-queue'); setSelectedTicketId(null); }}
-            >
-              Ticket Queue
-            </button>
-          )}
-          {isRequester && (
-            <>
+          {navItems.map(item => {
+            const active = item.tab === activeTab;
+            return (
               <button
-                className={`btn btn-link text-decoration-none pb-2 px-3 fw-bold ${currentTab === 'create' && selectedTicketId === null ? 'border-bottom border-3' : 'text-secondary'}`}
-                style={{ color: currentTab === 'create' && selectedTicketId === null ? '#006B3C' : '#6c757d', borderColor: '#006B3C', borderRadius: 0 }}
-                onClick={() => { setCurrentTab('create'); setSelectedTicketId(null); }}
+                key={item.tab}
+                type="button"
+                aria-current={active ? 'page' : undefined}
+                className={`btn btn-link pb-2 px-3 fw-bold ${active ? 'border-bottom border-3 text-decoration-underline' : 'text-decoration-none text-secondary'}`}
+                style={{ color: active ? '#006B3C' : '#6c757d', borderColor: '#006B3C', borderRadius: 0 }}
+                onClick={item.onSelect}
               >
-                Create Ticket
+                {item.label} {item.badge ? <span className="badge rounded-pill ms-1" style={{ backgroundColor: '#0B7A46' }}>{item.badge}</span> : null}
               </button>
-              <button
-                className={`btn btn-link text-decoration-none pb-2 px-3 fw-bold ${currentTab === 'my-tickets' || selectedTicketId !== null ? 'border-bottom border-3' : 'text-secondary'}`}
-                style={{ color: currentTab === 'my-tickets' || selectedTicketId !== null ? '#006B3C' : '#6c757d', borderColor: '#006B3C', borderRadius: 0 }}
-                onClick={() => { setCurrentTab('my-tickets'); setSelectedTicketId(null); }}
-              >
-                My Tickets {totalItems > 0 && <span className="badge rounded-pill ms-1" style={{ backgroundColor: '#0B7A46' }}>{totalItems}</span>}
-              </button>
-            </>
-          )}
+            );
+          })}
         </nav>
+
+        {/* DASHBOARD: the landing page of every role. A direct URL may ask for the other role's one; the API then refuses it. */}
+        {currentTab === 'dashboard' && selectedTicketId === null && (
+          (requestedDashboard ?? (isRequester ? 'requester' : 'staff')) === 'requester' ? (
+            <RequesterDashboard
+              key="requester-dashboard"
+              currentUser={currentUser}
+              onNavigate={handleDashboardNavigate}
+              onOpenTicket={openTicketFromDashboard}
+              onGoHome={goToDashboard}
+            />
+          ) : (
+            <StaffDashboard
+              key="staff-dashboard"
+              currentUser={currentUser}
+              onNavigate={handleDashboardNavigate}
+              onOpenTicket={openTicketFromDashboard}
+              onGoHome={goToDashboard}
+            />
+          )
+        )}
 
         {/* TAB 1: CREATE TICKET (Requester) */}
         {isRequester && currentTab === 'create' && selectedTicketId === null && (
@@ -758,6 +845,7 @@ function App() {
                     onChange={(e) => { setFilterStatus(e.target.value); setCurrentPage(1); }}
                   >
                     <option value="">All Statuses</option>
+                    <option value="Active">Active (not Resolved, Closed or Cancelled)</option>
                     {['New', 'Open', 'In Progress', 'Waiting for Requester', 'Resolved', 'Closed', 'Reopened', 'Cancelled'].map(s => (
                       <option key={s} value={s}>{s}</option>
                     ))}
@@ -780,6 +868,20 @@ function App() {
                 </div>
               </div>
             </div>
+
+            {filterRecent && (
+              <div className="alert alert-info py-2 d-flex justify-content-between align-items-center flex-wrap gap-2" role="status">
+                <span>Showing Tickets {filterRecent === 'updated' ? 'updated' : 'resolved'} in the last 7 days.</span>
+                <button type="button" className="btn btn-sm btn-outline-primary" onClick={() => { setFilterRecent(''); setCurrentPage(1); }}>
+                  Clear filter
+                </button>
+              </div>
+            )}
+            {!isLoadingTickets && !ticketsError && (
+              <p className="small text-muted mb-2" data-testid="my-tickets-total">
+                {totalItems} {totalItems === 1 ? 'Ticket' : 'Tickets'}
+              </p>
+            )}
 
             {/* Ticket List Cards */}
             {isLoadingTickets ? (
@@ -884,7 +986,9 @@ function App() {
         {/* TAB 3: STAFF TICKET QUEUE */}
         {isStaffOrAdmin && currentTab === 'staff-queue' && selectedTicketId === null && (
           <StaffTicketQueue
+            key={queueKey}
             currentUser={currentUser}
+            initialFilters={queueFilters}
             onSelectTicket={(ticketId) => {
               setSelectedTicketId(ticketId);
             }}
@@ -901,6 +1005,7 @@ function App() {
           isStaffOrAdmin ? (
             <StaffTicketDetail
               ticketId={selectedTicketId}
+              backLabel={currentTab === 'dashboard' ? 'Back to Dashboard' : undefined}
               currentUser={currentUser}
               onBack={() => {
                 setSelectedTicketId(null);
@@ -921,7 +1026,7 @@ function App() {
                   window.history.pushState(null, '', '/');
                 }}
               >
-                &larr; Back to My Tickets
+                &larr; {currentTab === 'dashboard' ? 'Back to Dashboard' : 'Back to My Tickets'}
               </button>
 
               {isLoadingDetail ? (
@@ -943,7 +1048,7 @@ function App() {
                         window.history.pushState(null, '', '/');
                       }}
                     >
-                      &larr; Back to My Tickets
+                      &larr; {currentTab === 'dashboard' ? 'Back to Dashboard' : 'Back to My Tickets'}
                     </button>
                   </div>
                 </div>

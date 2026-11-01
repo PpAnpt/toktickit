@@ -1,6 +1,7 @@
 import { randomUUID } from 'crypto';
 import { getPrisma } from '../../src/prisma';
-import { TicketStatus } from '../../generated/prisma/client';
+import { TicketPriority, TicketStatus } from '../../generated/prisma/client';
+import { hashPassword } from '../../src/utils/auth';
 
 /**
  * Lab 4 test helpers. The history tables are insert-only (BR-37) and every Lab 4 foreign key is
@@ -26,9 +27,24 @@ export async function userIdByEmail(email: string): Promise<number> {
 }
 
 const createdTicketIds: number[] = [];
+const createdUserIds: number[] = [];
+
+/** Creates an active Requester with no Tickets, so a test sees exact counts (removed by removeCreatedTickets). */
+export async function createRequester(label = 'Dashboard Tester') {
+    const email = `lab4-${randomUUID().slice(0, 8)}@example.com`;
+    const password = 'Password123!';
+    const user = await getPrisma().user.create({
+        data: { name: label, email, role: 'REQUESTER', passwordHash: await hashPassword(password), isActive: true, mustChangePassword: false },
+    });
+    createdUserIds.push(user.id);
+    return { id: user.id, email, password };
+}
 
 /** Creates an isolated Ticket owned by the given Requester (default David Lee). */
-export async function createTicket(opts: { status?: TicketStatus; requesterEmail?: string; ownerEmail?: string | null; createdAt?: Date } = {}) {
+export async function createTicket(opts: {
+    status?: TicketStatus; requesterEmail?: string; ownerEmail?: string | null; createdAt?: Date;
+    updatedAt?: Date; resolvedAt?: Date | null; requestedPriority?: TicketPriority; itPriority?: TicketPriority | null; summary?: string;
+} = {}) {
     const prisma = getPrisma();
     const requester = await prisma.user.findUniqueOrThrow({ where: { email: opts.requesterEmail ?? 'david.lee@example.com' } });
     const owner = opts.ownerEmail ? await prisma.user.findUniqueOrThrow({ where: { email: opts.ownerEmail } }) : null;
@@ -37,7 +53,7 @@ export async function createTicket(opts: { status?: TicketStatus; requesterEmail
     const ticket = await prisma.ticket.create({
         data: {
             ticketNumber: `LAB4-${randomUUID().slice(0, 8).toUpperCase()}`,
-            summary: 'Lab 4 test ticket',
+            summary: opts.summary ?? 'Lab 4 test ticket',
             description: 'Created by the Lab 4 API tests',
             status: opts.status ?? 'Open',
             requesterId: requester.id,
@@ -45,6 +61,10 @@ export async function createTicket(opts: { status?: TicketStatus; requesterEmail
             categoryId: category.id,
             relatedSystemId: system.id,
             ...(opts.createdAt ? { createdAt: opts.createdAt } : {}),
+            ...(opts.updatedAt ? { updatedAt: opts.updatedAt } : {}),
+            ...(opts.resolvedAt !== undefined ? { resolvedAt: opts.resolvedAt } : {}),
+            ...(opts.requestedPriority ? { requestedPriority: opts.requestedPriority } : {}),
+            ...(opts.itPriority !== undefined ? { itPriority: opts.itPriority } : {}),
         },
     });
     createdTicketIds.push(ticket.id);
@@ -57,6 +77,10 @@ export async function removeCreatedTickets() {
     if (createdTicketIds.length) {
         await getPrisma().ticket.deleteMany({ where: { id: { in: createdTicketIds } } });
         createdTicketIds.length = 0;
+    }
+    if (createdUserIds.length) {
+        await getPrisma().user.deleteMany({ where: { id: { in: createdUserIds } } });
+        createdUserIds.length = 0;
     }
 }
 

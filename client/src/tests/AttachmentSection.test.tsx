@@ -28,6 +28,8 @@ describe('UI-03: AttachmentSection UI', () => {
         render(<App />);
 
         // Wait for authenticated app to load
+        // Every role lands on the Dashboard now: open the Create Ticket page first
+        fireEvent.click(await screen.findByRole('button', { name: /^Create Ticket/i }));
         await screen.findByText(/Create New Support Ticket/i);
 
         // Simulate file attachment
