@@ -235,4 +235,68 @@ describe('UI-25: role navigation, landing page and dashboard drill-down (Issue #
     fireEvent.click(back);
     expect(await screen.findByRole('link', { name: /^Open Tickets: 3/ })).toBeInTheDocument();
   });
+
+  // Review of PR #40: menu entries and deep links must give the unfiltered / list-bound page every time
+  it('clicking Ticket Queue in the menu while the queue is already open drops the Dashboard filters', async () => {
+    mockSession('IT_STAFF');
+    render(<App />);
+    fireEvent.click(await screen.findByRole('link', { name: /^Unassigned: 4/ }));
+    await waitFor(() => expect(screen.getByLabelText('Owner')).toHaveValue('unassigned'));
+
+    requests.length = 0;
+    fireEvent.click(screen.getByRole('button', { name: /^Ticket Queue/ }));
+    await waitFor(() => expect(screen.getByLabelText('Owner')).toHaveValue('All'));
+    expect(screen.getByLabelText('Status')).toHaveValue('All');
+    await waitFor(() => expect(requests.some(u => u.includes('/api/staff/tickets?'))).toBe(true));
+    expect(requests.filter(u => u.includes('/api/staff/tickets?')).every(u => !u.includes('owner=') && !u.includes('status='))).toBe(true);
+  });
+
+  it('clicking My Tickets in the menu also clears Search and Category, even without leaving the page', async () => {
+    mockSession('REQUESTER');
+    render(<App />);
+    fireEvent.click(await screen.findByRole('button', { name: /^My Tickets/ }));
+    const search = await screen.findByPlaceholderText(/Search summary/);
+    fireEvent.change(search, { target: { value: 'printer' } });
+    await waitFor(() => expect(requests.some(u => u.includes('search=printer'))).toBe(true));
+
+    requests.length = 0;
+    fireEvent.click(screen.getByRole('button', { name: /^My Tickets/ }));
+    await waitFor(() => expect(requests.some(u => u.includes('/api/tickets?'))).toBe(true));
+    expect(requests.filter(u => u.includes('/api/tickets?')).every(u => !u.includes('search=') && !u.includes('categoryId='))).toBe(true);
+    expect(screen.getByPlaceholderText(/Search summary/)).toHaveValue('');
+  });
+
+  it.each([['REQUESTER', 'My Tickets', 'Back to My Tickets'], ['IT_STAFF', 'Ticket Queue', 'Back to Queue']] as const)(
+    'a %s who opens /tickets/9 before signing in lands in %s, not on the Dashboard',
+    async (role, entry, backLabel) => {
+      mockSession(role);
+      // Not signed in yet: the page is the login form, but the URL already names a Ticket
+      vi.spyOn(api, 'getAuthToken').mockReturnValue(null);
+      vi.spyOn(api, 'login').mockResolvedValue({
+        token: 'mock-jwt-token',
+        user: { id: 1, name: 'Test User', email: 'test@example.com', role, mustChangePassword: false },
+      } as Awaited<ReturnType<typeof api.login>>);
+      const base = (global.fetch as unknown as ReturnType<typeof vi.fn>).getMockImplementation()!;
+      (global.fetch as unknown as ReturnType<typeof vi.fn>).mockImplementation(async (url: string) => {
+        if (/\/api\/(tickets|staff\/tickets)\/9(\?|$)/.test(url.toString())) {
+          return { ok: true, status: 200, json: async () => ({
+            id: 9, ticketNumber: 'TKT-0009', summary: 'Printer jam', description: 'It jams', status: 'In Progress', requestedPriority: 'LOW',
+            itPriority: 'LOW', createdAt: '2026-10-20T00:00:00.000Z', updatedAt: '2026-10-29T03:00:00.000Z', category: { id: 1, name: 'Hardware' },
+            relatedSystem: { id: 1, name: 'Printer' }, attachments: [], requester: { id: 2, name: 'R', email: 'r@example.com' }, owner: null, comments: [], internalNotes: [],
+          }) };
+        }
+        return base(url);
+      });
+      window.history.pushState(null, '', '/tickets/9');
+
+      render(<App />);
+      fireEvent.change(await screen.findByLabelText(/Email Address/i), { target: { value: 'test@example.com' } });
+      fireEvent.change(screen.getByLabelText(/Password/i), { target: { value: 'Password123!' } });
+      fireEvent.click(screen.getByRole('button', { name: /Sign In/i }));
+
+      expect(await screen.findByRole('button', { name: new RegExp(backLabel) })).toBeInTheDocument();
+      expect(current()).toEqual([entry]);
+      expect(screen.queryByRole('button', { name: /Back to Dashboard/ })).not.toBeInTheDocument();
+    },
+  );
 });

@@ -83,6 +83,8 @@ function App() {
   });
   // Filters a dashboard link opens the Ticket Queue with; cleared when the user opens the queue from the menu
   const [queueFilters, setQueueFilters] = useState<QueueFilters>({});
+  // Changing the key remounts the queue, so its own filter state starts again from queueFilters (also when it is already open)
+  const [queueKey, setQueueKey] = useState(0);
 
   const isRequester = currentUser?.role === 'REQUESTER';
   const isStaffOrAdmin = currentUser?.role === 'IT_STAFF' || currentUser?.role === 'ADMINISTRATOR';
@@ -109,7 +111,8 @@ function App() {
     setLoginNotice('');
     setCurrentUser(user);
     setIsLoggedIn(true);
-    setCurrentTab(defaultTab);
+    // Same rule as restoring a session: a Ticket deep link opened before sign-in belongs to its list, not the Dashboard
+    setCurrentTab(tabForLocation(user.role));
   };
 
   const handlePasswordChanged = async () => {
@@ -176,6 +179,7 @@ function App() {
         break;
       case 'queue':
         setQueueFilters({ status: target.status, priority: target.priority, owner: target.owner });
+        setQueueKey(k => k + 1);
         setCurrentTab('staff-queue');
         break;
       case 'create':
@@ -541,11 +545,11 @@ function App() {
         label: 'My Tickets',
         badge: totalItems,
         // Opening the list from the menu is an unfiltered list, not the last Dashboard drill-down
-        onSelect: () => { setFilterStatus(''); setFilterRecent(''); setCurrentPage(1); setCurrentTab('my-tickets'); setSelectedTicketId(null); },
+        onSelect: () => { setSearch(''); setFilterCategory(''); setFilterStatus(''); setFilterRecent(''); setCurrentPage(1); setCurrentTab('my-tickets'); setSelectedTicketId(null); },
       },
     ] : []),
     ...(isStaffOrAdmin ? [
-      { tab: 'staff-queue' as Tab, label: 'Ticket Queue', onSelect: () => { setQueueFilters({}); setCurrentTab('staff-queue'); setSelectedTicketId(null); } },
+      { tab: 'staff-queue' as Tab, label: 'Ticket Queue', onSelect: () => { setQueueFilters({}); setQueueKey(k => k + 1); setCurrentTab('staff-queue'); setSelectedTicketId(null); } },
     ] : []),
     ...(currentUser.role === 'ADMINISTRATOR' ? [
       { tab: 'user-management' as Tab, label: 'User Management', onSelect: () => { setCurrentTab('user-management'); setSelectedTicketId(null); } },
@@ -982,6 +986,7 @@ function App() {
         {/* TAB 3: STAFF TICKET QUEUE */}
         {isStaffOrAdmin && currentTab === 'staff-queue' && selectedTicketId === null && (
           <StaffTicketQueue
+            key={queueKey}
             currentUser={currentUser}
             initialFilters={queueFilters}
             onSelectTicket={(ticketId) => {
