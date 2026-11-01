@@ -5,30 +5,21 @@ import os from 'os';
 import path from 'path';
 import request from 'supertest';
 import { Client } from 'pg';
+import { createScratchDatabase, dropScratchDatabase, type ScratchDatabase } from './helpers/scratch-db';
 import { hashPassword } from '../../src/utils/auth';
 
 /**
  * PERF-01 / PERF-02 (AC-30): performance smoke on a generated fixture, following docs/lab-04/tests.md section 6.
- * The fixture lives in its own database (`toktickit_perf`), created and dropped by this test; the test and
- * development databases are never touched. The application is imported after DATABASE_URL points there.
+ * The fixture lives in its own database (`toktickit_perf_<random>`): the name is unique per run, created with a plain
+ * CREATE DATABASE (never replacing one), only possible while DATABASE_URL names a `_test` database, and dropped only by the
+ * run that created it (see helpers/scratch-db.ts). The test and development databases are never touched. The application is imported after DATABASE_URL points there.
  */
-const PERF_DB = 'toktickit_perf';
 const SERVER_DIR = path.resolve(__dirname, '../..');
 const PASSWORD = 'Password123!';
 const WARM_UP = 3;
 const TIMED = 30;
 const LIMIT_MS = 1000;
 
-const urlFor = (db: string) => {
-    const url = new URL(process.env.DATABASE_URL!);
-    url.pathname = `/${db}`;
-    return url.toString();
-};
-const admin = async <T>(fn: (c: Client) => Promise<T>) => {
-    const client = new Client({ connectionString: urlFor('postgres') });
-    await client.connect();
-    try { return await fn(client); } finally { await client.end(); }
-};
 
 type Summary = { endpoint: string; min: number; median: number; p95: number; max: number };
 const summaries: Summary[] = [];
@@ -40,14 +31,12 @@ describe('Lab 4: performance smoke (Issue #34)', () => {
     let firstActionId: number;
     let sizes: Record<string, number> = {};
     let header = '';
+    let scratch: ScratchDatabase | undefined;
 
     beforeAll(async () => {
         const testUrl = process.env.DATABASE_URL!;
-        await admin(async c => {
-            await c.query(`DROP DATABASE IF EXISTS "${PERF_DB}" WITH (FORCE)`);
-            await c.query(`CREATE DATABASE "${PERF_DB}"`);
-        });
-        const perfUrl = urlFor(PERF_DB);
+        scratch = await createScratchDatabase();
+        const perfUrl = scratch.url;
         execSync('npx prisma migrate deploy', { cwd: SERVER_DIR, env: { ...process.env, DATABASE_URL: perfUrl }, stdio: 'pipe' });
 
         const hash = await hashPassword(PASSWORD);
@@ -110,7 +99,7 @@ describe('Lab 4: performance smoke (Issue #34)', () => {
         writeFileSync(path.join(out, 'summary.json'), JSON.stringify({ environment: header, fixture: sizes, limitMs: LIMIT_MS, results: summaries }, null, 2));
         const { getPrisma } = await import('../../src/prisma.js');
         await getPrisma().$disconnect();
-        await admin(c => c.query(`DROP DATABASE IF EXISTS "${PERF_DB}" WITH (FORCE)`));
+        if (scratch) await dropScratchDatabase(scratch);
     }, 60_000);
 
     async function measure(endpoint: string, token: () => string, pathOf: () => string) {
