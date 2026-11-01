@@ -2,7 +2,7 @@
 
 ## 1. AI Assistant Used
 - **LLM / Tool (implementation, tests, review fixes, release documents)**: Claude Sonnet 5.5 (Claude Code in VS Code)
-- **LLM / Tool (Sprint 4 specification and test plan, PR #37)**: the contract was drafted before implementation and revised in three review rounds; see `reviewer.md` for the rounds. *(The author confirms here which assistant produced the first draft.)*
+- **LLM / Tool (Sprint 4 specification and test plan, PR #37)**: Claude Sonnet 5.5 (Claude Code in VS Code). The commits of `docs/lab-04/` carry the trailer `Co-Authored-By: Claude Sonnet 5.5` from the first one (`46d3a52`, 2026-10-29) to the last review fix, and the contract was revised in three review rounds with @BBINGOAL (see `reviewer.md`).
 
 The AI wrote code and documents; every Pull Request was reviewed and merged by a human peer (@BBINGOAL), and the author read each review before answering it.
 
