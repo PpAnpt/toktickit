@@ -49,6 +49,21 @@ export async function dropScratchDatabase(handle: ScratchDatabase): Promise<bool
 export const databaseExists = (name: string) =>
     withAdmin(async client => (await client.query('SELECT 1 FROM pg_database WHERE datname = $1', [name])).rowCount === 1);
 
-/** Test-only: a database that must survive, created outside the handle mechanism */
-export const createDecoy = (name: string) => withAdmin(client => client.query(`CREATE DATABASE "${name}"`));
-export const dropDecoy = (name: string) => withAdmin(client => client.query(`DROP DATABASE IF EXISTS "${name}" WITH (FORCE)`));
+/** Test-only: a database that must survive. Same rules as the scratch database: test environment only, and only the creating call can drop it. */
+export interface DecoyDatabase { readonly name: string }
+const decoys = new WeakSet<DecoyDatabase>();
+
+export async function createDecoy(name: string): Promise<DecoyDatabase> {
+    assertTestDatabase();
+    await withAdmin(client => client.query(`CREATE DATABASE "${name}"`)); // an existing name throws, and then no handle exists to drop with
+    const handle: DecoyDatabase = { name };
+    decoys.add(handle);
+    return handle;
+}
+
+export async function dropDecoy(handle: DecoyDatabase | undefined): Promise<boolean> {
+    if (!handle || !decoys.has(handle)) return false;
+    decoys.delete(handle);
+    await withAdmin(client => client.query(`DROP DATABASE IF EXISTS "${handle.name}" WITH (FORCE)`));
+    return true;
+}

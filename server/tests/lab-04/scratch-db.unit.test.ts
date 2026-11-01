@@ -1,16 +1,18 @@
 import { describe, it, expect, afterAll } from 'vitest';
 import { randomBytes } from 'crypto';
 import {
-    createDecoy, createScratchDatabase, databaseExists, dropDecoy, dropScratchDatabase, urlForDatabase, type ScratchDatabase,
+    createDecoy, createScratchDatabase, databaseExists, dropDecoy, dropScratchDatabase, urlForDatabase, type DecoyDatabase, type ScratchDatabase,
 } from './helpers/scratch-db';
 
 /** Review of PR #41: the performance test must never drop a database it did not create. */
 describe('Lab 4: scratch database safety (Issue #34)', () => {
     const decoy = `toktickit_perf_${randomBytes(4).toString('hex')}_keep`;
-    afterAll(() => dropDecoy(decoy));
+    let decoyHandle: DecoyDatabase | undefined;
+    // Only a database this run created is dropped: if creating it failed there is no handle and nothing is removed
+    afterAll(() => dropDecoy(decoyHandle));
 
     it('a pre-existing database, even one with the scratch prefix, is never dropped by a forged or foreign handle', async () => {
-        await createDecoy(decoy);
+        decoyHandle = await createDecoy(decoy);
         const forged: ScratchDatabase = { name: decoy, url: urlForDatabase(decoy), dropped: false };
         expect(await dropScratchDatabase(forged)).toBe(false);
         expect(await databaseExists(decoy)).toBe(true);
@@ -34,6 +36,19 @@ describe('Lab 4: scratch database safety (Issue #34)', () => {
         const handle = await createScratchDatabase();
         await expect(createDecoy(handle.name)).rejects.toThrow(/already exists/);
         expect(await databaseExists(handle.name)).toBe(true);
+        // A failed create leaves no handle, so the cleanup that follows it cannot remove the database that was already there
+        expect(await dropDecoy(undefined)).toBe(false);
+        expect(await databaseExists(handle.name)).toBe(true);
         await dropScratchDatabase(handle);
+    });
+
+    it('a decoy can only be dropped once, by its creator', async () => {
+        const name = `toktickit_perf_${randomBytes(4).toString('hex')}_once`;
+        const handle = await createDecoy(name);
+        expect(await dropDecoy(handle)).toBe(true);
+        expect(await databaseExists(name)).toBe(false);
+        expect(await dropDecoy(handle)).toBe(false);
+        expect(await dropDecoy({ name: decoy })).toBe(false); // a look-alike object is not a handle
+        expect(await databaseExists(decoy)).toBe(true);
     });
 });
