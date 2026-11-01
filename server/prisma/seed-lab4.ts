@@ -86,6 +86,15 @@ export const SEED_ACTIONS: SeedAction[] = [
         key: 'seed-lab4-010', ticket: 'TKT-2025-000106', performer: 'james.gordon', assignee: 'james.gordon', status: 'Completed',
         hoursAfterCreate: 3, description: 'Reset the shared workstation password.', result: 'New password handed over in person.',
     },
+    // Tickets resolved and closed inside the dashboard window (TKT-2025-000115 / 000116): each has completed work
+    {
+        key: 'seed-lab4-015', ticket: 'TKT-2025-000115', performer: 'james.gordon', assignee: 'james.gordon', status: 'Completed',
+        hoursAfterCreate: 20, description: 'Restored the group membership for the team folder.', result: 'Access works after a new sign-in.',
+    },
+    {
+        key: 'seed-lab4-016', ticket: 'TKT-2025-000116', performer: 'sarah.connor', assignee: 'sarah.connor', status: 'Completed',
+        hoursAfterCreate: 4, description: 'Fitted two new AAA batteries in the remote.', result: 'The remote controls the projector again.',
+    },
     // Reopened Ticket: old completed work plus new planned work
     {
         key: 'seed-lab4-011', ticket: 'TKT-2025-000108', performer: 'sarah.connor', assignee: 'sarah.connor', status: 'Completed',

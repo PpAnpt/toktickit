@@ -229,6 +229,22 @@ async function main() {
             status: 'Open', requestedPriority: 'LOW', itPriority: 'LOW', requester: 'emily.watson', owner: null,
             category: 'Software', system: 'Printer', daysAgo: 3,
         },
+        // Lab 4: tickets resolved and closed inside the last 7 days, so the Requester dashboard card
+        // 'Recently Resolved' is non-zero (David Lee) while Emily Watson keeps a zero there
+        {
+            ticketNumber: 'TKT-2025-000115', summary: 'Shared drive shows an access denied message',
+            description: 'The team folder on the shared drive refuses access since the permission review.',
+            status: 'Resolved', requestedPriority: 'MEDIUM', itPriority: 'MEDIUM', requester: 'david.lee', owner: 'james.gordon',
+            category: 'Account and Access', system: 'Corporate Laptop', daysAgo: 3,
+            comments: [{ author: 'james.gordon', content: 'Your group membership was restored. Please sign out and in again.' }],
+        },
+        {
+            ticketNumber: 'TKT-2025-000116', summary: 'Projector remote control needs new batteries',
+            description: 'The remote of the projector in room 1105 does not respond.',
+            status: 'Closed', requestedPriority: 'LOW', itPriority: 'LOW', requester: 'david.lee', owner: 'sarah.connor',
+            category: 'Hardware', system: 'Corporate Laptop', daysAgo: 4,
+            comments: [{ author: 'sarah.connor', content: 'New batteries were fitted and the remote works again.' }],
+        },
     ]
 
     const users = await prisma.user.findMany()
