@@ -10,7 +10,7 @@ const baseServers = Array.isArray(baseConfig.webServer) ? baseConfig.webServer :
 export default defineConfig({
   ...baseConfig,
   testDir: '.',
-  testMatch: 'capture-lab4-screenshots.spec.ts',
+  testMatch: /capture-lab4(-workflow)?-screenshots.spec.ts/,
   timeout: 240_000,
   webServer: baseServers.map((server) => ({ ...server, cwd: repoRoot })),
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],

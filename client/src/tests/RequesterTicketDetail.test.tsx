@@ -102,6 +102,8 @@ describe('UI-04: RequesterTicketDetail View', () => {
         expect(await screen.findByText(/Could you try another HDMI cable/i)).toBeInTheDocument();
         expect(screen.getByLabelText(/Add a comment/i)).toBeInTheDocument();
         expect(screen.queryByText(/Internal Notes/i)).not.toBeInTheDocument();
+        // Lab 4 (UI-32): the Ticket history is for staff only
+        expect(screen.queryByText(/Ticket history/i)).not.toBeInTheDocument();
 
         // Requester can indicate the problem appears resolved (not formally resolve it)
         expect(screen.getByRole('button', { name: /My Problem Appears Resolved/i })).toBeInTheDocument();

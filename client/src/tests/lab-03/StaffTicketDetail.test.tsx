@@ -74,6 +74,7 @@ describe('UI-04 (AC-09, AC-10, AC-11, AC-12, AC-13, AC-14): Staff Ticket Detail 
     vi.clearAllMocks();
     vi.spyOn(api, 'fetchStaffMembers').mockResolvedValue(mockStaffMembers);
     // Lab 4: the detail screen also lists Actions Taken (covered by src/tests/lab-04)
+    vi.spyOn(api, 'fetchTicketEvents').mockResolvedValue({ events: [], total: 0, page: 1, limit: 50 });
     vi.spyOn(api, 'fetchActionsTaken').mockResolvedValue({ actions: [], total: 0, page: 1, limit: 20 });
     vi.spyOn(api, 'fetchStaffTicketDetail').mockResolvedValue(mockTicket);
     vi.spyOn(api, 'fetchPublicComments').mockResolvedValue(mockTicket.comments);
@@ -135,7 +136,7 @@ describe('UI-04 (AC-09, AC-10, AC-11, AC-12, AC-13, AC-14): Staff Ticket Detail 
     fireEvent.click(screen.getByRole('button', { name: /Claim Ticket/i }));
 
     await waitFor(() => {
-      expect(api.updateTicketOwner).toHaveBeenCalledWith(1, 5);
+      expect(api.updateTicketOwner).toHaveBeenCalledWith(1, 5, '2026-09-13T08:00:00.000Z');
     });
   });
 
@@ -153,7 +154,7 @@ describe('UI-04 (AC-09, AC-10, AC-11, AC-12, AC-13, AC-14): Staff Ticket Detail 
     fireEvent.click(savePriorityBtn);
 
     await waitFor(() => {
-      expect(api.updateTicketPriority).toHaveBeenCalledWith(1, 'URGENT');
+      expect(api.updateTicketPriority).toHaveBeenCalledWith(1, 'URGENT', '2026-09-13T08:00:00.000Z');
     });
   });
 
@@ -167,7 +168,7 @@ describe('UI-04 (AC-09, AC-10, AC-11, AC-12, AC-13, AC-14): Staff Ticket Detail 
     fireEvent.click(screen.getByRole('button', { name: /Move to In Progress/i }));
 
     await waitFor(() => {
-      expect(api.updateTicketStatus).toHaveBeenCalledWith(1, 'In Progress');
+      expect(api.updateTicketStatus).toHaveBeenCalledWith(1, 'In Progress', '2026-09-13T08:00:00.000Z');
     });
   });
 
@@ -224,7 +225,7 @@ describe('UI-04 (AC-09, AC-10, AC-11, AC-12, AC-13, AC-14): Staff Ticket Detail 
     render(<StaffTicketDetail ticketId={1} currentUser={mockCurrentUser} onBack={vi.fn()} />);
 
     await waitFor(() => {
-      expect(screen.getByText(/The requester indicated that this problem appears resolved/i)).toBeInTheDocument();
+      expect(screen.getByText(/Requester says the problem appears resolved/i)).toBeInTheDocument();
     });
   });
 });

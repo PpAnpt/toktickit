@@ -87,7 +87,7 @@ export function snapshot(a: {
     } satisfies Prisma.InputJsonObject;
 }
 
-function validationError(details: Record<string, string>): ApiError {
+export function validationError(details: Record<string, string>): ApiError {
     return new ApiError(400, 'Validation failed', undefined, { details });
 }
 
@@ -97,7 +97,7 @@ function assertTicketOpenForWork(status: TicketStatus) {
     }
 }
 
-async function lockTicket(tx: Tx, ticketId: number) {
+export async function lockTicket(tx: Tx, ticketId: number) {
     await tx.$queryRaw`SELECT "id" FROM "Ticket" WHERE "id" = ${ticketId} FOR UPDATE`;
     const ticket = await tx.ticket.findUnique({ where: { id: ticketId } });
     if (!ticket) throw new ApiError(404, 'Ticket not found');

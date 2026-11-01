@@ -143,7 +143,9 @@ test.describe('Lab 4: Actions Taken (Issue #31)', () => {
   test('E2E-04: two staff members record actions on one Ticket and the owner stays the same', async ({ page, request }) => {
     const ticket = await newTicket(request);
     const sarah = await apiLogin(request, ACCOUNTS.sarah);
-    const claim = await request.patch(`${API}/api/staff/tickets/${ticket.id}/owner`, { headers: { Authorization: `Bearer ${sarah.token}` }, data: { ownerId: sarah.user.id } });
+    // Lab 4 (BR-19): the owner change carries the Ticket's current updatedAt
+    const current = await (await request.get(`${API}/api/staff/tickets/${ticket.id}`, { headers: { Authorization: `Bearer ${sarah.token}` } })).json();
+    const claim = await request.patch(`${API}/api/staff/tickets/${ticket.id}/owner`, { headers: { Authorization: `Bearer ${sarah.token}` }, data: { ownerId: sarah.user.id, expectedUpdatedAt: current.updatedAt } });
     expect(claim.status()).toBe(200);
     await apiCreateAction(request, sarah.token, ticket.id, { description: 'First action by the owner', result: 'Done' });
 

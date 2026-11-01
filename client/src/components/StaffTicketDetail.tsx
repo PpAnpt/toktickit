@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   fetchStaffTicketDetail,
   updateTicketOwner,
@@ -10,6 +10,7 @@ import {
   postInternalNote,
   fetchStaffMembers,
   downloadAttachment,
+  ActionApiError,
   type StaffTicketDetail as StaffTicketDetailType,
   type StaffMember,
   type CommentItem,
@@ -18,6 +19,7 @@ import {
 } from '../api';
 import { RoleBadge, ROLE_LABELS } from './RoleBadge';
 import { ActionsTaken } from './ActionsTaken';
+import { TicketHistory } from './TicketHistory';
 
 interface StaffTicketDetailProps {
   ticketId: number;
@@ -66,9 +68,20 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [isUpdatingOwner, setIsUpdatingOwner] = useState(false);
   const [isUpdatingPriority, setIsUpdatingPriority] = useState(false);
+  // Lab 4: conflict, resolution gate and cancel confirmation feedback
+  const [conflict, setConflict] = useState(false);
+  const [gate, setGate] = useState<{ reasons: string[]; openActions?: number } | null>(null);
+  const [confirmCancel, setConfirmCancel] = useState(false);
+  // One workflow write at a time: they share the Ticket's updatedAt token (BR-19)
+  const writeLock = useRef(false);
+  // Whether Actions Taken holds unsaved text (reported by that component)
+  const actionDraftDirty = useRef(false);
+  const isBusy = isUpdatingStatus || isUpdatingOwner || isUpdatingPriority;
 
-  const loadTicketData = useCallback(async () => {
-    setIsLoading(true);
+  // `refresh` keeps the screen mounted: the first load shows the spinner, a reload must not unmount Actions Taken,
+  // which holds the user's unsaved editor text. Returns whether the data was loaded.
+  const loadTicketData = useCallback(async (refresh = false): Promise<boolean> => {
+    if (!refresh) setIsLoading(true);
     setError('');
     try {
       const [ticketData, membersData, commentsData, notesData] = await Promise.all([
@@ -83,8 +96,10 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
       setInternalNotes(notesData.length > 0 ? notesData : (ticketData.internalNotes || []));
       setSelectedOwnerId(ticketData.owner ? String(ticketData.owner.id) : '');
       setSelectedPriority(ticketData.itPriority || ticketData.requestedPriority || 'MEDIUM');
+      return true;
     } catch (err: any) {
       setError(err.message || 'Failed to load ticket details');
+      return false;
     } finally {
       setIsLoading(false);
     }
@@ -94,74 +109,88 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
     loadTicketData();
   }, [loadTicketData]);
 
-  // Handle Claim Ticket (quick assign to current user)
-  const handleClaimTicket = async () => {
-    setIsUpdatingOwner(true);
+  // The write responses carry the Ticket without its attachments or discussion, so they are merged into what is shown
+  const applyUpdated = (updated: StaffTicketDetailType) => {
+    const defined = Object.fromEntries(Object.entries(updated).filter(([, value]) => value !== undefined));
+    setTicket(prev => (prev ? { ...prev, ...defined } as StaffTicketDetailType : updated));
+    return updated;
+  };
+
+  const resetFeedback = () => {
     setError('');
     setActionSuccess('');
+    setConflict(false);
+    setGate(null);
+  };
+
+  // Shared by claim, owner, priority and status: runs one write at a time with the Ticket's current token
+  const runWrite = async (
+    setBusy: (busy: boolean) => void,
+    write: (expectedUpdatedAt: string) => Promise<StaffTicketDetailType>,
+    onDone: (updated: StaffTicketDetailType) => void,
+    failure: string,
+  ) => {
+    if (!ticket || writeLock.current) return;
+    writeLock.current = true;
+    setBusy(true);
+    resetFeedback();
     try {
-      const updated = await updateTicketOwner(ticketId, currentUser.id);
-      setTicket(updated);
-      setSelectedOwnerId(String(currentUser.id));
-      setActionSuccess('Ticket successfully claimed!');
+      onDone(applyUpdated(await write(ticket.updatedAt)));
       if (onTicketUpdated) onTicketUpdated();
-    } catch (err: any) {
-      setError(err.message || 'Failed to claim ticket');
+    } catch (err) {
+      const apiError = err instanceof ActionApiError ? err : null;
+      if (apiError?.code === 'STALE_UPDATE') setConflict(true);
+      else if (apiError?.code === 'RESOLUTION_GATE_FAILED') setGate({ reasons: apiError.reasons, openActions: apiError.openActions });
+      else setError(apiError?.message || (err instanceof Error ? err.message : '') || failure);
     } finally {
-      setIsUpdatingOwner(false);
+      writeLock.current = false;
+      setBusy(false);
     }
   };
+
+  // Handle Claim Ticket (quick assign to current user)
+  const handleClaimTicket = () => runWrite(
+    setIsUpdatingOwner,
+    token => updateTicketOwner(ticketId, currentUser.id, token),
+    () => { setSelectedOwnerId(String(currentUser.id)); setActionSuccess('Ticket successfully claimed!'); },
+    'Failed to claim ticket',
+  );
 
   // Handle Assign Owner
-  const handleAssignOwner = async () => {
-    setIsUpdatingOwner(true);
-    setError('');
-    setActionSuccess('');
-    try {
-      const targetId = selectedOwnerId ? Number(selectedOwnerId) : null;
-      const updated = await updateTicketOwner(ticketId, targetId);
-      setTicket(updated);
-      setActionSuccess('Ticket ownership updated successfully!');
-      if (onTicketUpdated) onTicketUpdated();
-    } catch (err: any) {
-      setError(err.message || 'Failed to update owner');
-    } finally {
-      setIsUpdatingOwner(false);
-    }
-  };
+  const handleAssignOwner = () => runWrite(
+    setIsUpdatingOwner,
+    token => updateTicketOwner(ticketId, selectedOwnerId ? Number(selectedOwnerId) : null, token),
+    () => setActionSuccess('Ticket ownership updated successfully!'),
+    'Failed to update owner',
+  );
 
   // Handle Update IT Priority
-  const handleUpdatePriority = async () => {
-    setIsUpdatingPriority(true);
-    setError('');
-    setActionSuccess('');
-    try {
-      const updated = await updateTicketPriority(ticketId, selectedPriority);
-      setTicket(updated);
-      setActionSuccess('IT Priority updated successfully!');
-      if (onTicketUpdated) onTicketUpdated();
-    } catch (err: any) {
-      setError(err.message || 'Failed to update IT Priority');
-    } finally {
-      setIsUpdatingPriority(false);
-    }
-  };
+  const handleUpdatePriority = () => runWrite(
+    setIsUpdatingPriority,
+    token => updateTicketPriority(ticketId, selectedPriority, token),
+    () => setActionSuccess('IT Priority updated successfully!'),
+    'Failed to update IT Priority',
+  );
 
   // Handle Status Transition
-  const handleTransitionStatus = async (nextStatus: string) => {
-    setIsUpdatingStatus(true);
-    setError('');
-    setActionSuccess('');
-    try {
-      const updated = await updateTicketStatus(ticketId, nextStatus);
-      setTicket(updated);
-      setActionSuccess(`Status transitioned to '${nextStatus}' successfully!`);
-      if (onTicketUpdated) onTicketUpdated();
-    } catch (err: any) {
-      setError(err.message || 'Failed to transition status');
-    } finally {
-      setIsUpdatingStatus(false);
+  const handleTransitionStatus = (nextStatus: string) => {
+    // Closed and Cancelled lock Actions Taken, so unsaved text there would be unreachable: ask before sending
+    if ((nextStatus === 'Closed' || nextStatus === 'Cancelled') && actionDraftDirty.current
+      && !window.confirm('You have unsaved text in Actions Taken. If you continue, the Ticket will be ' + nextStatus.toLowerCase() + ' and that text cannot be saved. Continue anyway?')) {
+      return;
     }
+    return runWrite(
+    setIsUpdatingStatus,
+    token => updateTicketStatus(ticketId, nextStatus, token),
+    updated => setActionSuccess(`Status changed to ${updated.status}.`),
+    'Failed to transition status',
+    );
+  };
+
+  // The latest saved Ticket replaces the stale view after a conflict
+  // If the reload fails the conflict message stays, together with the reason, so the user can try again
+  const handleReload = async () => {
+    if (await loadTicketData(true)) resetFeedback();
   };
 
   // Handle Post Public Comment
@@ -301,7 +330,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
             <button
               className="btn btn-sm btn-success fw-semibold"
               onClick={handleClaimTicket}
-              disabled={isUpdatingOwner}
+              disabled={isBusy}
             >
               {isUpdatingOwner ? 'Claiming...' : 'Claim Ticket'}
             </button>
@@ -316,20 +345,26 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
           <button type="button" className="btn-close" onClick={() => setError('')} aria-label="Close"></button>
         </div>
       )}
+      {conflict && (
+        <div className="alert alert-warning d-flex align-items-center justify-content-between flex-wrap gap-2" role="alert" data-testid="conflict-message">
+          <span>This Ticket was changed by someone else. Reload to see the latest version, then try again.</span>
+          <button type="button" className="btn btn-sm btn-outline-dark" onClick={handleReload}>Reload</button>
+        </div>
+      )}
       {actionSuccess && (
-        <div className="alert alert-success alert-dismissible fade show" role="alert">
+        <div className="alert alert-success alert-dismissible fade show" role="status">
           {actionSuccess}
           <button type="button" className="btn-close" onClick={() => setActionSuccess('')} aria-label="Close"></button>
         </div>
       )}
 
       {/* Indicated Resolved Alert Banner */}
-      {ticket.indicatedResolvedAt && (
+      {ticket.indicatedResolvedAt && !['Resolved', 'Closed', 'Cancelled'].includes(ticket.status) && (
         <div className="alert alert-info d-flex align-items-center mb-4" role="alert">
           <span className="fs-5 me-2">💡</span>
           <div>
-            <strong>Requester Indication:</strong> The requester indicated that this problem appears resolved on{' '}
-            {new Date(ticket.indicatedResolvedAt).toLocaleString()}. You may formally transition this ticket to <strong>Resolved</strong> below.
+            <span className="fw-semibold">Requester says the problem appears resolved. Review the actions and update the Ticket.</span>{' '}
+            <span className="text-muted small">(Indicated on {new Date(ticket.indicatedResolvedAt).toLocaleString()}; the status has not changed.)</span>
           </div>
         </div>
       )}
@@ -396,11 +431,18 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
             ticketStatus={ticket.status}
             canEdit
             staffMembers={staffMembers}
+            onDirtyChange={dirty => { actionDraftDirty.current = dirty; }}
             onChanged={() => {
+              // A recorded action changes what the gate and conflict messages described
+              setGate(null);
+              setConflict(false);
               fetchStaffTicketDetail(ticketId).then(setTicket).catch(() => { /* the saved action is authoritative; keep the current view */ });
               if (onTicketUpdated) onTicketUpdated();
             }}
           />
+
+          {/* Ticket history (Lab 4, staff only): status, owner and priority changes */}
+          <TicketHistory ticketId={ticket.id} refreshKey={ticket.updatedAt} />
 
           {/* TWO-TIER DISCUSSION THREADS */}
           <div className="card shadow-sm border-0">
@@ -569,13 +611,39 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
               ) : (
                 <div>
                   <label className="form-label small fw-semibold text-secondary mb-2">Permitted Transitions:</label>
+                  {allowedNextStatuses.includes('Resolved') && (
+                    <p className="small text-muted mb-2">Resolving requires one completed action and no open actions.</p>
+                  )}
+                  {gate && (
+                    <div className="alert alert-danger small py-2" role="alert" data-testid="resolution-gate-message">
+                      <strong>This Ticket cannot be resolved yet.</strong>
+                      <ul className="mb-1 ps-3">
+                        {gate.reasons.includes('NO_COMPLETED_ACTION') && <li>No completed action has been recorded.</li>}
+                        {gate.reasons.includes('OPEN_ACTIONS') && (
+                          <li>{gate.openActions ?? 'Some'} {gate.openActions === 1 ? 'action is' : 'actions are'} still planned or in progress.</li>
+                        )}
+                      </ul>
+                      <a href={`#actions-title-${ticket.id}`} className="alert-link">Go to Actions Taken</a>
+                    </div>
+                  )}
+                  {confirmCancel && (
+                    <div className="alert alert-warning small py-2" role="alertdialog" aria-label="Cancel this Ticket?">
+                      <strong>Cancel this Ticket?</strong>
+                      <p className="mb-2">Any open actions (Planned or In Progress) will be cancelled automatically. This cannot be undone.</p>
+                      <div className="d-flex gap-2">
+                        <button type="button" className="btn btn-sm btn-danger" disabled={isBusy}
+                          onClick={() => { setConfirmCancel(false); handleTransitionStatus('Cancelled'); }}>Cancel Ticket</button>
+                        <button type="button" className="btn btn-sm btn-outline-secondary" autoFocus onClick={() => setConfirmCancel(false)}>Keep Ticket</button>
+                      </div>
+                    </div>
+                  )}
                   <div className="d-flex flex-column gap-2">
                     {allowedNextStatuses.map((st) => (
                       <button
                         key={st}
                         className={`btn btn-sm text-start fw-semibold ${getTransitionButtonClass(st)}`}
-                        onClick={() => handleTransitionStatus(st)}
-                        disabled={isUpdatingStatus}
+                        onClick={() => (st === 'Cancelled' ? setConfirmCancel(true) : handleTransitionStatus(st))}
+                        disabled={isBusy}
                       >
                         &rarr; Move to <strong>{st}</strong>
                       </button>
@@ -626,7 +694,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
               <button
                 className="btn btn-sm btn-outline-success w-100"
                 onClick={handleAssignOwner}
-                disabled={isUpdatingOwner}
+                disabled={isBusy}
               >
                 {isUpdatingOwner ? 'Updating...' : 'Save Owner Assignment'}
               </button>
@@ -667,7 +735,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
               <button
                 className="btn btn-sm btn-outline-success w-100"
                 onClick={handleUpdatePriority}
-                disabled={isUpdatingPriority}
+                disabled={isBusy}
               >
                 {isUpdatingPriority ? 'Updating...' : 'Save IT Priority'}
               </button>
@@ -704,6 +772,12 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
                 <span className="text-muted">Created:</span>{' '}
                 <span>{new Date(ticket.createdAt).toLocaleString()}</span>
               </div>
+              {ticket.resolvedAt && (
+                <div className="mb-2">
+                  <span className="text-muted">Resolved:</span>{' '}
+                  <span>{new Date(ticket.resolvedAt).toLocaleString()}</span>
+                </div>
+              )}
               <div>
                 <span className="text-muted">Last Updated:</span>{' '}
                 <span>{new Date(ticket.updatedAt).toLocaleString()}</span>

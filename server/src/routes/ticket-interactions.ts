@@ -1,7 +1,8 @@
 import { Router, Response } from 'express';
 import { getPrisma } from '../prisma';
+import { indicateResolved } from '../services/workflow';
+import { sendApiError } from './send-error';
 import { requireAppAccess, requireRole, AuthenticatedRequest } from '../middlewares/auth';
-import { TicketStatus } from '../../generated/prisma/client';
 
 const router = Router();
 
@@ -175,31 +176,14 @@ router.post(
     requireRole('REQUESTER'),
     async (req: AuthenticatedRequest, res: Response) => {
         try {
-            const ticket = await findAccessibleTicket(req);
-            if (!ticket) {
+            const ticketId = Number(req.params.id);
+            if (!Number.isInteger(ticketId) || ticketId <= 0) {
                 return res.status(404).json(NOT_FOUND);
             }
-
-            const finalStatuses: TicketStatus[] = [TicketStatus.Resolved, TicketStatus.Closed, TicketStatus.Cancelled];
-            if (finalStatuses.includes(ticket.status)) {
-                return res.status(400).json({ error: 'This ticket is already resolved, closed, or cancelled' });
-            }
-            if (ticket.indicatedResolvedAt) {
-                return res.status(409).json({ error: 'Resolution has already been indicated for this ticket' });
-            }
-
-            const updated = await getPrisma().ticket.update({
-                where: { id: ticket.id },
-                data: { indicatedResolvedAt: new Date() },
-            });
-
-            res.status(200).json({
-                message: 'Indicated problem appears resolved',
-                indicatedResolvedAt: updated.indicatedResolvedAt,
-            });
+            const result = await indicateResolved(ticketId, req.user!.id);
+            res.status(200).json({ message: 'Indicated problem appears resolved', indicatedResolvedAt: result.indicatedResolvedAt });
         } catch (error) {
-            console.error('Failed to indicate ticket resolved:', error);
-            res.status(500).json({ error: 'Failed to indicate ticket resolved' });
+            sendApiError(res, error, 'Failed to indicate ticket resolved');
         }
     }
 );

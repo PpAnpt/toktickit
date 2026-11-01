@@ -73,7 +73,7 @@ Run commands: `npm --prefix server test`, `npm --prefix client test`, `npm run t
 | WF-03 | Authorization | AC-10 | Requester changes status | `403` | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
 | WF-04 | Workflow | AC-11 | Resolve a Ticket with no `Completed` action, and one that still has a `Planned`/`In Progress` action | `400 RESOLUTION_GATE_FAILED` with `reasons` `NO_COMPLETED_ACTION` / `OPEN_ACTIONS`; status unchanged | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
 | WF-05 | Workflow | AC-11 | Resolve after completing an action and completing or cancelling all open ones | `200`; `resolvedAt` set | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
-| WF-06 | Workflow | AC-12 | Requester indicates resolved | Status unchanged; `indicatedResolvedAt` set | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
+| WF-06 | Workflow | AC-12 | Requester indicates resolved | Status unchanged; `indicatedResolvedAt` set; two simultaneous indications give one `200` and the rest `409`; an indication waiting behind a staff write re-checks the locked Ticket (`400` once `Resolved`); the token comes from the locked row | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
 | WF-07 | Workflow | AC-12 | Reopen a Resolved Ticket | `resolvedAt` and `indicatedResolvedAt` cleared; Requester may indicate again | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
 | WF-08 | Workflow | AC-13 | Stale `expectedUpdatedAt` on status, owner, and priority | `409 STALE_UPDATE`; Ticket unchanged | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
 | WF-09 | Workflow | AC-13 | Two concurrent different status changes | One succeeds, the other `409` | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
@@ -137,10 +137,10 @@ Run commands: `npm --prefix server test`, `npm --prefix client test`, `npm run t
 | UI-08 | UI | AC-26 | Network/500 error on create | Alert shown; entered text kept | `client/src/tests/lab-04/ActionsTaken.test.tsx` | Planned |
 | UI-09 | UI | AC-07 | `Closed`/`Cancelled` Ticket | Add and Edit hidden with an explanation | `client/src/tests/lab-04/ActionsTaken.test.tsx` | Planned |
 | UI-10 | UI | AC-15 | Status buttons for each status | Only permitted "Move to ..." buttons; none for terminal statuses | `client/src/tests/lab-04/TicketWorkflow.test.tsx` | Planned |
-| UI-11 | UI | AC-15 | `RESOLUTION_GATE_FAILED` | Gate message names the reasons with a link to Actions Taken; status unchanged | `client/src/tests/lab-04/TicketWorkflow.test.tsx` | Planned |
-| UI-12 | UI | AC-15 | Successful transition | Summary status badge refreshes; status message announced | `client/src/tests/lab-04/TicketWorkflow.test.tsx` | Planned |
+| UI-11 | UI | AC-15 | `RESOLUTION_GATE_FAILED` | Gate message names the reasons with a link to Actions Taken; status unchanged; the message clears once an action is recorded | `client/src/tests/lab-04/TicketWorkflow.test.tsx` | Planned |
+| UI-12 | UI | AC-15 | Successful transition | Summary status badge refreshes; status message announced; the Resolved date appears once `resolvedAt` is set and disappears after a reopen; the Requester notice is hidden once the Ticket is Resolved, Closed, or Cancelled | `client/src/tests/lab-04/TicketWorkflow.test.tsx` | Planned |
 | UI-13 | UI | AC-27 | Transition in flight | All status buttons disabled; one request | `client/src/tests/lab-04/TicketWorkflow.test.tsx` | Planned |
-| UI-14 | UI | AC-26 | `409` on a transition | Conflict message with Reload; no status change shown | `client/src/tests/lab-04/TicketWorkflow.test.tsx` | Planned |
+| UI-14 | UI | AC-26 | `409` on a transition | Conflict message with Reload; no status change shown; Reload keeps the screen mounted, so an unsaved Action draft survives, and a failed Reload keeps the message and says why | `client/src/tests/lab-04/TicketWorkflow.test.tsx` | Planned |
 | UI-15 | UI | AC-18 | Staff dashboard cards and lists | Labels, values, recent Tickets, and My Recent Actions render | `client/src/tests/lab-04/StaffDashboard.test.tsx` | Planned |
 | UI-16 | UI | AC-20 | Staff drill-down links | Each card/row links to the queue filter in `api-spec.md` | `client/src/tests/lab-04/StaffDashboard.test.tsx` | Planned |
 | UI-17 | UI | AC-28 | Loading state | Skeletons with `aria-busy`; no stale numbers | `client/src/tests/lab-04/StaffDashboard.test.tsx` | Planned |
@@ -201,7 +201,7 @@ Run commands: `npm --prefix server test`, `npm --prefix client test`, `npm run t
 | HIST-07 | Migration | AC-35 | Direct SQL `UPDATE` and `DELETE` on `ActionTakenRevision` and `TicketEvent` | Database raises an error; rows unchanged | `server/tests/lab-04/history.api.test.ts` | Planned |
 | HIST-08 | Authorization | AC-37 | Requester, IT Staff, Administrator, and no token call the history endpoints | Requester `403` with no data, staff/admin `200`, no token `401` | `server/tests/lab-04/history.api.test.ts` | Planned |
 | HIST-09 | API | AC-34 | A stale or failing action write | No revision is left behind (change and history are in one transaction) | `server/tests/lab-04/history.api.test.ts` | Planned |
-| HIST-10 | API | AC-38 | History lists with more than one page | `total`, `page`, `limit`, clamping, no overlap or gap across pages | `server/tests/lab-04/history.api.test.ts` | Planned |
+| HIST-10 | API | AC-38 | History lists (revisions and the Ticket events list) with more than one page | `total`, `page`, `limit`, clamping, no overlap or gap across pages | `server/tests/lab-04/history.api.test.ts` | Planned |
 
 ### 2.12 Assignment, Lifecycle, and History in the UI and E2E
 | Test ID | Type | Requirement / AC | What It Tests | Expected Result | Automated Test File | Final |
@@ -210,9 +210,11 @@ Run commands: `npm --prefix server test`, `npm --prefix client test`, `npm run t
 | UI-27 | UI | AC-32 | Lifecycle buttons and confirm panels | Buttons match the action status; Complete and Cancel require a Result; terminal actions show none | `client/src/tests/lab-04/ActionsTaken.test.tsx` | Planned |
 | UI-28 | UI | AC-37 | History views | Staff open a per-action history (read-only, Before/After labels, no edit/delete controls, paginated); Requester sees none | `client/src/tests/lab-04/ActionsTaken.test.tsx` | Planned |
 | UI-29 | UI | AC-38 | Pagination controls on the actions list and history | Previous/Next and "Showing x-y of N" work; state is announced | `client/src/tests/lab-04/ActionsTaken.test.tsx` | Planned |
-| UI-30 | UI | AC-33 | Cancelling a Ticket | Confirm panel warns that open actions will be cancelled | `client/src/tests/lab-04/TicketWorkflow.test.tsx` | Planned |
+| UI-30 | UI | AC-33 | Cancelling a Ticket | Confirm panel warns that open actions will be cancelled; with unsaved Action text, `Cancel Ticket` and `Move to Closed` ask first (declining keeps the Ticket and the text) | `client/src/tests/lab-04/TicketWorkflow.test.tsx` | Planned |
 | UI-31 | UI | AC-40 | Add Action on a `Resolved` Ticket | Status select offers Completed only with the hint "Reopen the Ticket to plan new work."; a server `409 TICKET_RESOLVED` is shown as a clear alert and the entered text is kept | `client/src/tests/lab-04/ActionsTaken.test.tsx` | Planned |
 | UI-32 | UI | AC-36, AC-37 | Ticket history timeline on the Staff Ticket Detail | Status, owner, and priority events oldest first, read-only, with "No history recorded before Lab 4." for older Tickets; a Requester sees none | `client/src/tests/lab-04/TicketWorkflow.test.tsx` | Planned |
+| UI-38 | UI | AC-06, AC-15 | The Ticket becomes `Closed`/`Cancelled` (by this user or another) while an Action editor holds unsaved text | The editor and text stay visible with the notice "can no longer be saved"; Save is disabled; Close asks before discarding; with nothing typed the editor just goes away | `client/src/tests/lab-04/ActionsTaken.test.tsx` | Planned |
+| UI-39 | UI | AC-40 | A new-action draft set to `Planned` while the Ticket becomes `Resolved` | Status switches to `Completed` and the typed text is kept | `client/src/tests/lab-04/ActionsTaken.test.tsx` | Planned |
 | UI-33 | UI | AC-06 | Close, Edit/Reassign of another Action, or Add Action while the editor holds unsaved text | A confirm prompt appears; cancelling keeps the editor and text, confirming closes or switches; no prompt when nothing was changed | `client/src/tests/lab-04/ActionsTaken.test.tsx` | Planned |
 | UI-34 | UI | AC-06 | Conflict (`STALE_UPDATE`) on an Action that then moved to another page (21 Actions), and a failed reload | Reload latest keeps the editor and text, shows that the Action is on another page, and the next save uses the latest token; a failed reload keeps the text and the Reload button | `client/src/tests/lab-04/ActionsTaken.test.tsx` | Planned |
 | UI-35 | UI | AC-06, AC-38 | Change page of the Actions list while an editor is open | The editor and typed text stay; returning to the page shows the editor inline again | `client/src/tests/lab-04/ActionsTaken.test.tsx` | Planned |
@@ -231,7 +233,7 @@ Run commands: `npm --prefix server test`, `npm --prefix client test`, `npm run t
 | AC-03 | AUTHZ-01, AUTHZ-02, AUTHZ-03, AUTHZ-04, UI-01, UI-03, E2E-01 |
 | AC-04 | UNIT-01, UNIT-02, UNIT-03, API-06, API-07, API-08, API-27, UI-04, UI-05, E2E-03 |
 | AC-05 | API-05, E2E-04 |
-| AC-06 | API-09, API-10, API-11, API-12, UI-33, UI-34, UI-35, UI-36, UI-37, E2E-02 |
+| AC-06 | API-09, API-10, API-11, API-12, UI-33, UI-34, UI-35, UI-36, UI-37, UI-38, E2E-02 |
 | AC-07 | API-13, UI-09 |
 | AC-08 | API-14, API-15, API-26 |
 | AC-09 | API-01, API-02, UI-01 |
@@ -240,7 +242,7 @@ Run commands: `npm --prefix server test`, `npm --prefix client test`, `npm run t
 | AC-12 | WF-06, WF-07, E2E-07, E2E-08 |
 | AC-13 | UNIT-07, WF-08, WF-09, WF-12, WF-13, WF-14, E2E-08 |
 | AC-14 | WF-10 |
-| AC-15 | UI-10, UI-11, UI-12, E2E-06 |
+| AC-15 | UI-10, UI-11, UI-12, UI-38, E2E-06 |
 | AC-16 | DASH-01, DASH-02, SDASH-01, E2E-12 |
 | AC-17 | DASH-03, DASH-08, UI-21, E2E-09 |
 | AC-18 | UNIT-06, SDASH-02, SDASH-03, SDASH-04, SDASH-05, UI-15, UI-20, E2E-10, E2E-11 |
@@ -265,14 +267,14 @@ Run commands: `npm --prefix server test`, `npm --prefix client test`, `npm run t
 | AC-37 | HIST-08, UI-28, UI-32, E2E-14 |
 | AC-38 | API-24, HIST-10, UI-29, UI-35 |
 | AC-39 | SEED-02, E2E-13 |
-| AC-40 | API-25, UI-31, WF-04 |
+| AC-40 | API-25, UI-31, UI-39, WF-04 |
 
 Every AC-01..AC-40 maps to at least one planned test. AC-28 is also verified by the visual and accessibility checklist in `ui-spec.md` and the screenshots in `artifacts/lab-04/screenshots/`.
 
 ## 4. Issue Ownership
 | Issue | Tests it must turn green |
 | :--- | :--- |
-| #31 Actions Taken | UNIT-01..03, UNIT-07, API-01..22, API-24..27, AUTHZ-01..05, HIST-01..03, HIST-06..10, MIG-01..04, SEED-01..02, UI-01..09, UI-26..29, UI-33..37, UI-31, E2E-01..05, E2E-13..15 |
+| #31 Actions Taken | UNIT-01..03, UNIT-07, API-01..22, API-24..27, AUTHZ-01..05, HIST-01..03, HIST-06..10, MIG-01..04, SEED-01..02, UI-01..09, UI-26..29, UI-33..39, UI-31, E2E-01..05, E2E-13..15 |
 | #32 Ticket workflow | UNIT-04, API-23, WF-01..14, WF-16, HIST-04..05, UI-10..14, UI-30, UI-32, E2E-06..08, E2E-16 |
 | #33 Role dashboards | UNIT-05..06, WF-15, DASH-01..10, SDASH-01..08, UI-15..25, E2E-09..12 |
 | #34 Final hardening | ERR-01, PERF-01..02, STY-01..03, RSP-01..03, A11Y-01..02, REG-01..03 |

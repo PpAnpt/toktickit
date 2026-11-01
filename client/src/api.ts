@@ -332,6 +332,7 @@ export interface NoteItem {
 export interface StaffTicketDetail extends StaffTicket {
   description: string;
   indicatedResolvedAt?: string | null;
+  resolvedAt?: string | null;
   attachments?: Array<{
     id: number;
     originalFileName: string;
@@ -359,51 +360,58 @@ export async function fetchStaffTicketDetail(id: number): Promise<StaffTicketDet
 }
 
 /**
+ * Ticket status, owner and priority changes carry the Ticket's expectedUpdatedAt (Lab 4, BR-19). A stale token is a
+ * 409 STALE_UPDATE, a refused Resolved is a 400 RESOLUTION_GATE_FAILED; both arrive as an ActionApiError.
+ */
+async function ticketWrite(ticketId: number, path: string, body: Record<string, unknown>, expectedUpdatedAt: string): Promise<StaffTicketDetail> {
+  try {
+    const data = await actionRequest<StaffTicketDetail>(`/api/staff/tickets/${ticketId}/${path}`, jsonRequest('PATCH', { ...body, expectedUpdatedAt }));
+    const { _status, ...ticket } = data;
+    void _status;
+    return ticket as StaffTicketDetail;
+  } catch (err) {
+    if (err instanceof ActionApiError && err.status === 403) throw new ActionApiError(403, 'You do not have permission to change this Ticket.', err.code);
+    if (err instanceof ActionApiError && err.status === 404) throw new ActionApiError(404, 'This Ticket is no longer available.', err.code);
+    throw err;
+  }
+}
+
+/**
  * Claim or reassign ticket owner
  */
-export async function updateTicketOwner(id: number, ownerId: number | null): Promise<StaffTicketDetail> {
-  const res = await authFetch(`/api/staff/tickets/${id}/owner`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ownerId }),
-  });
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.error || 'Failed to update owner');
-  }
-  return res.json();
+export function updateTicketOwner(id: number, ownerId: number | null, expectedUpdatedAt: string): Promise<StaffTicketDetail> {
+  return ticketWrite(id, 'owner', { ownerId }, expectedUpdatedAt);
 }
 
 /**
  * Update IT Priority
  */
-export async function updateTicketPriority(id: number, itPriority: string): Promise<StaffTicketDetail> {
-  const res = await authFetch(`/api/staff/tickets/${id}/priority`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ itPriority }),
-  });
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.error || 'Failed to update IT priority');
-  }
-  return res.json();
+export function updateTicketPriority(id: number, itPriority: string, expectedUpdatedAt: string): Promise<StaffTicketDetail> {
+  return ticketWrite(id, 'priority', { itPriority }, expectedUpdatedAt);
 }
 
 /**
  * Update Ticket Status following workflow transition
  */
-export async function updateTicketStatus(id: number, status: string): Promise<StaffTicketDetail> {
-  const res = await authFetch(`/api/staff/tickets/${id}/status`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ status }),
-  });
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.error || 'Failed to update status');
-  }
-  return res.json();
+export function updateTicketStatus(id: number, status: string, expectedUpdatedAt: string): Promise<StaffTicketDetail> {
+  return ticketWrite(id, 'status', { status }, expectedUpdatedAt);
+}
+
+export interface TicketEventItem {
+  id: number;
+  type: 'STATUS_CHANGED' | 'OWNER_CHANGED' | 'PRIORITY_CHANGED';
+  from: string | null;
+  to: string | null;
+  actor: { id: number; name: string };
+  createdAt: string;
+}
+export interface TicketEventsPage { events: TicketEventItem[]; total: number; page: number; limit: number }
+
+/** Status, owner and priority history of a Ticket, oldest first (staff only) */
+export async function fetchTicketEvents(ticketId: number, page = 1, limit = 50): Promise<TicketEventsPage> {
+  const data = await actionRequest<Partial<TicketEventsPage>>(`/api/staff/tickets/${ticketId}/events?page=${page}&limit=${limit}`);
+  const events = Array.isArray(data.events) ? data.events : [];
+  return { events, total: data.total ?? events.length, page: data.page ?? page, limit: data.limit ?? limit };
 }
 
 /**
@@ -628,12 +636,20 @@ export class ActionApiError extends Error {
   code?: string;
   details: Record<string, string>;
   currentUpdatedAt?: string;
-  constructor(status: number, message: string, code?: string, details: Record<string, string> = {}, currentUpdatedAt?: string) {
+  /** RESOLUTION_GATE_FAILED: NO_COMPLETED_ACTION and/or OPEN_ACTIONS, with the number of open actions */
+  reasons: string[];
+  openActions?: number;
+  constructor(
+    status: number, message: string, code?: string, details: Record<string, string> = {}, currentUpdatedAt?: string,
+    extra: { reasons?: string[]; openActions?: number } = {},
+  ) {
     super(message);
     this.status = status;
     this.code = code;
     this.details = details;
     this.currentUpdatedAt = currentUpdatedAt;
+    this.reasons = extra.reasons ?? [];
+    this.openActions = extra.openActions;
   }
 }
 
@@ -658,7 +674,10 @@ async function actionRequest<T>(endpoint: string, options: RequestInit = {}): Pr
       : res.status === 400 || res.status === 409
         ? (data.error || 'The request could not be completed.')
         : (ACTION_ERROR_MESSAGES[res.status] || data.error || 'The request could not be completed.');
-    throw new ActionApiError(res.status, message, data.code, data.details ?? {}, data.currentUpdatedAt);
+    throw new ActionApiError(res.status, message, data.code, data.details ?? {}, data.currentUpdatedAt, {
+      reasons: Array.isArray(data.reasons) ? data.reasons : [],
+      openActions: typeof data.openActions === 'number' ? data.openActions : undefined,
+    });
   }
   return { ...data, _status: res.status };
 }
