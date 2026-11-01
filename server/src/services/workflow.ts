@@ -218,6 +218,30 @@ export async function changePriority(ticketId: number, actor: Actor, body: Recor
     });
 }
 
+// ─── Requester indication ─────────────────────────────────
+
+/**
+ * The owning Requester says the problem appears resolved (BR-18). It only sets `indicatedResolvedAt`; it never changes
+ * the status. It runs like every other Ticket write: the row is locked, ownership, final status and an earlier
+ * indication are checked on the locked row, and the new token is computed from that row, so it cannot be written after
+ * Staff resolved or closed the Ticket, and two simultaneous requests cannot both succeed.
+ */
+export async function indicateResolved(ticketId: number, requesterId: number) {
+    return getPrisma().$transaction(async tx => {
+        const ticket = await lockTicket(tx, ticketId);
+        // A Ticket of another Requester looks exactly like a missing one (L3-BR non-disclosure)
+        if (ticket.requesterId !== requesterId) throw new ApiError(404, 'Ticket not found');
+        if (ticket.status === 'Resolved' || ticket.status === 'Closed' || ticket.status === 'Cancelled') {
+            throw new ApiError(400, 'This ticket is already resolved, closed, or cancelled');
+        }
+        if (ticket.indicatedResolvedAt) throw new ApiError(409, 'Resolution has already been indicated for this ticket');
+
+        const now = new Date();
+        const updated = await updateTicket(tx, ticket, { indicatedResolvedAt: now }, now);
+        return { indicatedResolvedAt: updated.indicatedResolvedAt };
+    });
+}
+
 // ─── Ticket event history ─────────────────────────────────
 
 export async function listEvents(ticketId: number, page: number, limit: number) {

@@ -184,6 +184,55 @@ describe('Lab 4: Ticket workflow API (Issue #32)', () => {
             expect(row.resolvedAt).toBeNull();
         });
 
+        const indicate = (ticketId: number, session: Session = david) =>
+            request(app).post(`/api/tickets/${ticketId}/indicate-resolved`).set(bearer(session.token));
+
+        it('WF-06: two simultaneous indications: exactly one succeeds and the other is a 409', async () => {
+            const ticket = await createTicket({ status: 'Open' });
+            const results = await Promise.all([indicate(ticket.id), indicate(ticket.id), indicate(ticket.id)]);
+            expect(results.map(r => r.status).sort()).toEqual([200, 409, 409]);
+            expect((await prisma().ticket.findUniqueOrThrow({ where: { id: ticket.id } })).indicatedResolvedAt).not.toBeNull();
+        });
+
+        it('WF-06: an indication that waits behind a staff change re-checks the locked Ticket and is refused when it became Resolved', async () => {
+            const ticket = await createTicket({ status: 'Open' });
+            let lockHeld!: () => void;
+            const locked = new Promise<void>(resolve => { lockHeld = resolve; });
+            let release!: () => void;
+            const hold = new Promise<void>(resolve => { release = resolve; });
+            // A staff transaction holds the Ticket row, as changeStatus does while it works
+            const staffWrite = prisma().$transaction(async tx => {
+                await tx.$queryRaw`SELECT "id" FROM "Ticket" WHERE "id" = ${ticket.id} FOR UPDATE`;
+                lockHeld();
+                await hold;
+                await tx.ticket.update({ where: { id: ticket.id }, data: { status: 'Resolved', resolvedAt: new Date() } });
+            });
+            await locked;
+            const pending = indicate(ticket.id).then(res => res); // sends the request now; it must wait for the lock
+            await new Promise(resolve => setTimeout(resolve, 400));
+            release();
+            await staffWrite;
+            const res = await pending;
+            expect(res.status).toBe(400);
+            const row = await prisma().ticket.findUniqueOrThrow({ where: { id: ticket.id } });
+            expect(row.status).toBe('Resolved');
+            expect(row.indicatedResolvedAt).toBeNull();
+        });
+
+        it('WF-06: the new token is based on the locked row, so a staff write made just before is not lost', async () => {
+            const ticket = await createTicket({ status: 'Open' });
+            const changed = await setPriority(ticket.id, sarah, { itPriority: 'HIGH', expectedUpdatedAt: await tokenOf(ticket.id) });
+            expect(changed.status).toBe(200);
+            const afterStaff = await tokenOf(ticket.id);
+            expect((await indicate(ticket.id)).status).toBe(200);
+            expect(await tokenOf(ticket.id) > afterStaff).toBe(true);
+            // another Requester gets the same 404 as a missing Ticket and writes nothing
+            const other = await createTicket({ status: 'Open' });
+            const jennifer = await loginAs(ACCOUNTS.jennifer);
+            expect((await indicate(other.id, jennifer)).status).toBe(404);
+            expect((await prisma().ticket.findUniqueOrThrow({ where: { id: other.id } })).indicatedResolvedAt).toBeNull();
+        });
+
         it('WF-07: reopening a Resolved Ticket clears resolvedAt and indicatedResolvedAt, and the Requester may indicate again', async () => {
             const ticket = await createTicket({ status: 'Open' });
             await addAction(ticket.id, 'Completed');
